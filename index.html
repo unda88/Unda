@@ -308,8 +308,8 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
     <!-- Stock Fear & Greed (links) -->
     <div class="fg-widget" id="fg-stock">
-      <div class="fg-title">📈 Stock Market</div>
-      <div class="fg-subtitle">Fear &amp; Greed Index</div>
+      <div class="fg-title">📈 VIX Angstmeter</div>
+      <div class="fg-subtitle">Wall Street Fear Index</div>
       <div class="fg-gauge-wrap">
         <svg class="fg-gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -486,7 +486,18 @@ function applyLang(){
   document.getElementById('lang-btn').textContent=lang==='nl'?'EN':'NL';
   Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
 }
-function toggleLang(){lang=lang==='nl'?'en':'nl';applyLang();}
+function toggleLang(){
+  lang=lang==='nl'?'en':'nl';
+  applyLang();
+  // Herrender Fear & Greed labels
+  if(fgValues.crypto!=null)_renderFG('crypto',fgValues.crypto,fgValues.cryptoPrev);
+  if(fgValues.stock!=null)_renderFG('stock',fgValues.stock,fgValues.stockPrev);
+  // Widget titels
+  const st=document.querySelector('#fg-stock .fg-subtitle');
+  const ct=document.querySelector('#fg-crypto .fg-subtitle');
+  if(st)st.textContent=lang==='nl'?'Wall Street Fear Index':'Wall Street Fear Index';
+  if(ct)ct.textContent=lang==='nl'?'Fear & Greed Index':'Fear & Greed Index';
+}
 applyLang();
 
 // ── TICKER ──
@@ -834,8 +845,11 @@ function fgColor(val){
   return'fg-extreme-greed';
 }
 function fgText(val,l){
-  const t=val<=24?{nl:'Extreme angst',en:'Extreme Fear'}:val<=44?{nl:'Angst',en:'Fear'}:val<=55?{nl:'Neutraal',en:'Neutral'}:val<=74?{nl:'Hebzucht',en:'Greed'}:{nl:'Extreme hebzucht',en:'Extreme Greed'};
-  return t[l]||t.nl;
+  if(val<=24)return l==='en'?'Extreme Fear':'Extreme Angst';
+  if(val<=44)return l==='en'?'Fear':'Angst';
+  if(val<=55)return l==='en'?'Neutral':'Neutraal';
+  if(val<=74)return l==='en'?'Greed':'Hebzucht';
+  return l==='en'?'Extreme Greed':'Extreme Hebzucht';
 }
 function renderGauge(arcId, needleId, val){
   // Arc: total length of semicircle path = ~157px
@@ -846,7 +860,14 @@ function renderGauge(arcId, needleId, val){
   // Needle: rotate from -90 (left=0) to +90 (right=100)
   if(needleEl)needleEl.setAttribute('transform',`rotate(${-90+pct*180},60,65)`);
 }
+let fgValues={crypto:null,cryptoPrev:null,stock:null,stockPrev:null};
+
 function setFG(prefix, val, prev){
+  if(prefix==='crypto'){fgValues.crypto=val;fgValues.cryptoPrev=prev;}
+  else{fgValues.stock=val;fgValues.stockPrev=prev;}
+  _renderFG(prefix,val,prev);
+}
+function _renderFG(prefix,val,prev){
   const cls=fgColor(val);
   const lbl=fgText(val,lang);
   const valEl=document.getElementById(`fg-${prefix}-val`);
@@ -854,8 +875,10 @@ function setFG(prefix, val, prev){
   const prevEl=document.getElementById(`fg-${prefix}-prev`);
   if(valEl){valEl.textContent=val;valEl.className=`fg-value ${cls}`;}
   if(lblEl){lblEl.textContent=lbl;lblEl.className=`fg-label ${cls}`;}
-  if(prevEl&&prev!=null)prevEl.textContent=(lang==='nl'?'Gisteren: ':'Yesterday: ')+prev+' — '+fgText(prev,lang);
-  renderGauge(prefix==='crypto'?'cg-arc':'sg-arc', prefix==='crypto'?'cg-needle':'sg-needle', val);
+  if(prevEl&&prev!=null&&prefix==='crypto'){
+    prevEl.textContent=(lang==='nl'?'Gisteren: ':'Yesterday: ')+prev+' — '+fgText(prev,lang);
+  }
+  renderGauge(prefix==='crypto'?'cg-arc':'sg-arc',prefix==='crypto'?'cg-needle':'sg-needle',val);
 }
 
 async function fetchFearGreed(){
@@ -872,22 +895,48 @@ async function fetchFearGreed(){
     document.getElementById('fg-crypto-lbl').textContent='Niet beschikbaar';
   }
 
-  // Stock market via CNN proxy (best effort)
+  // Stock market via VIX (Yahoo Finance — zelfde proxy als ticker)
   try{
-    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent('https://production.dataviz.cnn.io/index/fearandgreed/graphdata')}`;
+    const url=`https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d`;
+    const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
     const r=await fetch(proxy,{cache:'no-store'});
     if(r.ok){
-      const j=await r.json();
-      const data=JSON.parse(j.contents);
-      const val=Math.round(data.fear_and_greed?.score||data.score||0);
-      const prev=Math.round(data.fear_and_greed?.previous_close||data.previous_close||0);
-      if(val>0)setFG('stock',val,prev||null);
-      else throw new Error('no score');
+      const data=await r.json();
+      const meta=data?.chart?.result?.[0]?.meta;
+      const vix=meta?.regularMarketPrice;
+      const prevVix=meta?.chartPreviousClose;
+      if(vix>0){
+        // VIX omzetten naar 0-100 schaal (omgekeerd: hoge VIX = angst)
+        // VIX 10 = 90/100, VIX 20 = 60/100, VIX 30 = 30/100, VIX 40+ = 0-15/100
+        const score=Math.round(Math.max(0,Math.min(100,100-(vix-10)*3)));
+        const prevScore=prevVix?Math.round(Math.max(0,Math.min(100,100-(prevVix-10)*3))):null;
+        setFG('stock',score,prevScore);
+        // Voeg VIX waarde toe als extra info
+        const prevEl=document.getElementById('fg-stock-prev');
+        if(prevEl)prevEl.textContent=`VIX: ${vix.toFixed(2)} ${vix>prevVix?'▲':'▼'}${Math.abs(vix-prevVix).toFixed(2)}`;
+      }else throw new Error('no vix');
     }
   }catch(e){
-    // Fallback: toon een neutrale waarde met label
-    document.getElementById('fg-stock-lbl').textContent='Niet beschikbaar';
-    document.getElementById('fg-stock-val').textContent='—';
+    // Fallback: probeer allorigins proxy
+    try{
+      const url=`https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=1d`;
+      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const r=await fetch(proxy,{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        const data=JSON.parse(j.contents);
+        const vix=data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+        if(vix>0){
+          const score=Math.round(Math.max(0,Math.min(100,100-(vix-10)*3)));
+          setFG('stock',score,null);
+          const prevEl=document.getElementById('fg-stock-prev');
+          if(prevEl)prevEl.textContent=`VIX: ${vix.toFixed(2)}`;
+        }else throw new Error();
+      }
+    }catch(e2){
+      document.getElementById('fg-stock-lbl').textContent='Niet beschikbaar';
+      document.getElementById('fg-stock-val').textContent='—';
+    }
   }
 }
 renderTicker();
