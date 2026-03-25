@@ -603,6 +603,8 @@ async function loadUKNews(){
   }catch(e){}
   await loadRSSFallback(RSS_UK_FEEDS);
 }
+
+async function loadRSSFallback(feeds){
   const allItems=[];
   for(const feed of feeds){
     try{
@@ -651,7 +653,8 @@ function timeAgo(date){
   return Math.round(mins/1440)+'d';
 }
 
-// Init
+// Init — toon ticker meteen met placeholders, vul daarna met echte prijzen
+renderTicker();
 fetchTickerPrices();
 setInterval(fetchTickerPrices,60000);
 loadNews();
