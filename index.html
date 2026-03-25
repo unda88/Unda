@@ -441,8 +441,14 @@ function renderTicker(){
   inner.innerHTML=html+html; // duplicate for seamless loop
 }
 
-// ── NEWS via NewsAPI.org ──
-const NEWS_API_KEY='4eb94ccbb6d14f6d95f1e45498a6beff';
+// ── NEWS: GNews → Mediastack → RSS fallback ──
+const GNEWS_KEY='6a2d4ea4b91083733b9afa3d8157714a';
+const MEDIASTACK_KEY='cfa39b8e4d4c1711450cd1313f6f2a43';
+const RSS_FEEDS=[
+  {url:'https://feeds.reuters.com/reuters/businessNews',name:'Reuters'},
+  {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
+  {url:'https://www.ft.com/rss/home/uk',name:'Financial Times'},
+];
 
 async function loadNews(){
   const btn=document.getElementById('news-refresh-btn');
@@ -450,43 +456,97 @@ async function loadNews(){
   const list=document.getElementById('news-list');
   list.innerHTML='<div class="news-loading">📡 Nieuws laden...</div>';
 
+  // ── Bron 1: GNews ──
   try{
-    // Business + finance news in English and Dutch
-    const url=`https://newsapi.org/v2/top-headlines?category=business&pageSize=20&apiKey=${NEWS_API_KEY}`;
+    const url=`https://gnews.io/api/v4/top-headlines?category=business&lang=en&max=10&apikey=${GNEWS_KEY}`;
     const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
+    if(!r.ok)throw new Error('GNews HTTP '+r.status);
     const data=await r.json();
-
-    if(!data.articles||data.articles.length===0){
-      list.innerHTML='<div class="news-loading">Geen nieuws beschikbaar</div>';
+    if(data.articles&&data.articles.length>0){
+      renderNewsArticles(data.articles.map(a=>({
+        title:a.title,
+        desc:a.description,
+        img:a.image,
+        url:a.url,
+        source:a.source?.name||'GNews',
+        date:new Date(a.publishedAt)
+      })),'GNews');
       if(btn)btn.textContent='↻';
       return;
     }
+  }catch(e){}
 
-    const articles=data.articles.filter(a=>a.title&&a.title!=='[Removed]'&&a.url);
-    list.innerHTML=articles.slice(0,15).map(a=>{
-      const timeStr=a.publishedAt?timeAgo(new Date(a.publishedAt)):'';
-      const img=a.urlToImage?`<img src="${a.urlToImage}" class="news-img" onerror="this.style.display='none'" loading="lazy">`:'';
-      const src=a.source?.name||'';
-      const desc=a.description?`<div class="news-desc">${a.description.slice(0,90)}${a.description.length>90?'…':''}</div>`:'';
-      return `<div class="news-item" onclick="window.open('${a.url}','_blank')">
-        ${img}
-        <div class="news-text">
-          <div class="news-headline">${a.title.replace(/&amp;/g,'&').replace(/&#39;/g,"'")}</div>
-          ${desc}
-          <div class="news-meta"><span class="news-source">${src}</span><span class="news-time">${timeStr}</span></div>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){
-    // Fallback to RSS if NewsAPI fails
-    list.innerHTML='<div class="news-loading" style="font-size:10px">API limiet bereikt — morgen weer beschikbaar (100/dag gratis)</div>';
+  // ── Bron 2: Mediastack ──
+  try{
+    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&categories=business,technology&languages=en&limit=10`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('Mediastack HTTP '+r.status);
+    const data=await r.json();
+    if(data.data&&data.data.length>0){
+      renderNewsArticles(data.data.map(a=>({
+        title:a.title,
+        desc:a.description,
+        img:a.image,
+        url:a.url,
+        source:a.source||'Mediastack',
+        date:new Date(a.published_at)
+      })),'Mediastack');
+      if(btn)btn.textContent='↻';
+      return;
+    }
+  }catch(e){}
+
+  // ── Bron 3: RSS fallback ──
+  const allItems=[];
+  for(const feed of RSS_FEEDS){
+    try{
+      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
+      const r=await fetch(proxy,{cache:'no-store'});
+      if(!r.ok)continue;
+      const j=await r.json();
+      const parser=new DOMParser();
+      const xml=parser.parseFromString(j.contents,'text/xml');
+      xml.querySelectorAll('item').forEach(item=>{
+        const title=item.querySelector('title')?.textContent?.trim();
+        const link=item.querySelector('link')?.textContent?.trim()||item.querySelector('link')?.nextSibling?.textContent?.trim();
+        const pubDate=item.querySelector('pubDate')?.textContent?.trim();
+        const desc=item.querySelector('description')?.textContent?.trim();
+        if(title&&title.length>10){
+          allItems.push({title,desc,img:null,url:link,source:feed.name,date:pubDate?new Date(pubDate):new Date()});
+        }
+      });
+    }catch(e){}
+  }
+  if(allItems.length>0){
+    allItems.sort((a,b)=>b.date-a.date);
+    renderNewsArticles(allItems.slice(0,15),'RSS');
+  } else {
+    list.innerHTML='<div class="news-loading">Nieuws tijdelijk niet beschikbaar</div>';
   }
   if(btn)btn.textContent='↻';
 }
 
+function renderNewsArticles(articles, source){
+  const list=document.getElementById('news-list');
+  list.innerHTML=articles.map(a=>{
+    const timeStr=a.date&&!isNaN(a.date)?timeAgo(a.date):'';
+    const clean=(a.title||'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/<[^>]*>/g,'');
+    const desc=a.desc?(a.desc.replace(/<[^>]*>/g,'').slice(0,90)+'…'):'';
+    const img=a.img?`<img src="${a.img}" class="news-img" onerror="this.style.display='none'" loading="lazy">`:'';
+    return `<div class="news-item" onclick="window.open('${a.url}','_blank')">
+      ${img}
+      <div class="news-text">
+        <div class="news-headline">${clean}</div>
+        ${desc?`<div class="news-desc">${desc}</div>`:''}
+        <div class="news-meta"><span class="news-source">${a.source}</span>${timeStr?`<span class="news-time">${timeStr}</span>`:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function timeAgo(date){
   const mins=Math.round((Date.now()-date.getTime())/60000);
+  if(mins<1)return 'nu';
   if(mins<60)return mins+'m';
   if(mins<1440)return Math.round(mins/60)+'u';
   return Math.round(mins/1440)+'d';
