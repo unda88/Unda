@@ -7,37 +7,44 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.03)}
+:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--red:#ff4444;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.03)}
 html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:var(--text);overflow-x:hidden}
-
-/* ── Background ── */
 .bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 20%,#001f0f 0%,#000d1a 50%,#000508 100%)}
 .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,178,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,.018) 1px,transparent 1px);background-size:44px 44px}
 .orb{position:absolute;border-radius:50%;pointer-events:none}
 .orb1{width:800px;height:800px;top:-300px;left:-200px;background:radial-gradient(circle,rgba(0,255,178,.07) 0%,transparent 60%);animation:drift 16s ease-in-out infinite alternate}
 .orb2{width:600px;height:600px;bottom:-200px;right:-150px;background:radial-gradient(circle,rgba(255,217,122,.06) 0%,transparent 60%);animation:drift2 19s ease-in-out infinite alternate}
-.orb3{width:400px;height:400px;top:50%;left:55%;background:radial-gradient(circle,rgba(0,212,255,.04) 0%,transparent 60%);animation:drift 12s ease-in-out infinite alternate-reverse}
 @keyframes drift{from{transform:translate(0,0)}to{transform:translate(50px,35px)}}
 @keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-40px,-50px)}}
-.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:100;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 8px 2px var(--g),0 0 40px 12px rgba(0,255,178,.25);animation:fl 9s ease-in-out infinite}
+.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:200;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 8px 2px var(--g),0 0 40px 12px rgba(0,255,178,.25);animation:fl 9s ease-in-out infinite}
 @keyframes fl{0%,100%{opacity:1}93%{opacity:.6}94.5%{opacity:1}96%{opacity:.8}97%{opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.a1{animation:up .6s .05s both}.a2{animation:up .6s .15s both}.a3{animation:up .6s .22s both}
+.a4{animation:up .6s .30s both}.a5{animation:up .6s .38s both}
 
-/* ── Animations ── */
-@keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
-@keyframes glow{0%,100%{opacity:.7}50%{opacity:1}}
-.a1{animation:up .6s .05s both}
-.a2{animation:up .6s .15s both}
-.a3{animation:up .6s .22s both}
-.a4{animation:up .6s .30s both}
-.a5{animation:up .6s .38s both}
-.a6{animation:up .6s .46s both}
-.a7{animation:up .6s .54s both}
+/* ── TICKER ── */
+.ticker-bar{position:fixed;top:2px;left:0;right:0;z-index:150;height:32px;background:rgba(0,8,5,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,255,178,.12);display:flex;align-items:center;overflow:hidden}
+.ticker-label{flex-shrink:0;padding:0 14px;font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
+.ticker-track{flex:1;overflow:hidden;position:relative;height:100%}
+.ticker-inner{display:flex;align-items:center;height:100%;gap:0;white-space:nowrap;animation:tickerScroll 120s linear infinite}
+.ticker-inner:hover{animation-play-state:paused}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{display:inline-flex;align-items:center;gap:6px;padding:0 20px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:11px;cursor:default}
+.tick-sym{color:rgba(200,255,235,.7);font-weight:500;font-size:10px}
+.tick-price{color:var(--text)}
+.tick-chg{font-size:10px}
+.tick-up{color:#00ff88}
+.tick-dn{color:var(--red)}
+.tick-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.tick-dot-up{background:#00ff88;box-shadow:0 0 4px #00ff8888}
+.tick-dot-dn{background:var(--red);box-shadow:0 0 4px #ff444488}
+.tick-dot-neu{background:rgba(255,255,255,.3)}
 
-/* ── Page ── */
-.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 32px 48px}
+/* ── PAGE ── */
+.page{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:70px 28px 48px}
 
-/* ── Header ── */
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
 .logo-wrap{display:flex;align-items:center;gap:14px}
 .logo-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(0,255,178,.2),rgba(0,255,178,.05));border:1px solid rgba(0,255,178,.3);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px rgba(0,255,178,.12)}
 .logo-text{font-size:20px;font-weight:600;background:linear-gradient(130deg,#9effd9 0%,#fff 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -45,90 +52,124 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.22);border-radius:9px;padding:7px 18px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;letter-spacing:.06em;font-weight:500}
 .lang-btn:hover{background:rgba(0,255,178,.16);color:var(--g);border-color:rgba(0,255,178,.4)}
 
-/* ── Hero ── */
-.hero{text-align:center;margin-bottom:36px}
-.hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
-.hero-label::before,.hero-label::after{content:'';flex:0 0 30px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:24px}
+.hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.hero-label::before,.hero-label::after{content:'';flex:0 0 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
 .hero-label::after{background:linear-gradient(90deg,rgba(0,255,178,.4),transparent)}
-.hero-title{font-size:56px;font-weight:700;line-height:1.0;letter-spacing:-.5px;background:linear-gradient(135deg,#c8ffec 0%,#ffffff 40%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(0,255,178,.18));margin-bottom:12px}
-.hero-sub{font-size:15px;color:rgba(200,255,235,.4);line-height:1.6;margin-bottom:22px}
-.hero-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.htag{font-size:10px;padding:4px 13px;border-radius:20px;border:1px solid;letter-spacing:.04em;font-weight:500}
+.hero-title{font-size:50px;font-weight:700;line-height:1.0;letter-spacing:-.5px;background:linear-gradient(135deg,#c8ffec 0%,#ffffff 40%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 28px rgba(0,255,178,.18));margin-bottom:10px}
+.hero-sub{font-size:14px;color:rgba(200,255,235,.4);line-height:1.6;margin-bottom:16px}
+.hero-tags{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.htag{font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid;letter-spacing:.04em;font-weight:500}
 .htag-g{background:rgba(0,255,178,.08);border-color:rgba(0,255,178,.22);color:rgba(0,255,178,.75)}
 .htag-gold{background:rgba(255,217,122,.08);border-color:rgba(255,217,122,.22);color:rgba(255,217,122,.75)}
 .htag-b{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.22);color:rgba(0,212,255,.75)}
 
-/* ── Workflow strip ── */
-.workflow{background:linear-gradient(90deg,rgba(0,255,178,.04),rgba(0,255,178,.02));border:1px solid rgba(0,255,178,.1);border-radius:14px;padding:12px 20px;margin-bottom:32px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* ── WORKFLOW ── */
+.workflow{background:linear-gradient(90deg,rgba(0,255,178,.04),rgba(0,255,178,.02));border:1px solid rgba(0,255,178,.1);border-radius:12px;padding:10px 18px;margin-bottom:24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .wf-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--g2);white-space:nowrap;font-weight:600}
-.wf-flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1}
-.wf-step{background:rgba(0,255,178,.07);border:1px solid rgba(0,255,178,.14);border-radius:8px;padding:5px 12px;font-size:11px;color:rgba(200,255,235,.8);white-space:nowrap}
+.wf-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
+.wf-step{background:rgba(0,255,178,.07);border:1px solid rgba(0,255,178,.14);border-radius:8px;padding:4px 11px;font-size:11px;color:rgba(200,255,235,.8);white-space:nowrap}
 .wf-arr{color:rgba(0,255,178,.28);font-size:12px}
 
-/* ── Main grid ── */
-.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+/* ── MAIN 3-COL GRID ── */
+.grid{display:grid;grid-template-columns:1fr 1fr 320px;gap:18px;align-items:start}
 
-/* ── Section ── */
-.sec{display:flex;flex-direction:column;gap:12px}
-.sec-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
-.sec-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+/* ── SECTIONS ── */
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;align-items:center;gap:10px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sec-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
 .icon-g{background:rgba(0,255,178,.12);border:1px solid rgba(0,255,178,.25)}
 .icon-gold{background:rgba(255,217,122,.12);border:1px solid rgba(255,217,122,.25)}
 .icon-blue{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25)}
-.sec-title{font-size:15px;font-weight:600;color:var(--text)}
-.sec-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.icon-red{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.25)}
+.sec-title{font-size:14px;font-weight:600;color:var(--text)}
+.sec-sub{font-size:10px;color:var(--muted);margin-top:1px}
 
-/* ── Cards ── */
-.card{background:var(--card);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .18s,border-color .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
-.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.3) 35%,rgba(0,255,178,.7) 50%,rgba(255,255,255,.3) 65%,transparent 95%)}
+/* ── CARDS ── */
+.card{background:var(--card);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .18s,border-color .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.3) 35%,rgba(0,255,178,.7) 50%,rgba(255,255,255,.3) 65%,transparent 95%);pointer-events:none}
 .card.gold::after{background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 35%,rgba(255,217,122,.7) 50%,rgba(255,255,255,.2) 65%,transparent 95%)}
-.card a,.card.link{text-decoration:none;display:block;cursor:pointer}
 a.card{text-decoration:none;color:inherit}
-a.card:hover,.card:hover{transform:translateY(-3px);border-color:rgba(0,255,178,.32);box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 28px rgba(0,255,178,.08),inset 0 1px 0 rgba(255,255,255,.1)}
-a.card.gold:hover{border-color:rgba(255,217,122,.32);box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 28px rgba(255,217,122,.08),inset 0 1px 0 rgba(255,255,255,.1)}
+a.card:hover{transform:translateY(-3px);border-color:rgba(0,255,178,.32);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 24px rgba(0,255,178,.08),inset 0 1px 0 rgba(255,255,255,.1)}
+a.card.gold:hover{border-color:rgba(255,217,122,.32);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 24px rgba(255,217,122,.08),inset 0 1px 0 rgba(255,255,255,.1)}
 .card.soon{opacity:.38;pointer-events:none}
-.card-inner{padding:16px 18px}
-
-/* ── Featured hero card ── */
-.featured-bar{height:3px;background:linear-gradient(90deg,var(--g),rgba(0,255,178,.15));border-radius:16px 16px 0 0}
-.featured-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
-.feat-icon{font-size:28px;flex-shrink:0;line-height:1}
-.feat-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
-.feat-desc{font-size:11px;color:rgba(200,255,235,.45);line-height:1.6}
-.feat-arr{color:rgba(0,255,178,.3);font-size:16px;margin-left:auto;padding-left:8px;transition:color .2s,transform .2s;flex-shrink:0}
+.card-inner{padding:14px 16px}
+.featured-bar{height:3px;background:linear-gradient(90deg,var(--g),rgba(0,255,178,.1));border-radius:14px 14px 0 0}
+.featured-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.feat-icon{font-size:26px;flex-shrink:0;line-height:1}
+.feat-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
+.feat-desc{font-size:10px;color:rgba(200,255,235,.45);line-height:1.6}
+.feat-arr{color:rgba(0,255,178,.3);font-size:15px;margin-left:auto;padding-left:8px;transition:color .2s,transform .2s;flex-shrink:0}
 a.card:hover .feat-arr{color:var(--g);transform:translateX(4px)}
-.feat-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-.fst{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:9px;padding:7px 4px;text-align:center}
-.fst-l{font-size:7px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
-.fst-v{font-family:'DM Mono',monospace;font-size:11px;color:#b8ffe0;font-weight:500}
-
-/* ── Regular tool card ── */
-.tool-row{display:flex;align-items:center;gap:12px}
-.tool-emoji{font-size:22px;flex-shrink:0;width:36px;text-align:center}
+.feat-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
+.fst{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:8px;padding:6px 3px;text-align:center}
+.fst-l{font-size:7px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
+.fst-v{font-family:'DM Mono',monospace;font-size:10px;color:#b8ffe0;font-weight:500}
+.tool-row{display:flex;align-items:center;gap:11px}
+.tool-emoji{font-size:20px;flex-shrink:0;width:32px;text-align:center}
 .tool-info{flex:1;min-width:0}
-.tool-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tool-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
 .tool-desc{font-size:10px;color:rgba(200,255,235,.42);line-height:1.5}
-.tool-arr{color:rgba(0,255,178,.25);font-size:14px;flex-shrink:0;transition:color .2s,transform .2s}
+.tool-arr{color:rgba(0,255,178,.25);font-size:13px;flex-shrink:0;transition:color .2s,transform .2s}
 a.card:hover .tool-arr{color:var(--g);transform:translateX(3px)}
-.gold .tool-arr{color:rgba(255,217,122,.25)}
-a.card.gold:hover .tool-arr{color:var(--gold);transform:translateX(3px)}
-.soon-badge{font-size:8px;color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 7px;flex-shrink:0;letter-spacing:.1em;text-transform:uppercase}
-
-/* ── Tags ── */
-.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
-.tag{font-size:8px;padding:2px 8px;border-radius:10px;letter-spacing:.04em;font-weight:500}
+.gold .tool-arr{color:rgba(255,217,122,.22)}
+a.card.gold:hover .tool-arr{color:var(--gold)}
+.soon-badge{font-size:8px;color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 6px;flex-shrink:0;letter-spacing:.1em;text-transform:uppercase}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tag{font-size:8px;padding:2px 7px;border-radius:10px;letter-spacing:.04em;font-weight:500}
 .tg{background:rgba(0,255,178,.06);border:1px solid rgba(0,255,178,.16);color:rgba(0,255,178,.65)}
 .tgold{background:rgba(255,217,122,.06);border:1px solid rgba(255,217,122,.16);color:rgba(255,217,122,.7)}
 .tb{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.16);color:rgba(0,212,255,.7)}
 .tdim{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.22)}
 
-/* ── Footer ── */
-.footer{text-align:center;margin-top:28px;padding-top:18px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase}
+/* ── NEWS COLUMN ── */
+.news-col{display:flex;flex-direction:column;gap:10px;position:sticky;top:70px}
+.news-card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
+.news-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 35%,rgba(255,68,68,.6) 50%,rgba(255,255,255,.2) 65%,transparent 95%);pointer-events:none}
+.news-head{padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between}
+.news-title-bar{font-size:11px;font-weight:600;color:var(--text);letter-spacing:.04em;display:flex;align-items:center;gap:7px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#ff4444;box-shadow:0 0 6px #ff444488;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.news-src{font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.news-list{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
+.news-list::-webkit-scrollbar{width:2px}
+.news-list::-webkit-scrollbar-thumb{background:rgba(0,255,178,.2);border-radius:2px}
+.news-item{border-bottom:1px solid rgba(255,255,255,.04);padding-bottom:10px;cursor:pointer;transition:background .15s;border-radius:8px;padding:8px;margin:-2px}
+.news-item:last-child{border-bottom:none}
+.news-item:hover{background:rgba(0,255,178,.03)}
+.news-item:hover .news-headline{color:rgba(0,255,178,.9)}
+.news-img{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:7px;display:block;border:1px solid rgba(255,255,255,.06)}
+.news-text{}
+.news-headline{font-size:11px;color:rgba(200,255,235,.78);line-height:1.5;margin-bottom:4px;transition:color .2s;font-weight:500}
+.news-desc{font-size:10px;color:rgba(180,240,220,.35);line-height:1.5;margin-bottom:5px}
+.news-meta{display:flex;align-items:center;gap:8px}
+.news-source{font-size:9px;color:var(--muted);font-weight:600}
+.news-time{font-size:9px;color:rgba(255,255,255,.2)}
+.news-loading{padding:20px 14px;text-align:center;font-size:11px;color:var(--muted)}
+.refresh-news{background:transparent;border:none;color:rgba(0,255,178,.35);cursor:pointer;font-size:11px;padding:2px 4px;transition:color .2s}
+.refresh-news:hover{color:var(--g)}
+.news-spin{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── FOOTER ── */
+.footer{text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase}
 </style>
 </head>
 <body>
-<div class="bg"><div class="bg-grid"></div><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb1"></div><div class="orb orb2"></div></div>
 <div class="tl"></div>
+
+<!-- ── TICKER BAR ── -->
+<div class="ticker-bar">
+  <div class="ticker-label">📡 LIVE</div>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <!-- filled by JS -->
+      <div class="tick-item"><span class="tick-sym">laden...</span></div>
+    </div>
+  </div>
+</div>
 
 <div class="page">
 
@@ -171,30 +212,21 @@ a.card.gold:hover .tool-arr{color:var(--gold);transform:translateX(3px)}
     </div>
   </div>
 
-  <!-- Main grid -->
+  <!-- 3-col grid -->
   <div class="grid">
 
-    <!-- LEFT col -->
+    <!-- COL 1: Stocks + Learn -->
     <div class="sec a4">
-
-      <!-- Stock Dashboard -->
       <div class="sec-head">
         <div class="sec-icon icon-g">📊</div>
-        <div>
-          <div class="sec-title" id="s1t">Stock Dashboard</div>
-          <div class="sec-sub" id="s1s">Aandelen &amp; ETF's — zonder hefboom</div>
-        </div>
+        <div><div class="sec-title" id="s1t">Stock Dashboard</div><div class="sec-sub" id="s1s">Aandelen &amp; ETF's — zonder hefboom</div></div>
       </div>
-
       <a class="card" href="unda-stocks.html">
         <div class="featured-bar"></div>
         <div class="card-inner">
           <div class="featured-top">
             <div class="feat-icon">📊</div>
-            <div style="flex:1">
-              <div class="feat-title" id="fc-t">Stock Dashboard</div>
-              <div class="feat-desc" id="fc-d">Alles-in-één: kosten, TOB, meerwaardebelasting, logboek met statistieken, grafieken en live portfolio tracking.</div>
-            </div>
+            <div style="flex:1"><div class="feat-title" id="fc-t">Stock Dashboard</div><div class="feat-desc" id="fc-d">Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.</div></div>
             <div class="feat-arr">→</div>
           </div>
           <div class="feat-stats">
@@ -203,213 +235,70 @@ a.card.gold:hover .tool-arr{color:var(--gold);transform:translateX(3px)}
             <div class="fst"><div class="fst-l" id="fs3">Posities</div><div class="fst-v" id="fs3v">live</div></div>
             <div class="fst"><div class="fst-l" id="fs4">Vrijstelling</div><div class="fst-v">€10K/jr</div></div>
           </div>
-          <div class="tags">
-            <span class="tag tg">TOB 0,35%</span>
-            <span class="tag tg" id="fc-tag1">Meerwaardebelasting</span>
-            <span class="tag tg" id="fc-tag2">Break-even</span>
-            <span class="tag tg" id="fc-tag3">Verliesoverdracht</span>
-            <span class="tag tgold" id="fc-tag4">Live koersen</span>
-          </div>
+          <div class="tags"><span class="tag tg">TOB 0,35%</span><span class="tag tg" id="fc-t1">Meerwaardebelasting</span><span class="tag tg" id="fc-t2">Break-even</span><span class="tag tgold" id="fc-t3">Live koersen</span></div>
         </div>
       </a>
 
-      <!-- Learn section -->
-      <div class="sec-head" style="margin-top:8px">
+      <div class="sec-head" style="margin-top:6px">
         <div class="sec-icon icon-blue">📖</div>
-        <div>
-          <div class="sec-title" id="s3t">Leren</div>
-          <div class="sec-sub" id="s3s">Elliott Wave, indicators &amp; video's</div>
-        </div>
+        <div><div class="sec-title" id="s3t">Leren</div><div class="sec-sub" id="s3s">Elliott Wave, indicators &amp; video's</div></div>
       </div>
-
       <a class="card" href="unda-guide.html">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">📖</div>
-            <div class="tool-info">
-              <div class="tool-name" id="gd-t">Handleiding</div>
-              <div class="tool-desc" id="gd-d">Stap-voor-stap gids voor alle tools samen</div>
-              <div class="tags"><span class="tag tb" id="gd-t1">Guide</span><span class="tag tb" id="gd-t2">Workflow</span></div>
-            </div>
-            <div class="tool-arr">→</div>
-          </div>
-        </div>
+        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📖</div><div class="tool-info"><div class="tool-name" id="gd-t">Handleiding</div><div class="tool-desc" id="gd-d">Stap-voor-stap gids voor alle tools samen</div><div class="tags"><span class="tag tb">Guide</span><span class="tag tb">Workflow</span></div></div><div class="tool-arr">→</div></div></div>
       </a>
+      <div class="card soon"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">🌊</div><div class="tool-info"><div class="tool-name" id="ew-t">Elliott Wave</div><div class="tool-desc" id="ew-d">Visuele gids: impulsgolven &amp; correcties</div><div class="tags"><span class="tag tdim">Elliott Wave</span><span class="tag tdim">Impuls</span></div></div><span class="soon-badge" id="sb1">Binnenkort</span></div></div></div>
+      <div class="card soon"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">📈</div><div class="tool-info"><div class="tool-name" id="ma-t">Moving Averages</div><div class="tool-desc" id="ma-d">EMA, SMA, VWAP</div><div class="tags"><span class="tag tdim">EMA</span><span class="tag tdim">SMA</span></div></div><span class="soon-badge" id="sb2">Binnenkort</span></div></div></div>
+      <div class="card soon"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">🎬</div><div class="tool-info"><div class="tool-name" id="vid-t">Video's</div><div class="tool-desc" id="vid-d">Analyses &amp; live setups</div><div class="tags"><span class="tag tdim">Analyse</span><span class="tag tdim">Live</span></div></div><span class="soon-badge" id="sb3">Binnenkort</span></div></div></div>
+    </div>
 
-      <div class="card soon">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">🌊</div>
-            <div class="tool-info">
-              <div class="tool-name" id="ew-t">Elliott Wave</div>
-              <div class="tool-desc" id="ew-d">Visuele gids: impulsgolven &amp; correcties</div>
-              <div class="tags"><span class="tag tdim">Elliott Wave</span><span class="tag tdim">Impuls</span></div>
-            </div>
-            <span class="soon-badge" id="sb1">Binnenkort</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card soon">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">📈</div>
-            <div class="tool-info">
-              <div class="tool-name" id="ma-t">Moving Averages</div>
-              <div class="tool-desc" id="ma-d">EMA, SMA, VWAP — wanneer gebruik je welke</div>
-              <div class="tags"><span class="tag tdim">EMA</span><span class="tag tdim">SMA</span><span class="tag tdim">VWAP</span></div>
-            </div>
-            <span class="soon-badge" id="sb2">Binnenkort</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card soon">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">🎬</div>
-            <div class="tool-info">
-              <div class="tool-name" id="vid-t">Video's</div>
-              <div class="tool-desc" id="vid-d">Analyses, strategie &amp; live trading setups</div>
-              <div class="tags"><span class="tag tdim">Analyse</span><span class="tag tdim">Live</span></div>
-            </div>
-            <span class="soon-badge" id="sb3">Binnenkort</span>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /left -->
-
-    <!-- RIGHT col -->
-    <div class="sec a5">
-
+    <!-- COL 2: Trading Suite -->
+    <div class="sec a4">
       <div class="sec-head">
         <div class="sec-icon icon-gold">⚡</div>
-        <div>
-          <div class="sec-title" id="s2t">Trading Suite</div>
-          <div class="sec-sub" id="s2s">Leverage, crypto &amp; futures</div>
+        <div><div class="sec-title" id="s2t">Trading Suite</div><div class="sec-sub" id="s2s">Leverage, crypto &amp; futures</div></div>
+      </div>
+      <a class="card gold" href="unda-calculator.html">
+        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">⚖️</div><div class="tool-info"><div class="tool-name" id="rc-t">Risk Calculator</div><div class="tool-desc" id="rc-d">Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.</div><div class="tags"><span class="tag tgold">Leverage</span><span class="tag tg" id="rc-t2">Positiegrootte</span><span class="tag tg" id="rc-t3">Stop loss</span></div></div><div class="tool-arr">→</div></div></div>
+      </a>
+      <a class="card gold" href="unda-simulator.html">
+        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">🎲</div><div class="tool-info"><div class="tool-name" id="ts-t">Trade Simulator</div><div class="tool-desc" id="ts-d">Monte Carlo simulatie — hoe evolueert je account over honderden trades?</div><div class="tags"><span class="tag tgold">Monte Carlo</span><span class="tag tg" id="ts-t2">Win rate</span><span class="tag tg" id="ts-t3">R:R ratio</span></div></div><div class="tool-arr">→</div></div></div>
+      </a>
+      <a class="card gold" href="unda-kelly.html">
+        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📐</div><div class="tool-info"><div class="tool-name" id="kc-t">Kelly Criterion</div><div class="tool-desc" id="kc-d">Mathematisch optimale inzetgrootte per trade op basis van je edge.</div><div class="tags"><span class="tag tgold">Kelly criterion</span><span class="tag tg" id="kc-t2">Bet sizing</span><span class="tag tg" id="kc-t3">Edge</span></div></div><div class="tool-arr">→</div></div></div>
+      </a>
+      <a class="card gold" href="unda-logbook.html">
+        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📒</div><div class="tool-info"><div class="tool-name" id="lb-t">Trade Logboek</div><div class="tool-desc" id="lb-d">Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.</div><div class="tags"><span class="tag tgold">Journal</span><span class="tag tg" id="lb-t2">Statistieken</span><span class="tag tg" id="lb-t3">Profit factor</span></div></div><div class="tool-arr">→</div></div></div>
+      </a>
+    </div>
+
+    <!-- COL 3: News -->
+    <div class="news-col a5">
+      <div class="sec-head">
+        <div class="sec-icon icon-red">📰</div>
+        <div><div class="sec-title" id="nws-t">Marktnieuws</div><div class="sec-sub" id="nws-s">Financieel &amp; wereldnieuws</div></div>
+      </div>
+      <div class="news-card">
+        <div class="news-head">
+          <div class="news-title-bar"><div class="live-dot"></div><span id="nws-live">Live nieuws</span></div>
+          <button class="refresh-news" onclick="loadNews()" id="news-refresh-btn" title="Ververs">↻</button>
+        </div>
+        <div id="news-list" class="news-list">
+          <div class="news-loading" id="news-loading">📡 Nieuws laden...</div>
         </div>
       </div>
-
-      <a class="card gold" href="unda-calculator.html">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">⚖️</div>
-            <div class="tool-info">
-              <div class="tool-name" id="rc-t">Risk Calculator</div>
-              <div class="tool-desc" id="rc-d">Optimale leverage, positiegrootte en contracten op basis van je portefeuille en stop loss.</div>
-              <div class="tags"><span class="tag tgold" id="rc-t1">Leverage</span><span class="tag tg" id="rc-t2">Positiegrootte</span><span class="tag tg" id="rc-t3">Stop loss</span></div>
-            </div>
-            <div class="tool-arr">→</div>
-          </div>
-        </div>
-      </a>
-
-      <a class="card gold" href="unda-simulator.html">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">🎲</div>
-            <div class="tool-info">
-              <div class="tool-name" id="ts-t">Trade Simulator</div>
-              <div class="tool-desc" id="ts-d">Monte Carlo simulatie — hoe evolueert je account over honderden trades?</div>
-              <div class="tags"><span class="tag tgold" id="ts-t1">Monte Carlo</span><span class="tag tg" id="ts-t2">Win rate</span><span class="tag tg" id="ts-t3">R:R ratio</span></div>
-            </div>
-            <div class="tool-arr">→</div>
-          </div>
-        </div>
-      </a>
-
-      <a class="card gold" href="unda-kelly.html">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">📐</div>
-            <div class="tool-info">
-              <div class="tool-name" id="kc-t">Kelly Criterion</div>
-              <div class="tool-desc" id="kc-d">Mathematisch optimale inzetgrootte per trade op basis van je edge en odds.</div>
-              <div class="tags"><span class="tag tgold" id="kc-t1">Kelly criterion</span><span class="tag tg" id="kc-t2">Bet sizing</span><span class="tag tg" id="kc-t3">Edge</span></div>
-            </div>
-            <div class="tool-arr">→</div>
-          </div>
-        </div>
-      </a>
-
-      <a class="card gold" href="unda-logbook.html">
-        <div class="card-inner">
-          <div class="tool-row">
-            <div class="tool-emoji">📒</div>
-            <div class="tool-info">
-              <div class="tool-name" id="lb-t">Trade Logboek</div>
-              <div class="tool-desc" id="lb-d">Log elke leveraged trade. Win rate, R:R en profit factor — automatisch bijgehouden.</div>
-              <div class="tags"><span class="tag tgold" id="lb-t1">Journal</span><span class="tag tg" id="lb-t2">Statistieken</span><span class="tag tg" id="lb-t3">Profit factor</span></div>
-            </div>
-            <div class="tool-arr">→</div>
-          </div>
-        </div>
-      </a>
-
-    </div><!-- /right -->
+    </div>
 
   </div><!-- /grid -->
 
-  <div class="footer a7" id="footer-txt">Unda · Elliott Wave · Trading Suite · Wave your risk</div>
-
-</div><!-- /page -->
+  <div class="footer" id="footer-txt">Unda · Elliott Wave · Trading Suite · Wave your risk</div>
+</div>
 
 <script>
+// ── Lang ──
 let lang='nl';
 const T={
-  nl:{
-    'l-sub':'Elliott Wave · Trading Suite',
-    'h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader',
-    'ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse',
-    'wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren',
-    's1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom',
-    'fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek met statistieken, grafieken en live portfolio tracking.',
-    'fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling',
-    'fc-tag1':'Meerwaardebelasting','fc-tag2':'Break-even','fc-tag3':'Verliesoverdracht','fc-tag4':'Live koersen',
-    's2t':'Trading Suite','s2s':'Leverage, crypto & futures',
-    'rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van je portefeuille en stop loss.',
-    'rc-t1':'Leverage','rc-t2':'Positiegrootte','rc-t3':'Stop loss',
-    'ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?',
-    'ts-t1':'Monte Carlo','ts-t2':'Win rate','ts-t3':'R:R ratio',
-    'kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge en odds.',
-    'kc-t1':'Kelly criterion','kc-t2':'Bet sizing','kc-t3':'Edge',
-    'lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor — automatisch bijgehouden.',
-    'lb-t1':'Journal','lb-t2':'Statistieken','lb-t3':'Profit factor',
-    's3t':'Leren','s3s':'Elliott Wave, indicators & video\'s',
-    'gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','gd-t1':'Guide','gd-t2':'Workflow',
-    'ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties',
-    'ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP — wanneer gebruik je welke',
-    'vid-t':'Video\'s','vid-d':'Analyses, strategie & live trading setups',
-    'sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort',
-    'footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'
-  },
-  en:{
-    'l-sub':'Elliott Wave · Trading Suite',
-    'h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader',
-    'ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis',
-    'wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise',
-    's1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage',
-    'fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook with stats, charts and live portfolio tracking.',
-    'fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption',
-    'fc-tag1':'Capital gains tax','fc-tag2':'Break-even','fc-tag3':'Loss carry','fc-tag4':'Live prices',
-    's2t':'Trading Suite','s2s':'Leverage, crypto & futures',
-    'rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on your portfolio and stop loss.',
-    'rc-t1':'Leverage','rc-t2':'Position size','rc-t3':'Stop loss',
-    'ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?',
-    'ts-t1':'Monte Carlo','ts-t2':'Win rate','ts-t3':'R:R ratio',
-    'kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge and odds.',
-    'kc-t1':'Kelly criterion','kc-t2':'Bet sizing','kc-t3':'Edge',
-    'lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor — tracked automatically.',
-    'lb-t1':'Journal','lb-t2':'Statistics','lb-t3':'Profit factor',
-    's3t':'Learn','s3s':'Elliott Wave, indicators & videos',
-    'gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','gd-t1':'Guide','gd-t2':'Workflow',
-    'ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections',
-    'ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP — when to use which',
-    'vid-t':'Videos','vid-d':'Analysis, strategy & live trading setups',
-    'sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon',
-    'footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'
-  }
+  nl:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren','s1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom','fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.','fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling','fc-t1':'Meerwaardebelasting','fc-t2':'Break-even','fc-t3':'Live koersen','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.','rc-t2':'Positiegrootte','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.','lb-t2':'Statistieken','lb-t3':'Profit factor','s3t':'Leren','s3s':'Elliott Wave, indicators & video\'s','gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Video\'s','vid-d':'Analyses & live setups','sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort','nws-t':'Marktnieuws','nws-s':'Financieel & wereldnieuws','nws-live':'Live nieuws','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'},
+  en:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise','s1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage','fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook, charts and live portfolio tracking.','fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption','fc-t1':'Capital gains tax','fc-t2':'Break-even','fc-t3':'Live prices','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on portfolio and stop loss.','rc-t2':'Position size','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor tracked automatically.','lb-t2':'Statistics','lb-t3':'Profit factor','s3t':'Learn','s3s':'Elliott Wave, indicators & videos','gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Analysis & live setups','sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon','nws-t':'Market News','nws-s':'Financial & world news','nws-live':'Live news','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'}
 };
 function applyLang(){
   const t=T[lang];
@@ -418,6 +307,196 @@ function applyLang(){
 }
 function toggleLang(){lang=lang==='nl'?'en':'nl';applyLang();}
 applyLang();
+
+// ── TICKER ──
+const TICKER_SYMBOLS=[
+  // 🟡 Indices
+  {sym:'^GSPC',  type:'stock', label:'S&P 500'},
+  {sym:'^IXIC',  type:'stock', label:'NASDAQ'},
+  {sym:'QQQ',    type:'stock', label:'QQQ'},
+  {sym:'^BFX',   type:'stock', label:'BEL 20'},
+  {sym:'^GDAXI', type:'stock', label:'DAX'},
+  {sym:'^FCHI',  type:'stock', label:'CAC 40'},
+  {sym:'^AEX',   type:'stock', label:'AEX'},
+  {sym:'^FTSE',  type:'stock', label:'FTSE 100'},
+  // 💱 Forex
+  {sym:'EURUSD=X', type:'stock', label:'EUR/USD'},
+  {sym:'EURGBP=X', type:'stock', label:'EUR/GBP'},
+  {sym:'JPY=X',    type:'stock', label:'USD/JPY'},
+  // 🏅 Commodities
+  {sym:'GC=F',  type:'stock', label:'GOLD'},
+  {sym:'SI=F',  type:'stock', label:'SILVER'},
+  {sym:'CL=F',  type:'stock', label:'OIL'},
+  {sym:'NG=F',  type:'stock', label:'NAT GAS'},
+  {sym:'ZW=F',  type:'stock', label:'WHEAT'},
+  // 📈 Rente
+  {sym:'^TNX',  type:'stock', label:'US 10Y'},
+  {sym:'^IRX',  type:'stock', label:'US 3M'},
+  // 🇧🇪 Belgische aandelen
+  {sym:'ABI.BR',  type:'stock', label:'AB InBev'},
+  {sym:'KBC.BR',  type:'stock', label:'KBC'},
+  {sym:'PROX.BR', type:'stock', label:'Proximus'},
+  // 🇺🇸 US Mega caps
+  {sym:'AAPL',  type:'stock', label:'Apple'},
+  {sym:'NVDA',  type:'stock', label:'Nvidia'},
+  {sym:'TSLA',  type:'stock', label:'Tesla'},
+  {sym:'MSFT',  type:'stock', label:'Microsoft'},
+  // 🇪🇺 Europese blue chips
+  {sym:'ASML.AS', type:'stock', label:'ASML'},
+  {sym:'MC.PA',   type:'stock', label:'LVMH'},
+  {sym:'SAP.DE',  type:'stock', label:'SAP'},
+  // 🪙 Top 15 crypto (CoinGecko)
+  {sym:'BTC',   type:'crypto', label:'BTC'},
+  {sym:'ETH',   type:'crypto', label:'ETH'},
+  {sym:'BNB',   type:'crypto', label:'BNB'},
+  {sym:'SOL',   type:'crypto', label:'SOL'},
+  {sym:'XRP',   type:'crypto', label:'XRP'},
+  {sym:'ADA',   type:'crypto', label:'ADA'},
+  {sym:'AVAX',  type:'crypto', label:'AVAX'},
+  {sym:'DOGE',  type:'crypto', label:'DOGE'},
+  {sym:'DOT',   type:'crypto', label:'DOT'},
+  {sym:'MATIC', type:'crypto', label:'MATIC'},
+  {sym:'LINK',  type:'crypto', label:'LINK'},
+  {sym:'TRX',   type:'crypto', label:'TRX'},
+  {sym:'SHIB',  type:'crypto', label:'SHIB'},
+  {sym:'LTC',   type:'crypto', label:'LTC'},
+  {sym:'UNI',   type:'crypto', label:'UNI'},
+];
+
+let tickerData={};
+
+async function fetchTickerPrices(){
+  // Crypto via Binance
+  const cryptos=TICKER_SYMBOLS.filter(s=>s.type==='crypto');
+  for(const s of cryptos){
+    try{
+      // Try EUR first
+      let r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}EUR`);
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData[s.sym]={price:+d.lastPrice,chg:+d.priceChangePercent};continue;}}
+      // Fallback USDT
+      r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}USDT`);
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData[s.sym]={price:+d.lastPrice*0.92,chg:+d.priceChangePercent};}}
+    }catch(e){}
+  }
+  // Stocks/indices via Yahoo Finance proxy
+  const stocks=TICKER_SYMBOLS.filter(s=>s.type==='stock');
+  for(const s of stocks){
+    try{
+      const url=`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.sym)}?interval=1d&range=1d`;
+      const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
+      const r=await fetch(proxy,{cache:'no-store'});
+      if(!r.ok)continue;
+      const data=await r.json();
+      const meta=data?.chart?.result?.[0]?.meta;
+      if(meta?.regularMarketPrice>0){
+        const price=meta.regularMarketPrice;
+        const prev=meta.chartPreviousClose||meta.previousClose||price;
+        const chg=prev>0?((price-prev)/prev*100):0;
+        const cur=(meta.currency||'USD').toUpperCase();
+        const eur=cur==='EUR'?price:price*0.92;
+        tickerData[s.sym]={price:eur,chg,cur};
+      }
+    }catch(e){}
+  }
+  renderTicker();
+}
+
+function renderTicker(){
+  const cats=[
+    {label:'📈 INDICES', syms:['^GSPC','^IXIC','QQQ','^BFX','^GDAXI','^FCHI','^AEX','^FTSE']},
+    {label:'💱 FOREX',   syms:['EURUSD=X','EURGBP=X','JPY=X']},
+    {label:'🏅 GRONDSTOFFEN', syms:['GC=F','SI=F','CL=F','NG=F','ZW=F']},
+    {label:'📊 RENTE',   syms:['^TNX','^IRX']},
+    {label:'🇧🇪 BELGIË', syms:['ABI.BR','KBC.BR','PROX.BR']},
+    {label:'🇺🇸 US',     syms:['AAPL','NVDA','TSLA','MSFT']},
+    {label:'🇪🇺 EUROPA', syms:['ASML.AS','MC.PA','SAP.DE']},
+    {label:'🪙 CRYPTO',  syms:['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','MATIC','LINK','TRX','SHIB','LTC','UNI']},
+  ];
+  let html='';
+  for(const cat of cats){
+    html+=`<div class="tick-item" style="padding:0 14px;border-right:1px solid rgba(0,255,178,.15)"><span style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--g2)">${cat.label}</span></div>`;
+    for(const sym of cat.syms){
+      const s=TICKER_SYMBOLS.find(x=>x.sym===sym);
+      if(!s)continue;
+      const d=tickerData[sym];
+      if(!d){
+        html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="color:var(--muted)">—</span></div>`;
+        continue;
+      }
+      const up=d.chg>=0;
+      const dotCls=up?'tick-dot-up':'tick-dot-dn';
+      const chgCls=up?'tick-up':'tick-dn';
+      const sign=up?'+':'';
+      const p=d.price;
+      // Format price based on magnitude
+      const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
+      // For forex/rates don't show EUR
+      const isForex=['EURUSD=X','EURGBP=X','JPY=X','^TNX','^IRX'].includes(sym);
+      const prefix=isForex?'':' €';
+      const suffix=isForex&&sym.includes('TNX')?'%':'';
+      html+=`<div class="tick-item"><div class="tick-dot ${dotCls}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}${suffix}</span><span class="tick-chg ${chgCls}">${sign}${d.chg.toFixed(2)}%</span></div>`;
+    }
+  }
+  const inner=document.getElementById('ticker-inner');
+  inner.innerHTML=html+html; // duplicate for seamless loop
+}
+
+// ── NEWS via NewsAPI.org ──
+const NEWS_API_KEY='4eb94ccbb6d14f6d95f1e45498a6beff';
+
+async function loadNews(){
+  const btn=document.getElementById('news-refresh-btn');
+  if(btn)btn.innerHTML='<span class="news-spin">↻</span>';
+  const list=document.getElementById('news-list');
+  list.innerHTML='<div class="news-loading">📡 Nieuws laden...</div>';
+
+  try{
+    // Business + finance news in English and Dutch
+    const url=`https://newsapi.org/v2/top-headlines?category=business&pageSize=20&apiKey=${NEWS_API_KEY}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+
+    if(!data.articles||data.articles.length===0){
+      list.innerHTML='<div class="news-loading">Geen nieuws beschikbaar</div>';
+      if(btn)btn.textContent='↻';
+      return;
+    }
+
+    const articles=data.articles.filter(a=>a.title&&a.title!=='[Removed]'&&a.url);
+    list.innerHTML=articles.slice(0,15).map(a=>{
+      const timeStr=a.publishedAt?timeAgo(new Date(a.publishedAt)):'';
+      const img=a.urlToImage?`<img src="${a.urlToImage}" class="news-img" onerror="this.style.display='none'" loading="lazy">`:'';
+      const src=a.source?.name||'';
+      const desc=a.description?`<div class="news-desc">${a.description.slice(0,90)}${a.description.length>90?'…':''}</div>`:'';
+      return `<div class="news-item" onclick="window.open('${a.url}','_blank')">
+        ${img}
+        <div class="news-text">
+          <div class="news-headline">${a.title.replace(/&amp;/g,'&').replace(/&#39;/g,"'")}</div>
+          ${desc}
+          <div class="news-meta"><span class="news-source">${src}</span><span class="news-time">${timeStr}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    // Fallback to RSS if NewsAPI fails
+    list.innerHTML='<div class="news-loading" style="font-size:10px">API limiet bereikt — morgen weer beschikbaar (100/dag gratis)</div>';
+  }
+  if(btn)btn.textContent='↻';
+}
+
+function timeAgo(date){
+  const mins=Math.round((Date.now()-date.getTime())/60000);
+  if(mins<60)return mins+'m';
+  if(mins<1440)return Math.round(mins/60)+'u';
+  return Math.round(mins/1440)+'d';
+}
+
+// Init
+fetchTickerPrices();
+setInterval(fetchTickerPrices,60000);
+loadNews();
+setInterval(loadNews,300000);
 </script>
 </body>
 </html>
