@@ -157,6 +157,98 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
 /* ── FOOTER ── */
 .footer{text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase}
+
+/* ════════════════════════════════════════
+   RESPONSIVE — alle schermformaten
+   Z Fold 6 buiten  : ~390px
+   Z Flip 6 binnen  : ~390px
+   Z Fold 6 binnen  : ~928px (tablet)
+   Tablet           : 600-900px
+   Desktop          : 1024px+
+════════════════════════════════════════ */
+
+/* ── TABLET: Z Fold 6 inner + gewone tablet (600–1023px) ── */
+@media(max-width:1023px){
+  .page{padding:60px 18px 40px}
+  .grid{grid-template-columns:1fr 1fr;gap:14px}
+  /* Nieuws schuift onder de twee kolommen */
+  .news-col{grid-column:1/-1;position:static;flex-direction:row;flex-wrap:wrap;gap:12px}
+  .news-card{flex:1;min-width:280px}
+  .news-list{max-height:320px}
+  .hero-title{font-size:40px}
+  .workflow{gap:7px}
+  .wf-step{font-size:10px;padding:3px 9px}
+}
+
+/* ── SMALL TABLET: 600–767px ── */
+@media(max-width:767px){
+  .ticker-label{padding:0 10px;font-size:8px}
+  .tick-item{padding:0 14px;font-size:10px}
+  .hero-title{font-size:34px}
+  .hero-sub{font-size:12px}
+  .htag{font-size:9px;padding:3px 9px}
+  .feat-stats{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── MOBIEL: GSM + Z Fold buiten + Z Flip binnen (max 599px) ── */
+@media(max-width:599px){
+  .page{padding:52px 12px 32px}
+  .ticker-bar{height:28px}
+  .ticker-label{display:none} /* meer ruimte voor tickers */
+  .tick-item{padding:0 10px;font-size:10px;gap:4px}
+  .tick-price{font-size:10px}
+  .tick-chg{font-size:9px}
+
+  .header{margin-bottom:16px}
+  .logo-icon{width:36px;height:36px;font-size:17px}
+  .logo-text{font-size:16px}
+  .logo-sub{display:none}
+  .lang-btn{padding:5px 12px;font-size:10px}
+
+  .hero{margin-bottom:16px}
+  .hero-label{font-size:9px;letter-spacing:.2em}
+  .hero-title{font-size:30px;letter-spacing:-.3px;margin-bottom:8px}
+  .hero-sub{font-size:12px;margin-bottom:12px}
+  .htag{font-size:9px;padding:3px 8px}
+
+  .workflow{padding:8px 12px;margin-bottom:16px;gap:5px}
+  .wf-label{font-size:8px}
+  .wf-step{font-size:9px;padding:3px 7px}
+  .wf-arr{font-size:10px}
+
+  /* 1 kolom op gsm */
+  .grid{grid-template-columns:1fr;gap:12px}
+  .news-col{position:static;gap:10px}
+  .news-list{max-height:400px}
+  .news-img{height:140px}
+
+  .card-inner{padding:12px 13px}
+  .featured-top{gap:10px}
+  .feat-icon{font-size:22px}
+  .feat-title{font-size:14px}
+  .feat-stats{grid-template-columns:repeat(2,1fr);gap:4px}
+  .fst{padding:5px 3px}
+  .fst-l{font-size:6px}
+  .fst-v{font-size:10px}
+
+  .sec-head{padding-bottom:8px;margin-bottom:2px}
+  .sec-title{font-size:13px}
+  .tool-name{font-size:12px}
+  .tool-desc{font-size:10px}
+
+  .news-head{padding:10px 12px 6px}
+  .news-headline{font-size:12px}
+  .news-desc{display:none} /* verberg beschrijving op gsm voor compactheid */
+}
+
+/* ── Z FLIP BUITEN (klein vierkant scherm ~260px) ── */
+@media(max-width:320px){
+  .hero-title{font-size:24px}
+  .hero-tags{display:none}
+  .workflow{display:none}
+  .page{padding:48px 10px 24px}
+  .tick-item{padding:0 8px;font-size:9px}
+}
 </style>
 </head>
 <body>
