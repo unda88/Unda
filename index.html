@@ -147,7 +147,10 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 .news-source{font-size:9px;color:var(--muted);font-weight:600}
 .news-time{font-size:9px;color:rgba(255,255,255,.2)}
 .news-loading{padding:20px 14px;text-align:center;font-size:11px;color:var(--muted)}
-.refresh-news{background:transparent;border:none;color:rgba(0,255,178,.35);cursor:pointer;font-size:11px;padding:2px 4px;transition:color .2s}
+.ncat-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:3px 7px;font-size:12px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.4)}
+.ncat-btn:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+.ncat-btn.ncat-act{background:rgba(0,255,178,.12);border-color:rgba(0,255,178,.3);color:var(--g)}
+.refresh-news{background:transparent;border:none;color:rgba(0,255,178,.35);cursor:pointer;font-size:12px;padding:2px 4px;transition:color .2s}
 .refresh-news:hover{color:var(--g)}
 .news-spin{display:inline-block;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -280,7 +283,11 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
       <div class="news-card">
         <div class="news-head">
           <div class="news-title-bar"><div class="live-dot"></div><span id="nws-live">Live nieuws</span></div>
-          <button class="refresh-news" onclick="loadNews()" id="news-refresh-btn" title="Ververs">↻</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="ncat-btn ncat-act" id="news-cat-world" onclick="loadNews('world')">🌍</button>
+            <button class="ncat-btn" id="news-cat-be" onclick="loadNews('be')">🇧🇪</button>
+            <button class="refresh-news" onclick="loadNews()" id="news-refresh-btn" title="Ververs">↻</button>
+          </div>
         </div>
         <div id="news-list" class="news-list">
           <div class="news-loading" id="news-loading">📡 Nieuws laden...</div>
@@ -449,56 +456,90 @@ const RSS_FEEDS=[
   {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
   {url:'https://www.ft.com/rss/home/uk',name:'Financial Times'},
 ];
+const RSS_BE_FEEDS=[
+  {url:'https://www.tijd.be/rss/home.xml',name:'De Tijd'},
+  {url:'https://trends.knack.be/rss.xml',name:'Trends'},
+  {url:'https://feeds.rtbf.be/article/rss/category_id/11',name:'RTBF Economie'},
+  {url:'https://www.vrt.be/vrtnws/nl.rss.economics.xml',name:'VRT Economie'},
+];
 
-async function loadNews(){
+let newsCategory='world'; // 'world' or 'be'
+
+async function loadNews(cat){
+  if(cat)newsCategory=cat;
   const btn=document.getElementById('news-refresh-btn');
+  const btnW=document.getElementById('news-cat-world');
+  const btnB=document.getElementById('news-cat-be');
   if(btn)btn.innerHTML='<span class="news-spin">↻</span>';
+  if(btnW){btnW.classList.toggle('ncat-act',newsCategory==='world');btnB.classList.toggle('ncat-act',newsCategory==='be');}
   const list=document.getElementById('news-list');
   list.innerHTML='<div class="news-loading">📡 Nieuws laden...</div>';
 
+  if(newsCategory==='be'){
+    await loadBelgianNews();
+  } else {
+    await loadWorldNews();
+  }
+  if(btn)btn.textContent='↻';
+}
+
+async function loadWorldNews(){
   // ── Bron 1: GNews ──
   try{
     const url=`https://gnews.io/api/v4/top-headlines?category=business&lang=en&max=10&apikey=${GNEWS_KEY}`;
     const r=await fetch(url);
-    if(!r.ok)throw new Error('GNews HTTP '+r.status);
+    if(!r.ok)throw new Error('GNews '+r.status);
     const data=await r.json();
     if(data.articles&&data.articles.length>0){
-      renderNewsArticles(data.articles.map(a=>({
-        title:a.title,
-        desc:a.description,
-        img:a.image,
-        url:a.url,
-        source:a.source?.name||'GNews',
-        date:new Date(a.publishedAt)
-      })),'GNews');
-      if(btn)btn.textContent='↻';
+      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'GNews',date:new Date(a.publishedAt)})));
       return;
     }
   }catch(e){}
-
   // ── Bron 2: Mediastack ──
   try{
     const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&categories=business,technology&languages=en&limit=10`;
     const r=await fetch(url);
-    if(!r.ok)throw new Error('Mediastack HTTP '+r.status);
+    if(!r.ok)throw new Error('Mediastack '+r.status);
     const data=await r.json();
     if(data.data&&data.data.length>0){
-      renderNewsArticles(data.data.map(a=>({
-        title:a.title,
-        desc:a.description,
-        img:a.image,
-        url:a.url,
-        source:a.source||'Mediastack',
-        date:new Date(a.published_at)
-      })),'Mediastack');
-      if(btn)btn.textContent='↻';
+      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'Mediastack',date:new Date(a.published_at)})));
       return;
     }
   }catch(e){}
+  // ── Bron 3: RSS ──
+  await loadRSSFallback(RSS_FEEDS);
+}
 
-  // ── Bron 3: RSS fallback ──
+async function loadBelgianNews(){
+  // ── GNews België ──
+  try{
+    const url=`https://gnews.io/api/v4/top-headlines?country=be&lang=nl&max=10&apikey=${GNEWS_KEY}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('GNews BE '+r.status);
+    const data=await r.json();
+    if(data.articles&&data.articles.length>0){
+      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'België',date:new Date(a.publishedAt)})));
+      return;
+    }
+  }catch(e){}
+  // ── Mediastack België ──
+  try{
+    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=be&languages=nl&limit=10`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('Mediastack BE '+r.status);
+    const data=await r.json();
+    if(data.data&&data.data.length>0){
+      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'België',date:new Date(a.published_at)})));
+      return;
+    }
+  }catch(e){}
+  // ── Belgische RSS feeds ──
+  await loadRSSFallback(RSS_BE_FEEDS);
+}
+
+async function loadRSSFallback(feeds){
   const allItems=[];
-  for(const feed of RSS_FEEDS){
+  for(const feed of feeds){
     try{
       const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
       const r=await fetch(proxy,{cache:'no-store'});
@@ -511,22 +552,15 @@ async function loadNews(){
         const link=item.querySelector('link')?.textContent?.trim()||item.querySelector('link')?.nextSibling?.textContent?.trim();
         const pubDate=item.querySelector('pubDate')?.textContent?.trim();
         const desc=item.querySelector('description')?.textContent?.trim();
-        if(title&&title.length>10){
-          allItems.push({title,desc,img:null,url:link,source:feed.name,date:pubDate?new Date(pubDate):new Date()});
-        }
+        if(title&&title.length>10)allItems.push({title,desc,img:null,url:link,source:feed.name,date:pubDate?new Date(pubDate):new Date()});
       });
     }catch(e){}
   }
-  if(allItems.length>0){
-    allItems.sort((a,b)=>b.date-a.date);
-    renderNewsArticles(allItems.slice(0,15),'RSS');
-  } else {
-    list.innerHTML='<div class="news-loading">Nieuws tijdelijk niet beschikbaar</div>';
-  }
-  if(btn)btn.textContent='↻';
+  if(allItems.length>0){allItems.sort((a,b)=>b.date-a.date);renderNewsArticles(allItems.slice(0,15));}
+  else document.getElementById('news-list').innerHTML='<div class="news-loading">Nieuws tijdelijk niet beschikbaar</div>';
 }
 
-function renderNewsArticles(articles, source){
+function renderNewsArticles(articles){
   const list=document.getElementById('news-list');
   list.innerHTML=articles.map(a=>{
     const timeStr=a.date&&!isNaN(a.date)?timeAgo(a.date):'';
