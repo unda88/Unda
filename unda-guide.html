@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a; --text: #e0fff5; --text-muted: rgba(0,255,178,0.45); --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); }
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+    .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 700px; margin: 0 auto; }
+    .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
+    .nav:hover { color: var(--g); }
+    .header { margin-bottom: 2rem; }
+    .header-wave { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 6px; }
+    .header-title { font-size: 30px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card { background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7); margin-bottom: 16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); }
+    .card-inner { padding: 1.75rem 2rem; }
+    .tool-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; }
+    .tool-icon { font-size: 24px; }
+    .tool-name { font-size: 17px; font-weight: 500; color: var(--g); }
+    .tool-desc { font-size: 12px; color: rgba(180,240,220,0.45); margin-top: 2px; }
+    .step { display: flex; gap: 14px; margin-bottom: 1rem; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(0,255,178,0.1); border: 1px solid rgba(0,255,178,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--g); flex-shrink: 0; font-family: 'DM Mono', monospace; margin-top: 1px; }
+    .step-body { font-size: 13px; color: rgba(180,240,220,0.65); line-height: 1.7; }
+    .step-body strong { color: var(--text); font-weight: 500; }
+    .step-body code { font-family: 'DM Mono', monospace; background: rgba(0,255,178,0.08); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--g); }
+    .divider { height: 1px; margin: 1.25rem 0; background: linear-gradient(90deg, transparent, rgba(0,255,178,0.15), transparent); }
+    .workflow-card { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.15); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 16px; }
+    .workflow-title { font-size: 12px; font-weight: 500; color: var(--g); letter-spacing: 0.05em; margin-bottom: 1rem; text-transform: uppercase; }
+    .workflow-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+    .wf-step { background: rgba(0,255,178,0.08); border: 1px solid rgba(0,255,178,0.2); border-radius: 8px; padding: 6px 12px; color: var(--text); }
+    .wf-arrow { color: rgba(0,255,178,0.4); }
+    .tip { background: rgba(255,217,122,0.07); border: 1px solid rgba(255,217,122,0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: rgba(255,220,130,0.75); line-height: 1.6; margin-top: 10px; }
+    .tip strong { color: var(--gold); }
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div></div>
+<div class="tl"></div>
+<div class="page">
+  <a class="nav" href="unda-index.html">← Terug naar suite</a>
+  <div class="header">
+    <div class="header-wave">Unda · Elliott Wave</div>
+    <div class="header-title">How to use the suite</div>
+  </div>
+
+  <!-- Workflow overview -->
+  <div class="workflow-card">
+    <div class="workflow-title">Complete trading workflow</div>
+    <div class="workflow-flow">
+      <span class="wf-step">⚖️ Risk Calc</span>
+      <span class="wf-arrow">→</span>
+      <span class="wf-step">📐 Kelly</span>
+      <span class="wf-arrow">→</span>
+      <span class="wf-step">Trade</span>
+      <span class="wf-arrow">→</span>
+      <span class="wf-step">📒 Log it</span>
+      <span class="wf-arrow">→</span>
+      <span class="wf-step">🎲 Simulate</span>
+      <span class="wf-arrow">→</span>
+      <span class="wf-step">Optimise</span>
+    </div>
+  </div>
+
+  <!-- Risk Calculator -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="tool-header">
+        <div class="tool-icon">⚖️</div>
+        <div><div class="tool-name">Risk Calculator</div><div class="tool-desc">Use before every single trade</div></div>
+      </div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Portfolio size</strong> — Enter the total value of your trading account in USD.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Margin size</strong> — How much of your portfolio you allocate as margin. Start with <code>10-20%</code> if you are new to leverage.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Risk %</strong> — The maximum % of your margin you are willing to lose on this trade. Most professional traders use <code>1-2%</code>.</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Stop loss %</strong> — Measure this with TradingView's measurement tool. Click on your entry candle and drag to your stop loss level.</div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Check the warning</strong> — Always verify on your exchange that your stop loss % is above the liquidation distance. The calculator warns you if leverage is too high.</div></div>
+      <div class="tip"><strong>Tip:</strong> The leverage number tells you exactly what to set on Bybit, Binance or OKX. The contracts number tells you the position size in USD.</div>
+    </div>
+  </div>
+
+  <!-- Kelly -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="tool-header">
+        <div class="tool-icon">📐</div>
+        <div><div class="tool-name">Kelly Criterion</div><div class="tool-desc">Use weekly to optimise your risk per trade</div></div>
+      </div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Win probability</strong> — Use your real win rate from the Trade Logbook. Never estimate — only use real tracked data.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>R:R ratio</strong> — Use your average R:R from the logbook statistics.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Always use Half-Kelly</strong> — The full Kelly is mathematically optimal but too aggressive for real trading. Divide by 2 for a more conservative and sustainable approach.</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Negative Kelly</strong> — If Kelly returns a negative number, you have no mathematical edge with your current stats. Work on improving your win rate or R:R first.</div></div>
+    </div>
+  </div>
+
+  <!-- Logbook -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="tool-header">
+        <div class="tool-icon">📒</div>
+        <div><div class="tool-name">Trade Logbook</div><div class="tool-desc">Log every trade immediately after closing</div></div>
+      </div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Log every trade</strong> — Win, loss or break even. Consistency is everything. One missing trade makes your statistics unreliable.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Profit factor</strong> — A profit factor above <code>1.5</code> is good. Above <code>2.0</code> is excellent. Below <code>1.0</code> means you are losing money overall.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Win rate vs R:R</strong> — A lower win rate is fine if your R:R is high. With a <code>1:2</code> R:R you only need to win <code>33%</code> of trades to break even.</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Use your real stats</strong> — After 30+ trades, use your real win rate and avg R:R as input for the Kelly Criterion and Trade Simulator.</div></div>
+    </div>
+  </div>
+
+  <!-- Simulator -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="tool-header">
+        <div class="tool-icon">🎲</div>
+        <div><div class="tool-name">Trade Simulator</div><div class="tool-desc">Use to test scenarios before risking real money</div></div>
+      </div>
+      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Use real data</strong> — Input your real win rate and R:R from the logbook for realistic results.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Run multiple simulations</strong> — Set 10-20 simulations to see the range of possible outcomes. The spread between best and worst shows your variance.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Test your risk %</strong> — Try different <code>Bet %</code> values. Higher risk = higher potential gains but also higher ruin risk. The Kelly Criterion tells you the optimal value.</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Ruin risk</strong> — If any simulation line hits $0, your bet size is too high for your win rate. Reduce your risk per trade.</div></div>
+      <div class="tip"><strong>Tip:</strong> Run a 1000 trade simulation with your real stats. If the worst case scenario still shows profit, your system is robust.</div>
+    </div>
+  </div>
+
+  <div class="footer">unda · wave your risk · elliott wave suite</div>
+</div>
+</body>
+</html>

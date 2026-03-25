@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Trade Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a;
+      --red: #ff4444; --pink: #ff6b9d;
+      --text: #e0fff5; --text-dim: rgba(180,240,220,0.6); --text-muted: rgba(0,255,178,0.45);
+      --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05);
+    }
+
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
+
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px);
+      background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 65%); animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%); animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(30px,20px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
+
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10;
+      background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%);
+      box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3);
+      animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 1000px; margin: 0 auto; }
+
+    .header { text-align: center; margin-bottom: 2.5rem; animation: fadeUp 0.6s both; }
+    .header-sub { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 8px; }
+    .header-title { font-size: 32px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 12px rgba(0,255,178,0.2)); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .card { background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,255,178,0.05); margin-bottom: 16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); box-shadow:0 0 8px 1px rgba(0,255,178,0.3); }
+    .card-inner { padding: 1.75rem 2rem; }
+
+    .sec { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .sec::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent); }
+
+    .inputs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 600px) { .inputs-grid { grid-template-columns: 1fr 1fr; } }
+
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .iw { display: flex; align-items: center; background: var(--inp); border-radius: 10px; border: 1px solid rgba(0,255,178,0.12); padding: 0 13px; height: 46px; position: relative; overflow: hidden; transition: border-color .2s, box-shadow .2s; box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
+    .iw::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent); }
+    .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); box-shadow: 0 0 0 3px rgba(0,255,178,0.08); }
+    .px { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--g2); margin-right: 9px; }
+    .iw input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 15px; width: 100%; }
+    .iw input::-webkit-inner-spin-button { opacity: 0.3; }
+
+    .run-btn { width: 100%; margin-top: 1.25rem; padding: 14px; background: rgba(0,255,178,0.1); border: 1px solid rgba(0,255,178,0.35); border-radius: 12px; color: var(--g); font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 500; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+    .run-btn:hover { background: rgba(0,255,178,0.18); box-shadow: 0 0 20px rgba(0,255,178,0.15); }
+    .run-btn:active { transform: scale(0.99); }
+    .run-btn.running { animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+    .stat { background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.1); border-radius: 12px; padding: 14px 12px; text-align: center; position: relative; overflow: hidden; }
+    .stat::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 7px; }
+    .stat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; }
+    .stat-val.green { color: #00ff88; } .stat-val.gold { color: var(--gold); } .stat-val.red { color: var(--red); } .stat-val.white { color: var(--text); }
+
+    .chart-wrap { position: relative; height: 280px; margin-bottom: 1.25rem; }
+
+    .table-wrap { max-height: 260px; overflow-y: auto; border-radius: 10px; border: 1px solid rgba(0,255,178,0.1); }
+    .table-wrap::-webkit-scrollbar { width: 4px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: rgba(0,255,178,0.2); border-radius: 2px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 12px; }
+    thead tr { background: rgba(0,255,178,0.08); position: sticky; top: 0; z-index: 1; }
+    th { padding: 10px 14px; text-align: right; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
+    th:first-child { text-align: left; }
+    td { padding: 8px 14px; text-align: right; border-bottom: 1px solid rgba(0,255,178,0.05); }
+    td:first-child { text-align: left; color: var(--text-muted); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0,255,178,0.03); }
+    .win  { color: #00ff88; } .loss { color: var(--pink); }
+
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: 0.12em; text-transform: uppercase; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+
+<div class="page">
+  <div class="header">
+    <div class="header-sub">Unda · Elliott Wave</div>
+    <div class="header-title">Trade Simulator</div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="sec">Simulation parameters</div>
+      <div class="inputs-grid">
+        <div class="fg">
+          <span class="fl">Account size</span>
+          <div class="iw"><span class="px">$</span><input type="number" id="account" value="10000" min="1"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Win rate (%)</span>
+          <div class="iw"><span class="px">%</span><input type="number" id="winrate" value="40" min="1" max="99" step="1"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Risk/Reward ratio</span>
+          <div class="iw"><span class="px">R</span><input type="number" id="rratio" value="2" min="0.1" step="0.1"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Risk per trade (%)</span>
+          <div class="iw"><span class="px">%</span><input type="number" id="betpct" value="1" min="0.1" max="50" step="0.1"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Number of trades</span>
+          <div class="iw"><span class="px">#</span><input type="number" id="iters" value="100" min="10" max="1000" step="10"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Simulations</span>
+          <div class="iw"><span class="px">x</span><input type="number" id="sims" value="5" min="1" max="20" step="1"></div>
+        </div>
+      </div>
+      <button class="run-btn" onclick="runSim()" id="runBtn">▶ Run Simulation</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card hidden" id="results-card">
+    <div class="card-inner">
+      <div class="sec">Results summary</div>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-label">Avg final balance</div>
+          <div class="stat-val gold" id="st-avg">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Best run</div>
+          <div class="stat-val green" id="st-best">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Worst run</div>
+          <div class="stat-val red" id="st-worst">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Breakeven win rate</div>
+          <div class="stat-val white" id="st-be">—</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="simChart"></canvas>
+      </div>
+
+      <div class="sec">Trade log — simulation 1</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Result</th>
+              <th>Bet $</th>
+              <th>Profit $</th>
+              <th>Balance $</th>
+            </tr>
+          </thead>
+          <tbody id="trade-log"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">unda · wave your risk</div>
+</div>
+
+<script>
+let chartInstance = null;
+
+const COLORS = [
+  'rgba(0,255,178,0.9)',
+  'rgba(255,217,122,0.9)',
+  'rgba(0,212,255,0.9)',
+  'rgba(255,107,157,0.9)',
+  'rgba(180,130,255,0.9)',
+  'rgba(255,160,80,0.9)',
+  'rgba(100,255,150,0.9)',
+  'rgba(255,80,80,0.9)',
+];
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+
+function runSim() {
+  const account  = parseFloat(document.getElementById('account').value);
+  const winRate  = parseFloat(document.getElementById('winrate').value) / 100;
+  const rr       = parseFloat(document.getElementById('rratio').value);
+  const betPct   = parseFloat(document.getElementById('betpct').value) / 100;
+  const iters    = parseInt(document.getElementById('iters').value);
+  const numSims  = parseInt(document.getElementById('sims').value);
+
+  if ([account, winRate, rr, betPct, iters, numSims].some(isNaN)) return;
+
+  const btn = document.getElementById('runBtn');
+  btn.classList.add('running');
+  btn.textContent = '⟳ Simulating...';
+
+  setTimeout(() => {
+    // Run simulations
+    const allSims = [];
+    for (let s = 0; s < numSims; s++) {
+      let bal = account;
+      const history = [bal];
+      const trades  = [];
+      for (let i = 0; i < iters; i++) {
+        const bet    = bal * betPct;
+        const isWin  = Math.random() < winRate;
+        const profit = isWin ? bet * rr : -bet;
+        bal = Math.max(0, bal + profit);
+        history.push(bal);
+        trades.push({ n: i+1, isWin, bet, profit, bal });
+        if (bal <= 0) break;
+      }
+      allSims.push({ history, trades, final: bal });
+    }
+
+    // Stats
+    const finals  = allSims.map(s => s.final);
+    const avg     = finals.reduce((a,b) => a+b, 0) / finals.length;
+    const best    = Math.max(...finals);
+    const worst   = Math.min(...finals);
+    const beWR    = 1 / (1 + rr) * 100;
+
+    document.getElementById('st-avg').textContent   = fmt(avg);
+    document.getElementById('st-best').textContent  = fmt(best);
+    document.getElementById('st-worst').textContent = fmt(worst);
+    document.getElementById('st-be').textContent    = fmtPct(beWR);
+
+    // Chart
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('simChart').getContext('2d');
+    const labels = Array.from({length: iters+1}, (_,i) => i);
+
+    const datasets = allSims.map((sim, i) => ({
+      label: 'Sim ' + (i+1),
+      data: sim.history,
+      borderColor: COLORS[i % COLORS.length],
+      backgroundColor: 'transparent',
+      borderWidth: i === 0 ? 2 : 1.5,
+      pointRadius: 0,
+      tension: 0.3,
+    }));
+
+    // Add breakeven line
+    datasets.push({
+      label: 'Start',
+      data: Array(iters+1).fill(account),
+      borderColor: 'rgba(255,255,255,0.2)',
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderDash: [4, 4],
+      pointRadius: 0,
+    });
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: 'rgba(180,240,220,0.5)', font: { family: 'DM Mono', size: 11 }, boxWidth: 20 } },
+          tooltip: {
+            backgroundColor: 'rgba(0,10,6,0.95)',
+            borderColor: 'rgba(0,255,178,0.3)',
+            borderWidth: 1,
+            titleColor: '#00ffb2',
+            bodyColor: '#e0fff5',
+            callbacks: {
+              label: ctx => ' ' + ctx.dataset.label + ': $' + Math.round(ctx.raw).toLocaleString()
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(0,255,178,0.05)' } },
+          y: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '$' + v.toLocaleString() }, grid: { color: 'rgba(0,255,178,0.05)' } }
+        }
+      }
+    });
+
+    // Trade log — sim 1
+    const tbody = document.getElementById('trade-log');
+    tbody.innerHTML = allSims[0].trades.map(t => `
+      <tr>
+        <td>${t.n}</td>
+        <td class="${t.isWin ? 'win' : 'loss'}">${t.isWin ? 'Win' : 'Loss'}</td>
+        <td>${fmt(t.bet)}</td>
+        <td class="${t.profit >= 0 ? 'win' : 'loss'}">${t.profit >= 0 ? '+' : ''}${fmt(t.profit)}</td>
+        <td>${fmt(t.bal)}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('results-card').classList.remove('hidden');
+    btn.classList.remove('running');
+    btn.textContent = '▶ Run Again';
+  }, 50);
+}
+</script>
+</body>
+</html>

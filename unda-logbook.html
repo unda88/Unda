@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Trade Logbook</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a; --red: #ff4444; --pink: #ff6b9d; --text: #e0fff5; --text-muted: rgba(0,255,178,0.45); --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05); }
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 65%); animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%); animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(30px,20px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+    .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 900px; margin: 0 auto; }
+    .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
+    .nav:hover { color: var(--g); }
+    .header { margin-bottom: 1.75rem; }
+    .header-wave { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 6px; }
+    .header-title { font-size: 30px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card { background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7); margin-bottom: 16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); }
+    .card-inner { padding: 1.75rem 2rem; }
+    .sec { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .sec::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent); }
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+    @media(max-width:700px) { .form-grid { grid-template-columns: repeat(2,1fr); } }
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fl { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .iw { display: flex; align-items: center; background: var(--inp); border-radius: 9px; border: 1px solid rgba(0,255,178,0.12); padding: 0 11px; height: 42px; position: relative; overflow: hidden; transition: border-color .2s; }
+    .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); }
+    .px { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--g2); margin-right: 7px; }
+    .iw input, .iw select { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; width: 100%; }
+    .add-btn { background: rgba(0,255,178,0.1); border: 1px solid rgba(0,255,178,0.3); border-radius: 10px; padding: 11px 20px; color: var(--g); font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; width: 100%; }
+    .add-btn:hover { background: rgba(0,255,178,0.18); }
+    .stats-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
+    @media(max-width:700px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
+    .stat { background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.1); border-radius: 12px; padding: 13px 8px; text-align: center; position: relative; overflow: hidden; }
+    .stat::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .stat-label { font-size: 8px; color: var(--text-muted); letter-spacing: .09em; text-transform: uppercase; margin-bottom: 6px; line-height: 1.3; }
+    .stat-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+    .c-green { color: #00ff88; } .c-gold { color: var(--gold); } .c-red { color: var(--red); } .c-white { color: var(--text); } .c-blue { color: #00d4ff; }
+    .table-wrap { max-height: 400px; overflow-y: auto; border-radius: 10px; border: 1px solid rgba(0,255,178,0.1); }
+    .table-wrap::-webkit-scrollbar { width: 4px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: rgba(0,255,178,0.2); border-radius: 2px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 12px; }
+    thead tr { background: rgba(0,255,178,0.08); position: sticky; top: 0; z-index: 1; }
+    th { padding: 10px 12px; text-align: right; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
+    th:first-child, th:nth-child(2) { text-align: left; }
+    td { padding: 8px 12px; text-align: right; border-bottom: 1px solid rgba(0,255,178,0.05); font-size: 12px; }
+    td:first-child, td:nth-child(2) { text-align: left; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(0,255,178,0.03); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-family: 'Outfit', sans-serif; }
+    .badge-win  { background: rgba(0,255,136,0.12); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
+    .badge-loss { background: rgba(255,68,68,0.1);  color: var(--red); border: 1px solid rgba(255,68,68,0.2); }
+    .badge-be   { background: rgba(255,217,122,0.1); color: var(--gold); border: 1px solid rgba(255,217,122,0.2); }
+    .del-btn { background: transparent; border: none; color: rgba(255,80,80,0.3); cursor: pointer; font-size: 14px; transition: color .2s; padding: 0; }
+    .del-btn:hover { color: rgba(255,80,80,0.7); }
+    .empty { text-align: center; padding: 2rem; font-size: 12px; color: rgba(0,255,178,0.25); }
+    .clear-btn { background: transparent; border: 1px solid rgba(255,80,80,0.2); border-radius: 7px; padding: 5px 12px; font-size: 11px; color: rgba(255,120,120,0.5); cursor: pointer; font-family: 'Outfit', sans-serif; transition: all .2s; }
+    .clear-btn:hover { border-color: rgba(255,80,80,0.45); color: rgba(255,120,120,0.85); }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+<div class="page">
+  <a class="nav" href="unda-index.html">← Terug naar suite</a>
+  <div class="header">
+    <div class="header-wave">Unda · Elliott Wave</div>
+    <div class="header-title">Trade Logbook</div>
+  </div>
+
+  <!-- Add trade -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="sec">Log a trade</div>
+      <div class="form-grid">
+        <div class="fg">
+          <span class="fl">Date</span>
+          <div class="iw"><input type="date" id="t-date"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Pair / Asset</span>
+          <div class="iw"><input type="text" id="t-pair" placeholder="BTCUSDT"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Direction</span>
+          <div class="iw">
+            <select id="t-dir">
+              <option value="Long">Long</option>
+              <option value="Short">Short</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <span class="fl">Result</span>
+          <div class="iw">
+            <select id="t-result">
+              <option value="Win">Win</option>
+              <option value="Loss">Loss</option>
+              <option value="Break even">Break even</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <span class="fl">Risk ($)</span>
+          <div class="iw"><span class="px">$</span><input type="number" id="t-risk" placeholder="100" min="0" step="0.01"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Profit / Loss ($)</span>
+          <div class="iw"><span class="px">$</span><input type="number" id="t-pnl" placeholder="200" step="0.01"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">R:R ratio</span>
+          <div class="iw"><span class="px">R</span><input type="number" id="t-rr" placeholder="2" min="0" step="0.1"></div>
+        </div>
+        <div class="fg">
+          <span class="fl">Notes</span>
+          <div class="iw"><input type="text" id="t-notes" placeholder="Optional..."></div>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addTrade()">+ Add trade to log</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card" id="stats-card">
+    <div class="card-inner">
+      <div class="sec">Statistics</div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-label">Total trades</div><div class="stat-val c-white" id="st-total">0</div></div>
+        <div class="stat"><div class="stat-label">Win rate</div><div class="stat-val c-green" id="st-wr">—</div></div>
+        <div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val c-gold" id="st-rr">—</div></div>
+        <div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val c-blue" id="st-pf">—</div></div>
+        <div class="stat"><div class="stat-label">Net P&L</div><div class="stat-val" id="st-pnl">—</div></div>
+        <div class="stat"><div class="stat-label">Wins</div><div class="stat-val c-green" id="st-wins">0</div></div>
+        <div class="stat"><div class="stat-label">Losses</div><div class="stat-val c-red" id="st-losses">0</div></div>
+        <div class="stat"><div class="stat-label">Break even</div><div class="stat-val c-gold" id="st-be">0</div></div>
+        <div class="stat"><div class="stat-label">Avg win $</div><div class="stat-val c-green" id="st-avgwin">—</div></div>
+        <div class="stat"><div class="stat-label">Avg loss $</div><div class="stat-val c-red" id="st-avgloss">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log table -->
+  <div class="card">
+    <div class="card-inner">
+      <div class="log-header">
+        <div class="sec" style="margin:0;flex:1">Trade history</div>
+        <button class="clear-btn" onclick="clearAll()">Clear all</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Pair</th>
+              <th>Dir</th>
+              <th>Result</th>
+              <th>Risk $</th>
+              <th>P&L $</th>
+              <th>R:R</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="log-body"></tbody>
+        </table>
+        <div class="empty" id="log-empty">No trades logged yet. Add your first trade above.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">unda · wave your risk</div>
+</div>
+
+<script>
+let trades = [];
+try { trades = JSON.parse(localStorage.getItem('unda-logbook') || '[]'); } catch(e) { trades = []; }
+
+// Set today as default date
+document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+
+function save() { try { localStorage.setItem('unda-logbook', JSON.stringify(trades)); } catch(e) {} }
+
+function addTrade() {
+  const date   = document.getElementById('t-date').value;
+  const pair   = document.getElementById('t-pair').value || '—';
+  const dir    = document.getElementById('t-dir').value;
+  const result = document.getElementById('t-result').value;
+  const risk   = parseFloat(document.getElementById('t-risk').value) || 0;
+  const pnl    = parseFloat(document.getElementById('t-pnl').value) || 0;
+  const rr     = parseFloat(document.getElementById('t-rr').value) || 0;
+  const notes  = document.getElementById('t-notes').value || '';
+
+  trades.unshift({ id: Date.now(), date, pair, dir, result, risk, pnl, rr, notes });
+  save();
+  render();
+
+  // Reset
+  document.getElementById('t-pair').value  = '';
+  document.getElementById('t-pnl').value   = '';
+  document.getElementById('t-rr').value    = '';
+  document.getElementById('t-notes').value = '';
+  document.getElementById('t-date').value  = new Date().toISOString().split('T')[0];
+}
+
+function deleteTrade(id) {
+  trades = trades.filter(t => t.id !== id);
+  save();
+  render();
+}
+
+function clearAll() {
+  if (confirm('Clear all trades?')) { trades = []; save(); render(); }
+}
+
+function render() {
+  const body  = document.getElementById('log-body');
+  const empty = document.getElementById('log-empty');
+
+  if (trades.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    body.innerHTML = trades.map((t, i) => {
+      const badgeClass = t.result === 'Win' ? 'badge-win' : t.result === 'Loss' ? 'badge-loss' : 'badge-be';
+      const pnlCol     = t.pnl > 0 ? 'c-green' : t.pnl < 0 ? 'c-red' : 'c-gold';
+      const dirCol     = t.dir === 'Long' ? '#00ff88' : '#ff6b9d';
+      return `<tr>
+        <td style="color:var(--text-muted)">${trades.length - i}</td>
+        <td style="color:var(--text-muted)">${t.date}</td>
+        <td style="color:var(--text)">${t.pair}</td>
+        <td style="color:${dirCol}">${t.dir}</td>
+        <td><span class="badge ${badgeClass}">${t.result}</span></td>
+        <td>$${t.risk.toFixed(2)}</td>
+        <td class="${pnlCol}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
+        <td>${t.rr > 0 ? t.rr.toFixed(2) : '—'}</td>
+        <td style="color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:11px">${t.notes}</td>
+        <td><button class="del-btn" onclick="deleteTrade(${t.id})">×</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Stats
+  const total   = trades.length;
+  const wins    = trades.filter(t => t.result === 'Win');
+  const losses  = trades.filter(t => t.result === 'Loss');
+  const bes     = trades.filter(t => t.result === 'Break even');
+  const wr      = total > 0 ? (wins.length / total * 100).toFixed(1) + '%' : '—';
+  const validRR = trades.filter(t => t.rr > 0);
+  const avgRR   = validRR.length ? (validRR.reduce((a,b) => a+b.rr, 0) / validRR.length).toFixed(2) : '—';
+  const totalWin  = wins.reduce((a,b) => a + b.pnl, 0);
+  const totalLoss = Math.abs(losses.reduce((a,b) => a + b.pnl, 0));
+  const pf        = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : wins.length > 0 ? '∞' : '—';
+  const netPnl    = trades.reduce((a,b) => a + b.pnl, 0);
+  const avgWin    = wins.length ? '$' + (totalWin / wins.length).toFixed(2) : '—';
+  const avgLoss   = losses.length ? '$' + (totalLoss / losses.length).toFixed(2) : '—';
+
+  document.getElementById('st-total').textContent  = total;
+  document.getElementById('st-wr').textContent     = wr;
+  document.getElementById('st-rr').textContent     = avgRR !== '—' ? '1:' + avgRR : '—';
+  document.getElementById('st-pf').textContent     = pf;
+  const pnlEl = document.getElementById('st-pnl');
+  pnlEl.textContent  = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
+  pnlEl.className    = 'stat-val ' + (netPnl >= 0 ? 'c-green' : 'c-red');
+  document.getElementById('st-wins').textContent   = wins.length;
+  document.getElementById('st-losses').textContent = losses.length;
+  document.getElementById('st-be').textContent     = bes.length;
+  document.getElementById('st-avgwin').textContent  = avgWin;
+  document.getElementById('st-avgloss').textContent = avgLoss;
+}
+
+render();
+</script>
+</body>
+</html>

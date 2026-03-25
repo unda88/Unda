@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Risk Reward Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a;
+      --text: #e0fff5; --text-muted: rgba(0,255,178,0.45);
+      --border: rgba(0,255,178,0.18); --bf: rgba(0,255,178,0.55);
+      --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05);
+    }
+
+    html, body {
+      min-height: 100vh; font-family: 'Outfit', sans-serif;
+      background: #000b08; color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      overflow-x: hidden;
+    }
+
+    .bg { position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 600px; height: 600px; top: -150px; left: -150px;
+      background: radial-gradient(circle, rgba(0,255,178,0.09) 0%, transparent 65%);
+      animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 500px; height: 500px; bottom: -100px; right: -100px;
+      background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%);
+      animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(40px,30px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-30px,-40px)} }
+
+    .tl-top { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10;
+      background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%);
+      box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3), 0 0 80px 25px rgba(0,255,178,0.1);
+      animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 92%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    .page { position: relative; z-index: 1; padding: 3rem 1rem; width: 100%; display: flex; justify-content: center; }
+
+    .card {
+      width: 100%; max-width: 460px;
+      background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+      border-radius: 28px; border: 1px solid var(--border); overflow: hidden; position: relative;
+      box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(0,255,178,0.06),
+        0 30px 90px rgba(0,0,0,0.75), 0 0 60px rgba(0,255,178,0.06);
+      animation: cardIn 0.7s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(24px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 35%, rgba(0,255,178,0.85) 50%, rgba(255,255,255,0.5) 65%, transparent);
+      box-shadow: 0 0 8px 1px rgba(0,255,178,0.35); }
+    .card-inner { padding: 2.25rem 2.25rem 2rem; }
+
+    .brand { text-align: center; margin-bottom: 1.5rem; }
+    .brand-wave { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 6px; }
+    .brand-title { font-size: 27px; font-weight: 500;
+      background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      filter: drop-shadow(0 0 10px rgba(0,255,178,0.22)); }
+
+    .hdiv { height: 1px; margin: 0 0 1.5rem;
+      background: linear-gradient(90deg, transparent, rgba(0,255,178,0.22) 30%, rgba(255,255,255,0.1) 50%, rgba(0,255,178,0.22) 70%, transparent);
+      box-shadow: 0 0 6px rgba(0,255,178,0.12); }
+
+    .fg { margin-bottom: 1rem; }
+    .flr { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+    .fl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+
+    .iw {
+      display: flex; align-items: center; background: var(--inp);
+      border-radius: 11px; border: 1px solid rgba(0,255,178,0.12);
+      padding: 0 15px; height: 48px; margin-bottom: 7px; position: relative; overflow: hidden;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.25);
+    }
+    .iw::before { content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent); }
+    .iw:focus-within { border-color: var(--bf); background: rgba(0,255,178,0.04);
+      box-shadow: 0 0 0 3px rgba(0,255,178,0.08), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 14px rgba(0,255,178,0.1); }
+    .iw:last-child { margin-bottom: 0; }
+    .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .r2 .iw { margin-bottom: 0; }
+    .px { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--g2); margin-right: 11px; min-width: 12px; }
+    .iw input { background: transparent; border: none; outline: none; color: var(--text);
+      font-family: 'DM Mono', monospace; font-size: 16px; width: 100%; }
+    .iw input::-webkit-inner-spin-button { opacity: 0.3; }
+
+    .ti { display:inline-flex; align-items:center; justify-content:center;
+      width:16px; height:16px; border-radius:50%; background:rgba(0,255,178,0.07);
+      color:rgba(0,255,178,0.5); font-size:10px; cursor:pointer; position:relative;
+      flex-shrink:0; font-style:normal; border:1px solid rgba(0,255,178,0.18); transition:all .15s; }
+    .ti:hover { background:rgba(0,255,178,0.14); }
+    .ti:hover .tb { display:block; }
+    .tb { display:none; position:absolute; left:22px; top:-4px; z-index:200;
+      background:rgba(0,10,6,0.97); border:1px solid rgba(0,255,178,0.2);
+      border-radius:10px; padding:10px 13px; font-family:'Outfit',sans-serif;
+      font-size:12px; color:#a8ffdf; min-width:200px; max-width:260px;
+      white-space:normal; line-height:1.55; font-style:normal;
+      box-shadow:0 10px 30px rgba(0,0,0,0.65); }
+
+    .results { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-top: 1.5rem; }
+    .ri { background:rgba(0,255,178,0.04); border:1px solid rgba(0,255,178,0.1);
+      border-radius:14px; padding:15px 8px; text-align:center; position:relative; overflow:hidden;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 14px rgba(0,0,0,0.3); }
+    .ri::before { content:''; position:absolute; top:0; left:12%; right:12%; height:1px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent); }
+    .ri.hl { background:rgba(0,255,178,0.09); border-color:rgba(0,255,178,0.3);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.13),0 0 22px rgba(0,255,178,0.1); }
+    .rl { font-size:9px; color:var(--text-muted); margin-bottom:8px; letter-spacing:.09em; text-transform:uppercase; line-height:1.3; }
+    .rv { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:#b8ffe0; }
+    .rv.big { font-size:34px; font-weight:400;
+      background:linear-gradient(135deg,#00ffb2 0%,#fff 50%,var(--gold) 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      filter:drop-shadow(0 0 10px rgba(0,255,178,0.4)); }
+
+    .wb { margin-top:12px; border-radius:12px; padding:12px 14px;
+      border:1px solid; display:none; position:relative; overflow:hidden; }
+    .wb::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .wb.green  { background:rgba(0,255,100,0.06); border-color:rgba(0,255,100,0.22); }
+    .wb.yellow { background:rgba(255,200,0,0.07); border-color:rgba(255,200,0,0.28); }
+    .wb.orange { background:rgba(255,130,0,0.08); border-color:rgba(255,130,0,0.32); }
+    .wb.red    { background:rgba(255,55,55,0.09); border-color:rgba(255,80,80,0.35); }
+    .wd { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .wb.green .wd  { background:#00ff88; box-shadow:0 0 5px #00ff88; }
+    .wb.yellow .wd { background:#ffd700; box-shadow:0 0 5px #ffd700; }
+    .wb.orange .wd { background:#ff8c00; box-shadow:0 0 5px #ff8c00; }
+    .wb.red .wd    { background:#ff4444; box-shadow:0 0 7px #ff4444; }
+    .wir { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+    .wt { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; }
+    .wb.green .wt  { color:#7dffb0; } .wb.yellow .wt { color:#ffd700; }
+    .wb.orange .wt { color:#ffaa44; } .wb.red .wt    { color:#ff8080; }
+    .wbody { font-size:11px; line-height:1.55; }
+    .wb.green .wbody  { color:rgba(180,255,210,0.8); } .wb.yellow .wbody { color:rgba(255,230,130,0.8); }
+    .wb.orange .wbody { color:rgba(255,190,100,0.8); } .wb.red .wbody    { color:rgba(255,170,170,0.8); }
+
+    .footer { text-align:center; margin-top:1.5rem; font-size:10px;
+      color:rgba(0,255,178,0.18); letter-spacing:.12em; text-transform:uppercase; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl-top"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="card-inner">
+
+      <div class="brand">
+        <div class="brand-wave">Unda · Elliott Wave</div>
+        <div class="brand-title">Risk Reward Calculator</div>
+      </div>
+      <div class="hdiv"></div>
+
+      <div class="fg">
+        <div class="flr">
+          <span class="fl">Portfolio size</span>
+          <i class="ti">?<span class="tb">The total value of your trading account in USD.</span></i>
+        </div>
+        <div class="iw"><span class="px">$</span><input type="number" id="portfolio" value="10000" min="1" oninput="calc()"></div>
+      </div>
+
+      <div class="fg">
+        <div class="flr">
+          <span class="fl">Margin size</span>
+          <i class="ti">?<span class="tb">The portion of your portfolio as margin. Adjust % or $ — they sync automatically.</span></i>
+        </div>
+        <div class="r2">
+          <div class="iw"><span class="px">%</span><input type="number" id="marginPct" value="50" step="0.1" oninput="syncMPtoU();calc()"></div>
+          <div class="iw"><span class="px">$</span><input type="number" id="marginUsd" oninput="syncMUtoP();calc()"></div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <div class="flr">
+          <span class="fl">Risk</span>
+          <i class="ti">?<span class="tb">Max amount you are willing to lose from your margin. Keep this at 1–2% for solid risk management.</span></i>
+        </div>
+        <div class="r2">
+          <div class="iw"><span class="px">%</span><input type="number" id="riskPct" value="13" step="0.1" oninput="syncRPtoU();calc()"></div>
+          <div class="iw"><span class="px">$</span><input type="number" id="riskUsd" oninput="syncRUtoP();calc()"></div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <div class="flr">
+          <span class="fl">Stop loss</span>
+          <i class="ti">?<span class="tb">% distance from your entry to your stop loss. Measure this with TradingView's measurement tool.</span></i>
+        </div>
+        <div class="iw"><span class="px">%</span><input type="number" id="slPct" value="1" step="0.01" oninput="calc()"></div>
+      </div>
+
+      <div class="results">
+        <div class="ri">
+          <div class="rl">Portfolio at risk</div>
+          <div class="rv" id="res-par">—</div>
+        </div>
+        <div class="ri hl">
+          <div class="rl">Leverage to use</div>
+          <div class="rv big" id="res-lev">—</div>
+        </div>
+        <div class="ri">
+          <div class="rl">Contracts to use</div>
+          <div class="rv" id="res-con">—</div>
+        </div>
+      </div>
+
+      <div class="wb" id="warn-block">
+        <div class="wir"><div class="wd"></div><div class="wt" id="warn-title"></div></div>
+        <div class="wbody" id="warn-body"></div>
+      </div>
+
+      <div class="footer">unda · wave your risk</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function v(id) { return parseFloat(document.getElementById(id).value); }
+  function set(id, val) {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el) el.value = val;
+  }
+  function ok(...args) { return args.every(x => !isNaN(x) && isFinite(x)); }
+
+  function syncMPtoU() {
+    const p = v('portfolio'), pct = v('marginPct');
+    if (ok(p, pct) && p > 0) set('marginUsd', (pct/100*p).toFixed(2));
+  }
+  function syncMUtoP() {
+    const p = v('portfolio'), usd = v('marginUsd');
+    if (ok(p, usd) && p > 0) set('marginPct', (usd/p*100).toFixed(2));
+  }
+  function syncRPtoU() {
+    const m = v('marginUsd'), pct = v('riskPct');
+    if (ok(m, pct) && m > 0) set('riskUsd', (pct/100*m).toFixed(2));
+  }
+  function syncRUtoP() {
+    const m = v('marginUsd'), usd = v('riskUsd');
+    if (ok(m, usd) && m > 0) set('riskPct', (usd/m*100).toFixed(2));
+  }
+
+  function calc() {
+    const portfolio = v('portfolio');
+    const marginPct = v('marginPct');
+    const riskPct   = v('riskPct');
+    const slPct     = v('slPct');
+
+    if (ok(portfolio, marginPct)) {
+      const mUsd = (marginPct/100)*portfolio;
+      set('marginUsd', mUsd.toFixed(2));
+      if (ok(v('riskPct'))) set('riskUsd', (v('riskPct')/100*mUsd).toFixed(2));
+    }
+
+    if (!ok(portfolio, marginPct, riskPct, slPct) || slPct <= 0 || portfolio <= 0) {
+      document.getElementById('res-par').textContent = '—';
+      document.getElementById('res-lev').textContent = '—';
+      document.getElementById('res-con').textContent = '—';
+      document.getElementById('warn-block').style.display = 'none';
+      return;
+    }
+
+    const marginUsd = (marginPct/100)*portfolio;
+    const riskUsd   = (riskPct/100)*marginUsd;
+    const leverage  = riskPct/slPct;
+    const contracts = marginUsd*leverage;
+    const par       = (riskUsd/portfolio)*100;
+
+    document.getElementById('res-par').textContent = par.toFixed(2)+'%';
+    document.getElementById('res-lev').textContent = Math.round(leverage);
+    document.getElementById('res-con').textContent = Math.round(contracts).toLocaleString('en-US');
+
+    const lev   = Math.round(leverage);
+    const block = document.getElementById('warn-block');
+    block.style.display = 'block';
+    block.className = 'wb';
+
+    const msgs = {
+      green:  ['Low leverage — looking good',        'At '+lev+'x, your stop loss has plenty of room. Safe on any exchange.'],
+      yellow: ['Moderate leverage — stay sharp',     'At '+lev+'x, verify the liquidation price on your exchange before entering.'],
+      orange: ['High leverage — check liquidation',  'At '+lev+'x, confirm your stop loss is above the liquidation distance on your exchange.'],
+      red:    ['Very high leverage — danger zone',   'At '+lev+'x with a '+slPct+'% stop loss, you risk being liquidated before your stop triggers. Widen your stop or reduce risk %.']
+    };
+
+    const key = leverage<=5?'green':leverage<=15?'yellow':leverage<=30?'orange':'red';
+    block.classList.add(key);
+    document.getElementById('warn-title').textContent = msgs[key][0];
+    document.getElementById('warn-body').textContent  = msgs[key][1];
+  }
+
+  calc();
+</script>
+</body>
+</html>

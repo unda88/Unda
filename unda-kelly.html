@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Kelly Criterion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a; --text: #e0fff5; --text-muted: rgba(0,255,178,0.45); --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05); }
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); display: flex; align-items: center; justify-content: center; overflow-x: hidden; }
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 65%); animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%); animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(30px,20px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+    .page { position: relative; z-index: 1; padding: 3rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; text-decoration: none; transition: color 0.2s; }
+    .nav:hover { color: var(--g); }
+    .card { width: 100%; max-width: 460px; background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-radius: 28px; border: 1px solid var(--border); overflow: hidden; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.13), 0 30px 90px rgba(0,0,0,0.75), 0 0 60px rgba(0,255,178,0.06); animation: cardIn 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+    @keyframes cardIn { from{opacity:0;transform:translateY(24px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); box-shadow:0 0 8px 1px rgba(0,255,178,0.35); }
+    .card-inner { padding: 2.25rem 2.25rem 2rem; }
+    .brand { text-align: center; margin-bottom: 1.5rem; }
+    .brand-wave { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 6px; }
+    .brand-title { font-size: 27px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 10px rgba(0,255,178,0.22)); }
+    .hdiv { height: 1px; margin: 0 0 1.5rem; background: linear-gradient(90deg, transparent, rgba(0,255,178,0.22) 30%, rgba(255,255,255,0.1) 50%, rgba(0,255,178,0.22) 70%, transparent); }
+    .fg { margin-bottom: 1rem; }
+    .flr { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+    .fl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; }
+    .iw { display: flex; align-items: center; background: var(--inp); border-radius: 11px; border: 1px solid rgba(0,255,178,0.12); padding: 0 15px; height: 48px; margin-bottom: 7px; position: relative; overflow: hidden; transition: border-color .2s, box-shadow .2s; box-shadow: inset 0 1px 0 rgba(255,255,255,0.07); }
+    .iw::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent); }
+    .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); box-shadow: 0 0 0 3px rgba(0,255,178,0.08); }
+    .px { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--g2); margin-right: 11px; min-width: 12px; }
+    .iw input, .iw select { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px; width: 100%; }
+    .iw input::-webkit-inner-spin-button { opacity: 0.3; }
+    .results { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 1.5rem; }
+    .ri { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.1); border-radius: 14px; padding: 15px 8px; text-align: center; position: relative; overflow: hidden; }
+    .ri::before { content:''; position:absolute; top:0; left:12%; right:12%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent); }
+    .ri.hl { background: rgba(0,255,178,0.09); border-color: rgba(0,255,178,0.3); box-shadow: 0 0 22px rgba(0,255,178,0.1); }
+    .rl { font-size: 9px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: .09em; text-transform: uppercase; }
+    .rv { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: #b8ffe0; }
+    .rv.big { font-size: 30px; font-weight: 400; background: linear-gradient(135deg, #00ffb2 0%, #fff 50%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 10px rgba(0,255,178,0.4)); }
+    .info-box { margin-top: 12px; background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.15); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: rgba(180,240,220,0.6); line-height: 1.6; }
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+<div class="page">
+  <a class="nav" href="unda-index.html">← Terug naar suite</a>
+  <div class="card">
+    <div class="card-inner">
+      <div class="brand">
+        <div class="brand-wave">Unda · Elliott Wave</div>
+        <div class="brand-title">Kelly Criterion</div>
+      </div>
+      <div class="hdiv"></div>
+
+      <div class="fg">
+        <div class="flr"><span class="fl">Win probability (%)</span></div>
+        <div class="iw"><span class="px">%</span><input type="number" id="winp" value="40" min="1" max="99" step="1" oninput="calc()"></div>
+      </div>
+      <div class="fg">
+        <div class="flr"><span class="fl">Risk / Reward ratio</span></div>
+        <div class="iw"><span class="px">R</span><input type="number" id="rr" value="2" min="0.1" step="0.1" oninput="calc()"></div>
+      </div>
+      <div class="fg">
+        <div class="flr"><span class="fl">Account size ($)</span></div>
+        <div class="iw"><span class="px">$</span><input type="number" id="account" value="10000" min="1" step="100" oninput="calc()"></div>
+      </div>
+      <div class="fg">
+        <div class="flr"><span class="fl">Kelly adjustment</span></div>
+        <div class="iw"><span class="px">÷</span>
+          <select id="adj" oninput="calc()">
+            <option value="1">Full Kelly (aggressive)</option>
+            <option value="2" selected>Half Kelly (recommended)</option>
+            <option value="4">Quarter Kelly (conservative)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="ri hl">
+          <div class="rl">Kelly % to risk</div>
+          <div class="rv big" id="kelly-pct">—</div>
+        </div>
+        <div class="ri hl">
+          <div class="rl">Bet size ($)</div>
+          <div class="rv big" id="kelly-usd">—</div>
+        </div>
+        <div class="ri">
+          <div class="rl">Full Kelly %</div>
+          <div class="rv" id="full-kelly">—</div>
+        </div>
+        <div class="ri">
+          <div class="rl">Breakeven win rate</div>
+          <div class="rv" id="breakeven">—</div>
+        </div>
+      </div>
+
+      <div class="info-box" id="info-box">Fill in your parameters to calculate optimal position size.</div>
+      <div class="footer">unda · wave your risk</div>
+    </div>
+  </div>
+</div>
+<script>
+function calc() {
+  const w   = parseFloat(document.getElementById('winp').value) / 100;
+  const rr  = parseFloat(document.getElementById('rr').value);
+  const acc = parseFloat(document.getElementById('account').value);
+  const adj = parseFloat(document.getElementById('adj').value);
+  if ([w, rr, acc].some(isNaN) || w <= 0 || rr <= 0) return;
+
+  const l = 1 - w;
+  const fullKelly = (w * rr - l) / rr;
+  const adjKelly  = fullKelly / adj;
+  const betUsd    = adjKelly * acc;
+  const be        = 1 / (1 + rr) * 100;
+
+  document.getElementById('full-kelly').textContent   = (fullKelly * 100).toFixed(2) + '%';
+  document.getElementById('kelly-pct').textContent    = fullKelly <= 0 ? '0%' : (adjKelly * 100).toFixed(2) + '%';
+  document.getElementById('kelly-usd').textContent    = fullKelly <= 0 ? '$0' : '$' + Math.round(betUsd).toLocaleString();
+  document.getElementById('breakeven').textContent    = be.toFixed(1) + '%';
+
+  const info = document.getElementById('info-box');
+  if (fullKelly <= 0) {
+    info.textContent = 'Negative Kelly — your edge is not sufficient with these parameters. You have no mathematical edge. Increase your win rate or R:R ratio.';
+    info.style.borderColor = 'rgba(255,68,68,0.3)';
+    info.style.color = 'rgba(255,150,150,0.8)';
+  } else if (adjKelly > 0.1) {
+    info.textContent = 'Kelly suggests ' + (adjKelly*100).toFixed(1) + '% risk per trade. This is relatively high — make sure your win rate is based on real tracked data, not estimates.';
+    info.style.borderColor = 'rgba(255,200,0,0.3)';
+    info.style.color = 'rgba(255,220,130,0.8)';
+  } else {
+    info.textContent = 'With a ' + (w*100).toFixed(0) + '% win rate and ' + rr + 'R setup, the optimal risk per trade is ' + (adjKelly*100).toFixed(2) + '% of your account ($' + Math.round(betUsd) + '). Half-Kelly is recommended for real trading.';
+    info.style.borderColor = 'rgba(0,255,178,0.15)';
+    info.style.color = 'rgba(180,240,220,0.6)';
+  }
+}
+calc();
+</script>
+</body>
+</html>
