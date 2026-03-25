@@ -1,7 +1,423 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-<meta http-equiv="refresh" content="0; url=unda-index.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unda · Trading Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.03)}
+html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:var(--text);overflow-x:hidden}
+
+/* ── Background ── */
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 20%,#001f0f 0%,#000d1a 50%,#000508 100%)}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,178,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,.018) 1px,transparent 1px);background-size:44px 44px}
+.orb{position:absolute;border-radius:50%;pointer-events:none}
+.orb1{width:800px;height:800px;top:-300px;left:-200px;background:radial-gradient(circle,rgba(0,255,178,.07) 0%,transparent 60%);animation:drift 16s ease-in-out infinite alternate}
+.orb2{width:600px;height:600px;bottom:-200px;right:-150px;background:radial-gradient(circle,rgba(255,217,122,.06) 0%,transparent 60%);animation:drift2 19s ease-in-out infinite alternate}
+.orb3{width:400px;height:400px;top:50%;left:55%;background:radial-gradient(circle,rgba(0,212,255,.04) 0%,transparent 60%);animation:drift 12s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(50px,35px)}}
+@keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-40px,-50px)}}
+.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:100;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 8px 2px var(--g),0 0 40px 12px rgba(0,255,178,.25);animation:fl 9s ease-in-out infinite}
+@keyframes fl{0%,100%{opacity:1}93%{opacity:.6}94.5%{opacity:1}96%{opacity:.8}97%{opacity:1}}
+
+/* ── Animations ── */
+@keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{opacity:.7}50%{opacity:1}}
+.a1{animation:up .6s .05s both}
+.a2{animation:up .6s .15s both}
+.a3{animation:up .6s .22s both}
+.a4{animation:up .6s .30s both}
+.a5{animation:up .6s .38s both}
+.a6{animation:up .6s .46s both}
+.a7{animation:up .6s .54s both}
+
+/* ── Page ── */
+.page{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 32px 48px}
+
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px}
+.logo-wrap{display:flex;align-items:center;gap:14px}
+.logo-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(0,255,178,.2),rgba(0,255,178,.05));border:1px solid rgba(0,255,178,.3);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px rgba(0,255,178,.12)}
+.logo-text{font-size:20px;font-weight:600;background:linear-gradient(130deg,#9effd9 0%,#fff 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:1px}
+.lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.22);border-radius:9px;padding:7px 18px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;letter-spacing:.06em;font-weight:500}
+.lang-btn:hover{background:rgba(0,255,178,.16);color:var(--g);border-color:rgba(0,255,178,.4)}
+
+/* ── Hero ── */
+.hero{text-align:center;margin-bottom:36px}
+.hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+.hero-label::before,.hero-label::after{content:'';flex:0 0 30px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
+.hero-label::after{background:linear-gradient(90deg,rgba(0,255,178,.4),transparent)}
+.hero-title{font-size:56px;font-weight:700;line-height:1.0;letter-spacing:-.5px;background:linear-gradient(135deg,#c8ffec 0%,#ffffff 40%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(0,255,178,.18));margin-bottom:12px}
+.hero-sub{font-size:15px;color:rgba(200,255,235,.4);line-height:1.6;margin-bottom:22px}
+.hero-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.htag{font-size:10px;padding:4px 13px;border-radius:20px;border:1px solid;letter-spacing:.04em;font-weight:500}
+.htag-g{background:rgba(0,255,178,.08);border-color:rgba(0,255,178,.22);color:rgba(0,255,178,.75)}
+.htag-gold{background:rgba(255,217,122,.08);border-color:rgba(255,217,122,.22);color:rgba(255,217,122,.75)}
+.htag-b{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.22);color:rgba(0,212,255,.75)}
+
+/* ── Workflow strip ── */
+.workflow{background:linear-gradient(90deg,rgba(0,255,178,.04),rgba(0,255,178,.02));border:1px solid rgba(0,255,178,.1);border-radius:14px;padding:12px 20px;margin-bottom:32px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.wf-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--g2);white-space:nowrap;font-weight:600}
+.wf-flow{display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1}
+.wf-step{background:rgba(0,255,178,.07);border:1px solid rgba(0,255,178,.14);border-radius:8px;padding:5px 12px;font-size:11px;color:rgba(200,255,235,.8);white-space:nowrap}
+.wf-arr{color:rgba(0,255,178,.28);font-size:12px}
+
+/* ── Main grid ── */
+.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start}
+
+/* ── Section ── */
+.sec{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sec-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.icon-g{background:rgba(0,255,178,.12);border:1px solid rgba(0,255,178,.25)}
+.icon-gold{background:rgba(255,217,122,.12);border:1px solid rgba(255,217,122,.25)}
+.icon-blue{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25)}
+.sec-title{font-size:15px;font-weight:600;color:var(--text)}
+.sec-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── Cards ── */
+.card{background:var(--card);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .18s,border-color .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.3) 35%,rgba(0,255,178,.7) 50%,rgba(255,255,255,.3) 65%,transparent 95%)}
+.card.gold::after{background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 35%,rgba(255,217,122,.7) 50%,rgba(255,255,255,.2) 65%,transparent 95%)}
+.card a,.card.link{text-decoration:none;display:block;cursor:pointer}
+a.card{text-decoration:none;color:inherit}
+a.card:hover,.card:hover{transform:translateY(-3px);border-color:rgba(0,255,178,.32);box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 28px rgba(0,255,178,.08),inset 0 1px 0 rgba(255,255,255,.1)}
+a.card.gold:hover{border-color:rgba(255,217,122,.32);box-shadow:0 8px 36px rgba(0,0,0,.5),0 0 28px rgba(255,217,122,.08),inset 0 1px 0 rgba(255,255,255,.1)}
+.card.soon{opacity:.38;pointer-events:none}
+.card-inner{padding:16px 18px}
+
+/* ── Featured hero card ── */
+.featured-bar{height:3px;background:linear-gradient(90deg,var(--g),rgba(0,255,178,.15));border-radius:16px 16px 0 0}
+.featured-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
+.feat-icon{font-size:28px;flex-shrink:0;line-height:1}
+.feat-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
+.feat-desc{font-size:11px;color:rgba(200,255,235,.45);line-height:1.6}
+.feat-arr{color:rgba(0,255,178,.3);font-size:16px;margin-left:auto;padding-left:8px;transition:color .2s,transform .2s;flex-shrink:0}
+a.card:hover .feat-arr{color:var(--g);transform:translateX(4px)}
+.feat-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.fst{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:9px;padding:7px 4px;text-align:center}
+.fst-l{font-size:7px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.fst-v{font-family:'DM Mono',monospace;font-size:11px;color:#b8ffe0;font-weight:500}
+
+/* ── Regular tool card ── */
+.tool-row{display:flex;align-items:center;gap:12px}
+.tool-emoji{font-size:22px;flex-shrink:0;width:36px;text-align:center}
+.tool-info{flex:1;min-width:0}
+.tool-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tool-desc{font-size:10px;color:rgba(200,255,235,.42);line-height:1.5}
+.tool-arr{color:rgba(0,255,178,.25);font-size:14px;flex-shrink:0;transition:color .2s,transform .2s}
+a.card:hover .tool-arr{color:var(--g);transform:translateX(3px)}
+.gold .tool-arr{color:rgba(255,217,122,.25)}
+a.card.gold:hover .tool-arr{color:var(--gold);transform:translateX(3px)}
+.soon-badge{font-size:8px;color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 7px;flex-shrink:0;letter-spacing:.1em;text-transform:uppercase}
+
+/* ── Tags ── */
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.tag{font-size:8px;padding:2px 8px;border-radius:10px;letter-spacing:.04em;font-weight:500}
+.tg{background:rgba(0,255,178,.06);border:1px solid rgba(0,255,178,.16);color:rgba(0,255,178,.65)}
+.tgold{background:rgba(255,217,122,.06);border:1px solid rgba(255,217,122,.16);color:rgba(255,217,122,.7)}
+.tb{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.16);color:rgba(0,212,255,.7)}
+.tdim{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.22)}
+
+/* ── Footer ── */
+.footer{text-align:center;margin-top:28px;padding-top:18px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase}
+</style>
 </head>
-<body></body>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="tl"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header a1">
+    <div class="logo-wrap">
+      <div class="logo-icon">🌊</div>
+      <div>
+        <div class="logo-text">Unda</div>
+        <div class="logo-sub" id="l-sub">Elliott Wave · Trading Suite</div>
+      </div>
+    </div>
+    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero a2">
+    <div class="hero-label" id="h-label">Unda · Elliott Wave</div>
+    <div class="hero-title" id="h-title">Trading Suite</div>
+    <div class="hero-sub" id="h-sub">Professionele risicobeheer tools voor elke trader</div>
+    <div class="hero-tags">
+      <span class="htag htag-gold" id="ht1">⚡ Leverage &amp; crypto</span>
+      <span class="htag htag-g" id="ht2">📊 Monte Carlo</span>
+      <span class="htag htag-g" id="ht3">📐 Kelly Criterion</span>
+      <span class="htag htag-b" id="ht4">💼 Live posities</span>
+      <span class="htag htag-b" id="ht5">📈 Technische analyse</span>
+    </div>
+  </div>
+
+  <!-- Workflow -->
+  <div class="workflow a3">
+    <span class="wf-label" id="wf-lbl">⚡ Workflow</span>
+    <div class="wf-flow">
+      <span class="wf-step" id="wf1">📐 Kelly</span><span class="wf-arr">→</span>
+      <span class="wf-step" id="wf2">⚖️ Positie</span><span class="wf-arr">→</span>
+      <span class="wf-step" id="wf3">📈 Trade</span><span class="wf-arr">→</span>
+      <span class="wf-step" id="wf4">📒 Logboek</span><span class="wf-arr">→</span>
+      <span class="wf-step" id="wf5">🎲 Simuleren</span><span class="wf-arr">→</span>
+      <span class="wf-step" id="wf6">🔁 Optimaliseren</span>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+
+    <!-- LEFT col -->
+    <div class="sec a4">
+
+      <!-- Stock Dashboard -->
+      <div class="sec-head">
+        <div class="sec-icon icon-g">📊</div>
+        <div>
+          <div class="sec-title" id="s1t">Stock Dashboard</div>
+          <div class="sec-sub" id="s1s">Aandelen &amp; ETF's — zonder hefboom</div>
+        </div>
+      </div>
+
+      <a class="card" href="unda-stocks.html">
+        <div class="featured-bar"></div>
+        <div class="card-inner">
+          <div class="featured-top">
+            <div class="feat-icon">📊</div>
+            <div style="flex:1">
+              <div class="feat-title" id="fc-t">Stock Dashboard</div>
+              <div class="feat-desc" id="fc-d">Alles-in-één: kosten, TOB, meerwaardebelasting, logboek met statistieken, grafieken en live portfolio tracking.</div>
+            </div>
+            <div class="feat-arr">→</div>
+          </div>
+          <div class="feat-stats">
+            <div class="fst"><div class="fst-l" id="fs1">Calculator</div><div class="fst-v">TOB+tax</div></div>
+            <div class="fst"><div class="fst-l" id="fs2">Logboek</div><div class="fst-v" id="fs2v">+stats</div></div>
+            <div class="fst"><div class="fst-l" id="fs3">Posities</div><div class="fst-v" id="fs3v">live</div></div>
+            <div class="fst"><div class="fst-l" id="fs4">Vrijstelling</div><div class="fst-v">€10K/jr</div></div>
+          </div>
+          <div class="tags">
+            <span class="tag tg">TOB 0,35%</span>
+            <span class="tag tg" id="fc-tag1">Meerwaardebelasting</span>
+            <span class="tag tg" id="fc-tag2">Break-even</span>
+            <span class="tag tg" id="fc-tag3">Verliesoverdracht</span>
+            <span class="tag tgold" id="fc-tag4">Live koersen</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Learn section -->
+      <div class="sec-head" style="margin-top:8px">
+        <div class="sec-icon icon-blue">📖</div>
+        <div>
+          <div class="sec-title" id="s3t">Leren</div>
+          <div class="sec-sub" id="s3s">Elliott Wave, indicators &amp; video's</div>
+        </div>
+      </div>
+
+      <a class="card" href="unda-guide.html">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">📖</div>
+            <div class="tool-info">
+              <div class="tool-name" id="gd-t">Handleiding</div>
+              <div class="tool-desc" id="gd-d">Stap-voor-stap gids voor alle tools samen</div>
+              <div class="tags"><span class="tag tb" id="gd-t1">Guide</span><span class="tag tb" id="gd-t2">Workflow</span></div>
+            </div>
+            <div class="tool-arr">→</div>
+          </div>
+        </div>
+      </a>
+
+      <div class="card soon">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">🌊</div>
+            <div class="tool-info">
+              <div class="tool-name" id="ew-t">Elliott Wave</div>
+              <div class="tool-desc" id="ew-d">Visuele gids: impulsgolven &amp; correcties</div>
+              <div class="tags"><span class="tag tdim">Elliott Wave</span><span class="tag tdim">Impuls</span></div>
+            </div>
+            <span class="soon-badge" id="sb1">Binnenkort</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card soon">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">📈</div>
+            <div class="tool-info">
+              <div class="tool-name" id="ma-t">Moving Averages</div>
+              <div class="tool-desc" id="ma-d">EMA, SMA, VWAP — wanneer gebruik je welke</div>
+              <div class="tags"><span class="tag tdim">EMA</span><span class="tag tdim">SMA</span><span class="tag tdim">VWAP</span></div>
+            </div>
+            <span class="soon-badge" id="sb2">Binnenkort</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card soon">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">🎬</div>
+            <div class="tool-info">
+              <div class="tool-name" id="vid-t">Video's</div>
+              <div class="tool-desc" id="vid-d">Analyses, strategie &amp; live trading setups</div>
+              <div class="tags"><span class="tag tdim">Analyse</span><span class="tag tdim">Live</span></div>
+            </div>
+            <span class="soon-badge" id="sb3">Binnenkort</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- RIGHT col -->
+    <div class="sec a5">
+
+      <div class="sec-head">
+        <div class="sec-icon icon-gold">⚡</div>
+        <div>
+          <div class="sec-title" id="s2t">Trading Suite</div>
+          <div class="sec-sub" id="s2s">Leverage, crypto &amp; futures</div>
+        </div>
+      </div>
+
+      <a class="card gold" href="unda-calculator.html">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">⚖️</div>
+            <div class="tool-info">
+              <div class="tool-name" id="rc-t">Risk Calculator</div>
+              <div class="tool-desc" id="rc-d">Optimale leverage, positiegrootte en contracten op basis van je portefeuille en stop loss.</div>
+              <div class="tags"><span class="tag tgold" id="rc-t1">Leverage</span><span class="tag tg" id="rc-t2">Positiegrootte</span><span class="tag tg" id="rc-t3">Stop loss</span></div>
+            </div>
+            <div class="tool-arr">→</div>
+          </div>
+        </div>
+      </a>
+
+      <a class="card gold" href="unda-simulator.html">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">🎲</div>
+            <div class="tool-info">
+              <div class="tool-name" id="ts-t">Trade Simulator</div>
+              <div class="tool-desc" id="ts-d">Monte Carlo simulatie — hoe evolueert je account over honderden trades?</div>
+              <div class="tags"><span class="tag tgold" id="ts-t1">Monte Carlo</span><span class="tag tg" id="ts-t2">Win rate</span><span class="tag tg" id="ts-t3">R:R ratio</span></div>
+            </div>
+            <div class="tool-arr">→</div>
+          </div>
+        </div>
+      </a>
+
+      <a class="card gold" href="unda-kelly.html">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">📐</div>
+            <div class="tool-info">
+              <div class="tool-name" id="kc-t">Kelly Criterion</div>
+              <div class="tool-desc" id="kc-d">Mathematisch optimale inzetgrootte per trade op basis van je edge en odds.</div>
+              <div class="tags"><span class="tag tgold" id="kc-t1">Kelly criterion</span><span class="tag tg" id="kc-t2">Bet sizing</span><span class="tag tg" id="kc-t3">Edge</span></div>
+            </div>
+            <div class="tool-arr">→</div>
+          </div>
+        </div>
+      </a>
+
+      <a class="card gold" href="unda-logbook.html">
+        <div class="card-inner">
+          <div class="tool-row">
+            <div class="tool-emoji">📒</div>
+            <div class="tool-info">
+              <div class="tool-name" id="lb-t">Trade Logboek</div>
+              <div class="tool-desc" id="lb-d">Log elke leveraged trade. Win rate, R:R en profit factor — automatisch bijgehouden.</div>
+              <div class="tags"><span class="tag tgold" id="lb-t1">Journal</span><span class="tag tg" id="lb-t2">Statistieken</span><span class="tag tg" id="lb-t3">Profit factor</span></div>
+            </div>
+            <div class="tool-arr">→</div>
+          </div>
+        </div>
+      </a>
+
+    </div><!-- /right -->
+
+  </div><!-- /grid -->
+
+  <div class="footer a7" id="footer-txt">Unda · Elliott Wave · Trading Suite · Wave your risk</div>
+
+</div><!-- /page -->
+
+<script>
+let lang='nl';
+const T={
+  nl:{
+    'l-sub':'Elliott Wave · Trading Suite',
+    'h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader',
+    'ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse',
+    'wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren',
+    's1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom',
+    'fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek met statistieken, grafieken en live portfolio tracking.',
+    'fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling',
+    'fc-tag1':'Meerwaardebelasting','fc-tag2':'Break-even','fc-tag3':'Verliesoverdracht','fc-tag4':'Live koersen',
+    's2t':'Trading Suite','s2s':'Leverage, crypto & futures',
+    'rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van je portefeuille en stop loss.',
+    'rc-t1':'Leverage','rc-t2':'Positiegrootte','rc-t3':'Stop loss',
+    'ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?',
+    'ts-t1':'Monte Carlo','ts-t2':'Win rate','ts-t3':'R:R ratio',
+    'kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge en odds.',
+    'kc-t1':'Kelly criterion','kc-t2':'Bet sizing','kc-t3':'Edge',
+    'lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor — automatisch bijgehouden.',
+    'lb-t1':'Journal','lb-t2':'Statistieken','lb-t3':'Profit factor',
+    's3t':'Leren','s3s':'Elliott Wave, indicators & video\'s',
+    'gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','gd-t1':'Guide','gd-t2':'Workflow',
+    'ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties',
+    'ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP — wanneer gebruik je welke',
+    'vid-t':'Video\'s','vid-d':'Analyses, strategie & live trading setups',
+    'sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort',
+    'footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'
+  },
+  en:{
+    'l-sub':'Elliott Wave · Trading Suite',
+    'h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader',
+    'ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis',
+    'wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise',
+    's1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage',
+    'fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook with stats, charts and live portfolio tracking.',
+    'fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption',
+    'fc-tag1':'Capital gains tax','fc-tag2':'Break-even','fc-tag3':'Loss carry','fc-tag4':'Live prices',
+    's2t':'Trading Suite','s2s':'Leverage, crypto & futures',
+    'rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on your portfolio and stop loss.',
+    'rc-t1':'Leverage','rc-t2':'Position size','rc-t3':'Stop loss',
+    'ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?',
+    'ts-t1':'Monte Carlo','ts-t2':'Win rate','ts-t3':'R:R ratio',
+    'kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge and odds.',
+    'kc-t1':'Kelly criterion','kc-t2':'Bet sizing','kc-t3':'Edge',
+    'lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor — tracked automatically.',
+    'lb-t1':'Journal','lb-t2':'Statistics','lb-t3':'Profit factor',
+    's3t':'Learn','s3s':'Elliott Wave, indicators & videos',
+    'gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','gd-t1':'Guide','gd-t2':'Workflow',
+    'ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections',
+    'ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP — when to use which',
+    'vid-t':'Videos','vid-d':'Analysis, strategy & live trading setups',
+    'sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon',
+    'footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'
+  }
+};
+function applyLang(){
+  const t=T[lang];
+  document.getElementById('lang-btn').textContent=lang==='nl'?'EN':'NL';
+  Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
+}
+function toggleLang(){lang=lang==='nl'?'en':'nl';applyLang();}
+applyLang();
+</script>
+</body>
 </html>
