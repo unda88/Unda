@@ -284,8 +284,10 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
         <div class="news-head">
           <div class="news-title-bar"><div class="live-dot"></div><span id="nws-live">Live nieuws</span></div>
           <div style="display:flex;align-items:center;gap:6px">
-            <button class="ncat-btn ncat-act" id="news-cat-world" onclick="loadNews('world')">🌍</button>
-            <button class="ncat-btn" id="news-cat-be" onclick="loadNews('be')">🇧🇪</button>
+            <button class="ncat-btn ncat-act" id="news-cat-world" onclick="loadNews('world')" title="Wereldnieuws">🌍</button>
+            <button class="ncat-btn" id="news-cat-be" onclick="loadNews('be')" title="België">🇧🇪</button>
+            <button class="ncat-btn" id="news-cat-nl" onclick="loadNews('nl')" title="Nederland">🇳🇱</button>
+            <button class="ncat-btn" id="news-cat-uk" onclick="loadNews('uk')" title="United Kingdom">🇬🇧</button>
             <button class="refresh-news" onclick="loadNews()" id="news-refresh-btn" title="Ververs">↻</button>
           </div>
         </div>
@@ -459,8 +461,19 @@ const RSS_FEEDS=[
 const RSS_BE_FEEDS=[
   {url:'https://www.tijd.be/rss/home.xml',name:'De Tijd'},
   {url:'https://trends.knack.be/rss.xml',name:'Trends'},
-  {url:'https://feeds.rtbf.be/article/rss/category_id/11',name:'RTBF Economie'},
   {url:'https://www.vrt.be/vrtnws/nl.rss.economics.xml',name:'VRT Economie'},
+];
+const RSS_NL_FEEDS=[
+  {url:'https://feeds.feedburner.com/rtl-nieuws/binnenland',name:'RTL Nieuws'},
+  {url:'https://www.nu.nl/rss/Economie',name:'NU.nl Economie'},
+  {url:'https://www.nos.nl/rss/economie',name:'NOS Economie'},
+  {url:'https://fd.nl/rss',name:'Financieele Dagblad'},
+];
+const RSS_UK_FEEDS=[
+  {url:'https://feeds.bbci.co.uk/news/uk/rss.xml',name:'BBC UK'},
+  {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
+  {url:'https://www.theguardian.com/uk/rss',name:'The Guardian'},
+  {url:'https://www.ft.com/rss/home/uk',name:'Financial Times'},
 ];
 
 let newsCategory='world'; // 'world' or 'be'
@@ -470,13 +483,19 @@ async function loadNews(cat){
   const btn=document.getElementById('news-refresh-btn');
   const btnW=document.getElementById('news-cat-world');
   const btnB=document.getElementById('news-cat-be');
+  const btnN=document.getElementById('news-cat-nl');
+  const btnU=document.getElementById('news-cat-uk');
   if(btn)btn.innerHTML='<span class="news-spin">↻</span>';
-  if(btnW){btnW.classList.toggle('ncat-act',newsCategory==='world');btnB.classList.toggle('ncat-act',newsCategory==='be');}
+  if(btnW){btnW.classList.toggle('ncat-act',newsCategory==='world');btnB.classList.toggle('ncat-act',newsCategory==='be');if(btnN)btnN.classList.toggle('ncat-act',newsCategory==='nl');if(btnU)btnU.classList.toggle('ncat-act',newsCategory==='uk');}
   const list=document.getElementById('news-list');
   list.innerHTML='<div class="news-loading">📡 Nieuws laden...</div>';
 
   if(newsCategory==='be'){
     await loadBelgianNews();
+  } else if(newsCategory==='nl'){
+    await loadDutchNews();
+  } else if(newsCategory==='uk'){
+    await loadUKNews();
   } else {
     await loadWorldNews();
   }
@@ -537,7 +556,53 @@ async function loadBelgianNews(){
   await loadRSSFallback(RSS_BE_FEEDS);
 }
 
-async function loadRSSFallback(feeds){
+async function loadDutchNews(){
+  try{
+    const url=`https://gnews.io/api/v4/top-headlines?country=nl&lang=nl&max=10&apikey=${GNEWS_KEY}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    if(data.articles&&data.articles.length>0){
+      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'NL',date:new Date(a.publishedAt)})));
+      return;
+    }
+  }catch(e){}
+  try{
+    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=nl&languages=nl&limit=10`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    if(data.data&&data.data.length>0){
+      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'NL',date:new Date(a.published_at)})));
+      return;
+    }
+  }catch(e){}
+  await loadRSSFallback(RSS_NL_FEEDS);
+}
+
+async function loadUKNews(){
+  try{
+    const url=`https://gnews.io/api/v4/top-headlines?country=gb&lang=en&max=10&apikey=${GNEWS_KEY}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    if(data.articles&&data.articles.length>0){
+      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'UK',date:new Date(a.publishedAt)})));
+      return;
+    }
+  }catch(e){}
+  try{
+    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=gb&languages=en&limit=10`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    if(data.data&&data.data.length>0){
+      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'UK',date:new Date(a.published_at)})));
+      return;
+    }
+  }catch(e){}
+  await loadRSSFallback(RSS_UK_FEEDS);
+}
   const allItems=[];
   for(const feed of feeds){
     try{
