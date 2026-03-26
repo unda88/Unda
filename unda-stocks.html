@@ -421,7 +421,7 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
             </div>
             <div class="fg"><span class="fl t-hf-qty">Aantal</span><div class="iw"><span class="px">#</span><input type="number" id="hf-qty" placeholder="10" step="any"></div></div>
             <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-buy">Gem. aankoopprijs (€)</span><div class="iw"><span class="px">€</span><input type="number" id="hf-buy" placeholder="150.00" step="0.01"></div></div>
-            <div id="fg-metal-hint" style="display:none;grid-column:1/-1;font-size:10px;color:var(--muted);padding:4px 0">Vul aankoopprijs per gram in. 1 oz = 31.10g · 1 kg = 1000g</div>
+            <div id="fg-metal-hint" style="display:none;grid-column:1/-1;font-size:10px;color:var(--muted);padding:4px 0">⚠️ Vul aankoopprijs <strong>per gram</strong> in · 1 oz = 31.10g · 1 kg = 1000g</div>
           </div>
           <button class="btn-add t-hadd-btn" onclick="addHolding()" style="margin-bottom:0">+ Toevoegen</button>
         </div></div>
@@ -1013,9 +1013,17 @@ function setHoldType(t){
   fe('fg-metal-unit').style.display=isMetal?'':'none';
   fe('fg-metal-hint').style.display=isMetal?'':'none';
   if(!isMetal)fe('hf-ticker').placeholder=t==='stock'?'AAPL / ABI.BR':'BTC / ETH';
-  if(isMetal){fe('hf-name').placeholder='Zilver munten / Goud baar...';fe('hf-buy').placeholder='0.85';}
-  else{fe('hf-name').placeholder='Apple / Bitcoin...';}
-}
+  if(isMetal){
+    fe('hf-name').placeholder='Zilver munten / Goud baar...';
+    fe('hf-buy').placeholder='0.85';
+    const buyLabel=document.querySelector('.t-hf-buy');
+    if(buyLabel)buyLabel.textContent='Aankoopprijs per gram (€)';
+  } else {
+    fe('hf-name').placeholder='Apple / Bitcoin...';
+    fe('hf-buy').placeholder='150.00';
+    const buyLabel=document.querySelector('.t-hf-buy');
+    if(buyLabel)buyLabel.textContent=lang==='nl'?'Gem. aankoopprijs (€)':'Avg buy price (€)';
+  }
 function saveHoldings(){
   try{localStorage.setItem('us3-holdings',JSON.stringify(holdings));}catch(e){}
 }
@@ -1044,7 +1052,9 @@ function addHolding(){
     holdings.push({id:Date.now(),name,ticker,type:hTypeNew,qty,avgBuy,livePrice:null,err:null});
   }
   saveHoldings();
-  fe('hf-name').value='';fe('hf-ticker').value='';fe('hf-qty').value='';fe('hf-buy').value='';
+  fe('hf-name').value='';fe('hf-qty').value='';fe('hf-buy').value='';
+  if(hTypeNew!=='metal')fe('hf-ticker').value='';
+  else setHoldType('metal');
   renderHoldingsTable();renderHoldingPie();
 }
 function delHolding(id){
