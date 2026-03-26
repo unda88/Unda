@@ -180,43 +180,36 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
 
 /* ── TABLET (max 900px) ── */
 @media(max-width:900px){
-  .shell{padding:10px 10px;padding-top:82px;height:auto;min-height:100vh}
-  .panel.active{flex-direction:column;height:auto}
-  .col-l{width:100%;flex-shrink:1;overflow-y:visible;padding-right:0}
-  .col-r{overflow-y:visible}
+  .shell{padding:10px 10px;padding-top:82px;height:auto;min-height:100vh;overflow-y:auto}
+  .panel{height:auto;overflow:visible}
+  .panel.active{flex-direction:column;height:auto;overflow:visible}
+  .col-l{width:100%;flex-shrink:1;overflow-y:visible;padding-right:0;max-height:none}
+  .col-r{overflow-y:visible;max-height:none}
   .tab{font-size:11px;padding:7px 0}
 }
 
 /* ── MOBIEL (max 600px) ── */
 @media(max-width:600px){
-  .shell{padding:8px 8px;padding-top:80px;height:auto;min-height:100vh}
-  .tabs{gap:2px;padding:3px;border-radius:12px}
-  .tab{font-size:10px;padding:6px 0}
+  .shell{padding:8px 8px;padding-top:80px;height:auto;min-height:100vh;overflow-y:auto}
+  .panel{height:auto;overflow:visible}
   .panel.active{flex-direction:column;height:auto;overflow:visible}
-  .col-l{width:100%;overflow-y:visible;padding-right:0}
-  .col-r{min-width:0;overflow-y:visible}
+  .col-l{width:100%;overflow-y:visible;padding-right:0;max-height:none}
+  .col-r{min-width:0;overflow-y:visible;max-height:none}
   .card{border-radius:10px}
   .ci{padding:10px 12px}
   .topbar{flex-wrap:wrap;gap:6px}
   .brand-logo{font-size:13px}
   .topbar-right{gap:6px}
   .back-link,.lang-btn{font-size:10px;padding:4px 10px}
-  /* Tabellen scrollen horizontaal */
-  .htwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  /* Stats */
+  .htwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:none}
   .hstats{grid-template-columns:repeat(3,1fr);gap:6px}
   .hstatv{font-size:12px}
   .hstatl{font-size:7px}
-  /* Charts kleiner */
   .chart-row{flex-direction:column}
-  /* Type toggle */
   .type-toggle{flex-wrap:wrap}
   .ttbtn{font-size:10px;padding:5px 3px}
-  /* Forms */
   .hform-grid{gap:8px}
-  .fg{gap:4px}
   .fl{font-size:10px}
-  /* Ticker */
   .ticker-label{font-size:7px;padding:0 6px}
   .tick-item{padding:0 8px}
   .tick-sym{font-size:8px}
@@ -229,7 +222,7 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
   .shell{padding:6px 6px;padding-top:78px}
   .tabs{gap:1px}
   .tab{font-size:9px;padding:5px 0}
-  .hstats{grid-template-columns:1fr 1fr 1fr;gap:4px}
+  .hstats{gap:4px}
   .hstatv{font-size:11px}
   .ticker-label{display:none}
 }
