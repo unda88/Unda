@@ -75,8 +75,58 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 @media(max-width:599px){.fg-hero{grid-template-columns:1fr 1fr;gap:10px}.fg-hero .hero{grid-column:1/-1;order:-1}}
 @media(max-width:400px){.fg-hero{grid-template-columns:1fr 1fr}.fg-value{font-size:22px}}
 
-/* ── HERO ── */
-.hero{text-align:center}
+/* dark mode toggle */
+.dark-toggle-wrap{display:flex;align-items:center;gap:5px}
+.dm-sun,.dm-moon{font-size:13px;line-height:1}
+.dm-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0}
+.dm-toggle input{opacity:0;width:0;height:0;position:absolute}
+.dm-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;transition:background .25s}
+.dm-slider::before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:rgba(255,255,255,.7);border-radius:50%;transition:transform .25s}
+.dm-toggle input:checked + .dm-slider{background:rgba(99,102,241,.5);border-color:rgba(99,102,241,.6)}
+.dm-toggle input:checked + .dm-slider::before{transform:translateX(16px);background:#fff}
+
+/* light mode overrides */
+body.light-mode{background:#f0f4f8}
+body.light-mode .bg{background:linear-gradient(135deg,#e8f0fe 0%,#f0f4f8 50%,#e8f5f0 100%)}
+body.light-mode .bg-grid{background-image:linear-gradient(rgba(0,80,40,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,80,40,.08) 1px,transparent 1px);background-size:44px 44px}
+body.light-mode .orb1{background:radial-gradient(circle,rgba(0,200,120,.12) 0%,transparent 60%)}
+body.light-mode .orb2{background:radial-gradient(circle,rgba(255,200,50,.1) 0%,transparent 60%)}
+body.light-mode .ticker-bar{background:#1a2e1a;border-bottom:1px solid #0a1a0a}
+body.light-mode .logo-text{background:linear-gradient(130deg,#003d28,#005a3a 50%,#7a5a00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+body.light-mode .logo-sub{color:rgba(0,80,40,.55)}
+body.light-mode .hero-title{background:linear-gradient(135deg,#002d1e 0%,#004d30 40%,#7a5a00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:none}
+body.light-mode .hero-sub{color:rgba(0,50,30,.55)}
+body.light-mode .htag{border-color:rgba(0,100,50,.3);color:rgba(0,60,30,.8);background:rgba(0,150,80,.08)}
+body.light-mode .htag-gold{border-color:rgba(150,100,0,.3);color:rgba(120,80,0,.9);background:rgba(200,150,0,.08)}
+body.light-mode .workflow{background:rgba(0,100,50,.06);border-color:rgba(0,100,50,.15)}
+body.light-mode .wf-label,.wf-arr{color:rgba(0,80,40,.5)}
+body.light-mode .wf-step{background:rgba(255,255,255,.7);border-color:rgba(0,100,50,.2);color:#003d28}
+body.light-mode .card{background:rgba(255,255,255,.85);border-color:rgba(0,100,50,.18);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+body.light-mode .sec-title{color:#002d1e}
+body.light-mode .sec-sub{color:rgba(0,60,30,.6)}
+body.light-mode .tool-name{color:#001a10}
+body.light-mode .tool-desc{color:rgba(0,50,25,.65)}
+body.light-mode .tag{background:rgba(0,100,50,.08);border-color:rgba(0,100,50,.2);color:rgba(0,80,40,.8)}
+body.light-mode .featured-top{border-color:rgba(0,100,50,.15)}
+body.light-mode .feat-title{color:#001a10}
+body.light-mode .fst{background:rgba(0,100,50,.06);border-color:rgba(0,100,50,.12)}
+body.light-mode .fst-l{color:rgba(0,70,35,.55)}
+body.light-mode .fst-v{color:#001a10}
+body.light-mode .news-card{background:rgba(255,255,255,.85);border-color:rgba(0,100,50,.18)}
+body.light-mode .news-head{border-color:rgba(0,100,50,.12)}
+body.light-mode .news-headline{color:#001a10;font-weight:500}
+body.light-mode .news-source{color:rgba(0,80,40,.7)}
+body.light-mode .news-desc{color:rgba(0,50,25,.65)}
+body.light-mode .live-dot{background:#e53935}
+body.light-mode .ncat-btn{border-color:rgba(0,100,50,.2);color:rgba(0,60,30,.6)}
+body.light-mode .ncat-act{background:rgba(0,120,60,.12);border-color:rgba(0,120,60,.4);color:#003d28}
+body.light-mode .fg-widget{background:rgba(255,255,255,.85);border-color:rgba(0,100,50,.2)}
+body.light-mode .fg-title{color:#001a10}
+body.light-mode .fg-subtitle{color:rgba(0,70,35,.6)}
+body.light-mode .footer{color:rgba(0,60,30,.3);border-color:rgba(0,80,40,.1)}
+body.light-mode .lang-btn{background:rgba(0,100,50,.08);border-color:rgba(0,100,50,.25);color:#003d28}
+body.light-mode .back-btn{color:rgba(0,80,40,.6);border-color:rgba(0,100,50,.2)}
+body.light-mode .header{border-color:rgba(0,100,50,.1)}
 .hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 .hero-label::before,.hero-label::after{content:'';flex:0 0 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
 .hero-label::after{background:linear-gradient(90deg,rgba(0,255,178,.4),transparent)}
@@ -300,7 +350,17 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
         <div class="logo-sub" id="l-sub">Elliott Wave · Trading Suite</div>
       </div>
     </div>
-    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="dark-toggle-wrap">
+        <span class="dm-sun">☀️</span>
+        <label class="dm-toggle">
+          <input type="checkbox" id="dark-chk" onchange="toggleDark()">
+          <span class="dm-slider"></span>
+        </label>
+        <span class="dm-moon">🌙</span>
+      </div>
+      <button class="lang-btn" id="lang-btn" onclick="cycleLang()">NL</button>
+    </div>
   </div>
 
   <!-- Hero + Fear & Greed -->
@@ -308,8 +368,8 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
     <!-- Stock Fear & Greed (links) -->
     <div class="fg-widget" id="fg-stock">
-      <div class="fg-title">📈 VIX Angstmeter</div>
-      <div class="fg-subtitle">Wall Street Fear Index</div>
+      <div class="fg-title" id="vix-title">📈 VIX</div>
+      <div class="fg-subtitle" id="vix-sub">Volatility Index</div>
       <div class="fg-gauge-wrap">
         <svg class="fg-gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -476,28 +536,43 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
 <script>
 // ── Lang ──
+const LANGS=['nl','en','es','fr'];
+let langIdx=0;
 let lang='nl';
 const T={
-  nl:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren','s1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom','fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.','fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling','fc-t1':'Meerwaardebelasting','fc-t2':'Break-even','fc-t3':'Live koersen','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.','rc-t2':'Positiegrootte','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.','lb-t2':'Statistieken','lb-t3':'Profit factor','s3t':'Leren','s3s':'Elliott Wave, indicators & video\'s','gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Video\'s','vid-d':'Analyses & live setups','sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort','nws-t':'Marktnieuws','nws-s':'Financieel & wereldnieuws','nws-live':'Live nieuws','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'},
-  en:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise','s1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage','fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook, charts and live portfolio tracking.','fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption','fc-t1':'Capital gains tax','fc-t2':'Break-even','fc-t3':'Live prices','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on portfolio and stop loss.','rc-t2':'Position size','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor tracked automatically.','lb-t2':'Statistics','lb-t3':'Profit factor','s3t':'Learn','s3s':'Elliott Wave, indicators & videos','gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Analysis & live setups','sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon','nws-t':'Market News','nws-s':'Financial & world news','nws-live':'Live news','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk'}
+  nl:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren','s1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom','fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.','fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling','fc-t1':'Meerwaardebelasting','fc-t2':'Break-even','fc-t3':'Live koersen','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.','rc-t2':'Positiegrootte','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.','lb-t2':'Statistieken','lb-t3':'Profit factor','s3t':'Leren','s3s':'Elliott Wave, indicators & video\'s','gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Video\'s','vid-d':'Analyses & live setups','sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort','nws-t':'Marktnieuws','nws-s':'Financieel & wereldnieuws','nws-live':'Live nieuws','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
+  en:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise','s1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage','fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook, charts and live portfolio tracking.','fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption','fc-t1':'Capital gains tax','fc-t2':'Break-even','fc-t3':'Live prices','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on portfolio and stop loss.','rc-t2':'Position size','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor tracked automatically.','lb-t2':'Statistics','lb-t3':'Profit factor','s3t':'Learn','s3s':'Elliott Wave, indicators & videos','gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Analysis & live setups','sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon','nws-t':'Market News','nws-s':'Financial & world news','nws-live':'Live news','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
+  es:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Herramientas profesionales de gestión de riesgo para traders','ht1':'⚡ Apalancamiento & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Criterio Kelly','ht4':'💼 Posiciones en vivo','ht5':'📈 Análisis técnico','wf-lbl':'⚡ Flujo de trabajo','wf1':'📐 Kelly','wf2':'⚖️ Posición','wf3':'📈 Trade','wf4':'📒 Diario','wf5':'🎲 Simular','wf6':'🔁 Optimizar','s1t':'Panel de acciones','s1s':'Acciones & ETFs — sin apalancamiento','fc-t':'Panel de acciones','fc-d':'Todo en uno: costes, impuestos, diario, gráficos y seguimiento de cartera en vivo.','fs1':'Calculadora','fs2':'Diario','fs2v':'+stats','fs3':'Posiciones','fs3v':'vivo','fs4':'Exención','fc-t1':'Impuesto ganancias','fc-t2':'Break-even','fc-t3':'Precios en vivo','s2t':'Suite de trading','s2s':'Apalancamiento, crypto & futuros','rc-t':'Calculadora de riesgo','rc-d':'Apalancamiento óptimo, tamaño de posición y contratos basados en cartera y stop loss.','rc-t2':'Tamaño posición','rc-t3':'Stop loss','ts-t':'Simulador de trades','ts-d':'Simulación Monte Carlo — cómo evoluciona tu cuenta en cientos de trades.','ts-t2':'Win rate','ts-t3':'Ratio R:R','kc-t':'Criterio de Kelly','kc-d':'Tamaño óptimo de apuesta por trade basado en tu ventaja.','kc-t2':'Apuesta','kc-t3':'Ventaja','lb-t':'Diario de trades','lb-d':'Registra cada trade apalancado. Win rate, R:R y factor de beneficio automáticos.','lb-t2':'Estadísticas','lb-t3':'Factor beneficio','s3t':'Aprender','s3s':'Elliott Wave, indicadores & videos','gd-t':'Guía','gd-d':'Guía paso a paso para usar todas las herramientas','ew-t':'Elliott Wave','ew-d':'Guía visual: ondas impulsivas & correctivas','ma-t':'Medias móviles','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Análisis & setups en vivo','sb1':'Próximamente','sb2':'Próximamente','sb3':'Próximamente','nws-t':'Noticias del mercado','nws-s':'Noticias financieras & mundiales','nws-live':'En directo','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
+  fr:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Outils professionnels de gestion des risques pour chaque trader','ht1':'⚡ Levier & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Critère de Kelly','ht4':'💼 Positions en direct','ht5':'📈 Analyse technique','wf-lbl':'⚡ Flux de travail','wf1':'📐 Kelly','wf2':'⚖️ Position','wf3':'📈 Trade','wf4':'📒 Journal','wf5':'🎲 Simuler','wf6':'🔁 Optimiser','s1t':'Tableau de bord','s1s':'Actions & ETFs — sans levier','fc-t':'Tableau de bord','fc-d':'Tout-en-un: coûts, taxes, journal, graphiques et suivi de portefeuille en direct.','fs1':'Calculatrice','fs2':'Journal','fs2v':'+stats','fs3':'Positions','fs3v':'direct','fs4':'Exonération','fc-t1':'Impôt sur gains','fc-t2':'Seuil de rentabilité','fc-t3':'Prix en direct','s2t':'Suite de trading','s2s':'Levier, crypto & futures','rc-t':'Calculatrice de risque','rc-d':'Levier optimal, taille de position et contrats basés sur le portefeuille et stop loss.','rc-t2':'Taille position','rc-t3':'Stop loss','ts-t':'Simulateur de trades','ts-d':'Simulation Monte Carlo — comment évolue votre compte sur des centaines de trades.','ts-t2':'Win rate','ts-t3':'Ratio R:R','kc-t':'Critère de Kelly','kc-d':'Taille de mise optimale par trade basée sur votre avantage.','kc-t2':'Mise','kc-t3':'Avantage','lb-t':'Journal de trades','lb-d':'Enregistrez chaque trade avec levier. Win rate, R:R et facteur de profit automatiques.','lb-t2':'Statistiques','lb-t3':'Facteur profit','s3t':'Apprendre','s3s':'Elliott Wave, indicateurs & vidéos','gd-t':'Guide','gd-d':'Guide étape par étape pour utiliser tous les outils','ew-t':'Elliott Wave','ew-d':'Guide visuel: vagues impulsives & correctives','ma-t':'Moyennes mobiles','ma-d':'EMA, SMA, VWAP','vid-t':'Vidéos','vid-d':'Analyses & setups en direct','sb1':'Bientôt','sb2':'Bientôt','sb3':'Bientôt','nws-t':'Actualités marché','nws-s':'Actualités financières & mondiales','nws-live':'En direct','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'}
 };
 function applyLang(){
-  const t=T[lang];
-  document.getElementById('lang-btn').textContent=lang==='nl'?'EN':'NL';
+  const t=T[lang]||T.nl;
   Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
 }
-function toggleLang(){
-  lang=lang==='nl'?'en':'nl';
+function cycleLang(){
+  langIdx=(langIdx+1)%LANGS.length;
+  lang=LANGS[langIdx];
+  document.getElementById('lang-btn').textContent=lang.toUpperCase();
   applyLang();
-  // Herrender Fear & Greed labels
   if(fgValues.crypto!=null)_renderFG('crypto',fgValues.crypto,fgValues.cryptoPrev);
   if(fgValues.stock!=null)_renderFG('stock',fgValues.stock,fgValues.stockPrev);
-  // Widget titels
-  const st=document.querySelector('#fg-stock .fg-subtitle');
-  const ct=document.querySelector('#fg-crypto .fg-subtitle');
-  if(st)st.textContent=lang==='nl'?'Wall Street Fear Index':'Wall Street Fear Index';
-  if(ct)ct.textContent=lang==='nl'?'Fear & Greed Index':'Fear & Greed Index';
 }
+
+// ── Dark / Light mode ──
+function toggleDark(){
+  const dark=document.getElementById('dark-chk').checked;
+  document.body.classList.toggle('light-mode',!dark);
+  try{localStorage.setItem('unda-theme',dark?'dark':'light');}catch(e){}
+}
+(function(){
+  try{
+    const t=localStorage.getItem('unda-theme');
+    const chk=document.getElementById('dark-chk');
+    if(t==='light'){document.body.classList.add('light-mode');if(chk)chk.checked=false;}
+    else{if(chk)chk.checked=true;}
+  }catch(e){}
+})();
+
 applyLang();
 
 // ── TICKER ──
