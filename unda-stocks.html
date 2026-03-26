@@ -1033,6 +1033,9 @@ function savePortHistory(){
   try{localStorage.setItem('us3-porthist',JSON.stringify(portHistory));}catch(e){}
 }
 function addHolding(){
+  // Lees actief type direct van de knoppen
+  const currentType=document.querySelector('#htype-metal.act-m')?'metal':document.querySelector('#htype-crypto.act-c')?'crypto':'stock';
+  hTypeNew=currentType;
   const name=fe('hf-name').value.trim();
   const qty=parseFloat(fe('hf-qty').value)||0;
   const avgBuy=parseFloat(fe('hf-buy').value)||0;
