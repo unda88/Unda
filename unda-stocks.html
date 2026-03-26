@@ -1024,6 +1024,7 @@ function setHoldType(t){
     const buyLabel=document.querySelector('.t-hf-buy');
     if(buyLabel)buyLabel.textContent=lang==='nl'?'Gem. aankoopprijs (€)':'Avg buy price (€)';
   }
+}
 function saveHoldings(){
   try{localStorage.setItem('us3-holdings',JSON.stringify(holdings));}catch(e){}
 }
