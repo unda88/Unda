@@ -23,25 +23,37 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .a4{animation:up .6s .30s both}.a5{animation:up .6s .38s both}
 
 /* ── TICKER ── */
-.ticker-bar{position:fixed;top:2px;left:0;right:0;z-index:150;height:32px;background:rgba(0,8,5,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,255,178,.12);display:flex;align-items:center;overflow:hidden}
-.ticker-label{flex-shrink:0;padding:0 14px;font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
+.ticker-wrap{position:fixed;top:2px;left:0;right:0;z-index:150;display:flex;flex-direction:column}
+.ticker-bar{height:26px;background:rgba(0,8,5,.92);backdrop-filter:blur(20px);display:flex;align-items:center;overflow:hidden}
+.ticker-bar-1{border-bottom:1px solid rgba(0,255,178,.1)}
+.ticker-bar-2{border-bottom:1px solid rgba(255,217,122,.1);background:rgba(0,5,10,.92)}
+.ticker-bar-3{border-bottom:1px solid rgba(0,200,255,.1);background:rgba(0,3,12,.92)}
+.ticker-label{flex-shrink:0;padding:0 10px;font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
+.ticker-bar-2 .ticker-label{color:var(--gold);border-right-color:rgba(255,217,122,.15);background:rgba(255,217,122,.04)}
+.ticker-bar-3 .ticker-label{color:#00d4ff;border-right-color:rgba(0,212,255,.15);background:rgba(0,212,255,.04)}
 .ticker-track{flex:1;overflow:hidden;position:relative;height:100%}
-.ticker-inner{display:flex;align-items:center;height:100%;gap:0;white-space:nowrap;animation:tickerScroll 120s linear infinite}
-.ticker-inner:hover{animation-play-state:paused}
+.ticker-inner{display:flex;align-items:center;height:100%;gap:0;white-space:nowrap;animation:tickerScroll 180s linear infinite}
+.ticker-inner-rev{animation:tickerScrollRev 160s linear infinite}
+.ticker-inner:hover,.ticker-inner-rev:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.tick-item{display:inline-flex;align-items:center;gap:6px;padding:0 20px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:11px;cursor:default}
-.tick-sym{color:rgba(200,255,235,.7);font-weight:500;font-size:10px}
+@keyframes tickerScrollRev{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+.tick-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:10px;cursor:default}
+.ticker-bar-2 .tick-item{border-right-color:rgba(255,217,122,.07)}
+.ticker-bar-3 .tick-item{border-right-color:rgba(0,212,255,.07)}
+.tick-sym{color:rgba(200,255,235,.7);font-weight:500;font-size:9px}
+.ticker-bar-2 .tick-sym{color:rgba(255,235,180,.7)}
+.ticker-bar-3 .tick-sym{color:rgba(180,230,255,.7)}
 .tick-price{color:var(--text)}
-.tick-chg{font-size:10px}
+.tick-chg{font-size:9px}
 .tick-up{color:#00ff88}
 .tick-dn{color:var(--red)}
-.tick-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.tick-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
 .tick-dot-up{background:#00ff88;box-shadow:0 0 4px #00ff8888}
 .tick-dot-dn{background:var(--red);box-shadow:0 0 4px #ff444488}
 .tick-dot-neu{background:rgba(255,255,255,.3)}
 
 /* ── PAGE ── */
-.page{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:70px 28px 48px}
+.page{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:86px 28px 48px}
 
 /* ── HEADER ── */
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
@@ -202,7 +214,7 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
 /* ── TABLET: Z Fold 6 inner + gewone tablet (600–1023px) ── */
 @media(max-width:1023px){
-  .page{padding:60px 18px 40px}
+  .page{padding:88px 18px 40px}
   .grid{grid-template-columns:1fr 1fr;gap:14px}
   /* Nieuws schuift onder de twee kolommen */
   .news-col{grid-column:1/-1;position:static;flex-direction:row;flex-wrap:wrap;gap:12px}
@@ -225,7 +237,7 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 
 /* ── MOBIEL: GSM + Z Fold buiten + Z Flip binnen (max 599px) ── */
 @media(max-width:599px){
-  .page{padding:52px 12px 32px}
+  .page{padding:84px 12px 32px}
   .ticker-bar{height:28px}
   .ticker-label{display:none} /* meer ruimte voor tickers */
   .tick-item{padding:0 10px;font-size:10px;gap:4px}
@@ -279,7 +291,7 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
   .hero-title{font-size:24px}
   .hero-tags{display:none}
   .workflow{display:none}
-  .page{padding:48px 10px 24px}
+  .page{padding:80px 10px 24px}
   .tick-item{padding:0 8px;font-size:9px}
 }
 </style>
@@ -289,12 +301,32 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 <div class="tl"></div>
 
 <!-- ── TICKER BAR ── -->
-<div class="ticker-bar">
-  <div class="ticker-label">📡 LIVE</div>
-  <div class="ticker-track">
-    <div class="ticker-inner" id="ticker-inner">
-      <!-- filled by JS -->
-      <div class="tick-item"><span class="tick-sym">laden...</span></div>
+<div class="ticker-wrap">
+  <!-- Rij 1 → rechts: Indices + ETFs + Aandelen -->
+  <div class="ticker-bar ticker-bar-1">
+    <div class="ticker-label">📊 INDICES</div>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="ticker-inner-1">
+        <div class="tick-item"><span class="tick-sym">laden...</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Rij 2 ← links: Forex + Commodities + Rente -->
+  <div class="ticker-bar ticker-bar-2">
+    <div class="ticker-label">💱 FOREX</div>
+    <div class="ticker-track">
+      <div class="ticker-inner ticker-inner-rev" id="ticker-inner-2">
+        <div class="tick-item"><span class="tick-sym">laden...</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- Rij 3 → rechts: Crypto -->
+  <div class="ticker-bar ticker-bar-3">
+    <div class="ticker-label">🪙 CRYPTO</div>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="ticker-inner-3">
+        <div class="tick-item"><span class="tick-sym">laden...</span></div>
+      </div>
     </div>
   </div>
 </div>
@@ -519,43 +551,70 @@ function toggleDark(){}
 applyLang();
 
 // ── TICKER ──
-const TICKER_SYMBOLS=[
-  // 🟡 Indices
-  {sym:'^GSPC',  type:'stock', label:'S&P 500'},
-  {sym:'^IXIC',  type:'stock', label:'NASDAQ'},
-  {sym:'QQQ',    type:'stock', label:'QQQ'},
-  {sym:'^BFX',   type:'stock', label:'BEL 20'},
-  {sym:'^GDAXI', type:'stock', label:'DAX'},
-  {sym:'^FCHI',  type:'stock', label:'CAC 40'},
-  {sym:'^AEX',   type:'stock', label:'AEX'},
-  {sym:'^FTSE',  type:'stock', label:'FTSE 100'},
-  // 💱 Forex
-  {sym:'EURUSD=X', type:'stock', label:'EUR/USD'},
-  {sym:'EURGBP=X', type:'stock', label:'EUR/GBP'},
-  {sym:'JPY=X',    type:'stock', label:'USD/JPY'},
-  // 🏅 Commodities
-  {sym:'GC=F',  type:'stock', label:'GOLD'},
-  {sym:'SI=F',  type:'stock', label:'SILVER'},
-  {sym:'CL=F',  type:'stock', label:'OIL'},
-  {sym:'NG=F',  type:'stock', label:'NAT GAS'},
-  {sym:'ZW=F',  type:'stock', label:'WHEAT'},
-  // 📈 Rente
-  {sym:'^TNX',  type:'stock', label:'US 10Y'},
-  {sym:'^IRX',  type:'stock', label:'US 3M'},
-  // 🇧🇪 Belgische aandelen
-  {sym:'ABI.BR',  type:'stock', label:'AB InBev'},
-  {sym:'KBC.BR',  type:'stock', label:'KBC'},
-  {sym:'PROX.BR', type:'stock', label:'Proximus'},
-  // 🇺🇸 US Mega caps
-  {sym:'AAPL',  type:'stock', label:'Apple'},
-  {sym:'NVDA',  type:'stock', label:'Nvidia'},
-  {sym:'TSLA',  type:'stock', label:'Tesla'},
-  {sym:'MSFT',  type:'stock', label:'Microsoft'},
-  // 🇪🇺 Europese blue chips
+// Rij 1: Indices + ETFs + Aandelen
+const TICKER_ROW1=[
+  {sym:'^GSPC',   type:'stock', label:'S&P 500'},
+  {sym:'^IXIC',   type:'stock', label:'NASDAQ'},
+  {sym:'^DJI',    type:'stock', label:'DOW'},
+  {sym:'^BFX',    type:'stock', label:'BEL 20'},
+  {sym:'^GDAXI',  type:'stock', label:'DAX'},
+  {sym:'^FCHI',   type:'stock', label:'CAC 40'},
+  {sym:'^AEX',    type:'stock', label:'AEX'},
+  {sym:'^FTSE',   type:'stock', label:'FTSE 100'},
+  {sym:'^N225',   type:'stock', label:'Nikkei'},
+  {sym:'^HSI',    type:'stock', label:'Hang Seng'},
+  {sym:'^NSEI',   type:'stock', label:'Nifty 50'},
+  {sym:'^AXJO',   type:'stock', label:'ASX 200'},
+  {sym:'^SSMI',   type:'stock', label:'SMI'},
+  {sym:'^IBEX',   type:'stock', label:'IBEX 35'},
+  {sym:'SPY',     type:'stock', label:'SPY ETF'},
+  {sym:'QQQ',     type:'stock', label:'QQQ ETF'},
+  {sym:'IWDA.AS', type:'stock', label:'IWDA'},
+  {sym:'VWCE.DE', type:'stock', label:'VWCE'},
+  {sym:'EEM',     type:'stock', label:'iSh EM'},
+  {sym:'AAPL',    type:'stock', label:'Apple'},
+  {sym:'NVDA',    type:'stock', label:'Nvidia'},
+  {sym:'MSFT',    type:'stock', label:'Microsoft'},
+  {sym:'TSLA',    type:'stock', label:'Tesla'},
   {sym:'ASML.AS', type:'stock', label:'ASML'},
   {sym:'MC.PA',   type:'stock', label:'LVMH'},
   {sym:'SAP.DE',  type:'stock', label:'SAP'},
-  // 🪙 Top 15 crypto (CoinGecko)
+  {sym:'ABI.BR',  type:'stock', label:'AB InBev'},
+  {sym:'KBC.BR',  type:'stock', label:'KBC'},
+  {sym:'SIE.DE',  type:'stock', label:'Siemens'},
+  {sym:'AMZN',    type:'stock', label:'Amazon'},
+];
+
+// Rij 2: Forex + Commodities + Rente
+const TICKER_ROW2=[
+  {sym:'EURUSD=X', type:'stock', label:'EUR/USD'},
+  {sym:'EURGBP=X', type:'stock', label:'EUR/GBP'},
+  {sym:'EURJPY=X', type:'stock', label:'EUR/JPY'},
+  {sym:'JPY=X',    type:'stock', label:'USD/JPY'},
+  {sym:'GBPUSD=X', type:'stock', label:'GBP/USD'},
+  {sym:'EURCHF=X', type:'stock', label:'EUR/CHF'},
+  {sym:'CHFUSD=X', type:'stock', label:'USD/CHF'},
+  {sym:'AUDUSD=X', type:'stock', label:'AUD/USD'},
+  {sym:'CADUSD=X', type:'stock', label:'USD/CAD'},
+  {sym:'GC=F',     type:'stock', label:'GOLD'},
+  {sym:'SI=F',     type:'stock', label:'SILVER'},
+  {sym:'CL=F',     type:'stock', label:'OIL WTI'},
+  {sym:'BZ=F',     type:'stock', label:'BRENT'},
+  {sym:'NG=F',     type:'stock', label:'NAT GAS'},
+  {sym:'HG=F',     type:'stock', label:'COPPER'},
+  {sym:'PL=F',     type:'stock', label:'PLATINUM'},
+  {sym:'PA=F',     type:'stock', label:'PALLADIUM'},
+  {sym:'ZW=F',     type:'stock', label:'WHEAT'},
+  {sym:'KC=F',     type:'stock', label:'COFFEE'},
+  {sym:'CC=F',     type:'stock', label:'COCOA'},
+  {sym:'^TNX',     type:'stock', label:'US 10Y'},
+  {sym:'^TYX',     type:'stock', label:'US 30Y'},
+  {sym:'^IRX',     type:'stock', label:'US 3M'},
+  {sym:'^IRDE',    type:'stock', label:'DE 10Y'},
+];
+
+// Rij 3: Top 20 Crypto
+const TICKER_ROW3=[
   {sym:'BTC',   type:'crypto', label:'BTC'},
   {sym:'ETH',   type:'crypto', label:'ETH'},
   {sym:'BNB',   type:'crypto', label:'BNB'},
@@ -571,7 +630,14 @@ const TICKER_SYMBOLS=[
   {sym:'SHIB',  type:'crypto', label:'SHIB'},
   {sym:'LTC',   type:'crypto', label:'LTC'},
   {sym:'UNI',   type:'crypto', label:'UNI'},
+  {sym:'ATOM',  type:'crypto', label:'ATOM'},
+  {sym:'XLM',   type:'crypto', label:'XLM'},
+  {sym:'ALGO',  type:'crypto', label:'ALGO'},
+  {sym:'FIL',   type:'crypto', label:'FIL'},
+  {sym:'NEAR',  type:'crypto', label:'NEAR'},
 ];
+
+const TICKER_SYMBOLS=[...TICKER_ROW1,...TICKER_ROW2,...TICKER_ROW3];
 
 let tickerData={};
 
@@ -611,44 +677,37 @@ async function fetchTickerPrices(){
   renderTicker();
 }
 
-function renderTicker(){
-  const cats=[
-    {label:'📈 INDICES', syms:['^GSPC','^IXIC','QQQ','^BFX','^GDAXI','^FCHI','^AEX','^FTSE']},
-    {label:'💱 FOREX',   syms:['EURUSD=X','EURGBP=X','JPY=X']},
-    {label:'🏅 GRONDSTOFFEN', syms:['GC=F','SI=F','CL=F','NG=F','ZW=F']},
-    {label:'📊 RENTE',   syms:['^TNX','^IRX']},
-    {label:'🇧🇪 BELGIË', syms:['ABI.BR','KBC.BR','PROX.BR']},
-    {label:'🇺🇸 US',     syms:['AAPL','NVDA','TSLA','MSFT']},
-    {label:'🇪🇺 EUROPA', syms:['ASML.AS','MC.PA','SAP.DE']},
-    {label:'🪙 CRYPTO',  syms:['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','DOGE','DOT','MATIC','LINK','TRX','SHIB','LTC','UNI']},
-  ];
+function buildTickerHtml(symbols){
   let html='';
-  for(const cat of cats){
-    html+=`<div class="tick-item" style="padding:0 14px;border-right:1px solid rgba(0,255,178,.15)"><span style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--g2)">${cat.label}</span></div>`;
-    for(const sym of cat.syms){
-      const s=TICKER_SYMBOLS.find(x=>x.sym===sym);
-      if(!s)continue;
-      const d=tickerData[sym];
-      if(!d){
-        html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="color:var(--muted)">—</span></div>`;
-        continue;
-      }
-      const up=d.chg>=0;
-      const dotCls=up?'tick-dot-up':'tick-dot-dn';
-      const chgCls=up?'tick-up':'tick-dn';
-      const sign=up?'+':'';
-      const p=d.price;
-      // Format price based on magnitude
-      const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
-      // For forex/rates don't show EUR
-      const isForex=['EURUSD=X','EURGBP=X','JPY=X','^TNX','^IRX'].includes(sym);
-      const prefix=isForex?'':' €';
-      const suffix=isForex&&sym.includes('TNX')?'%':'';
-      html+=`<div class="tick-item"><div class="tick-dot ${dotCls}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}${suffix}</span><span class="tick-chg ${chgCls}">${sign}${d.chg.toFixed(2)}%</span></div>`;
+  for(const s of symbols){
+    const d=tickerData[s.sym];
+    if(!d){
+      html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="opacity:.4">—</span></div>`;
+      continue;
     }
+    const up=d.chg>=0;
+    const dotCls=up?'tick-dot-up':'tick-dot-dn';
+    const chgCls=up?'tick-up':'tick-dn';
+    const sign=up?'+':'';
+    const p=d.price;
+    const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
+    const isForex=s.label.includes('/')||s.label.includes('Y')||s.label.includes('3M');
+    const prefix=isForex?'':' €';
+    html+=`<div class="tick-item"><div class="tick-dot ${dotCls}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}</span><span class="tick-chg ${chgCls}">${sign}${d.chg.toFixed(2)}%</span></div>`;
   }
-  const inner=document.getElementById('ticker-inner');
-  inner.innerHTML=html+html; // duplicate for seamless loop
+  return html;
+}
+
+function renderTicker(){
+  const h1=buildTickerHtml(TICKER_ROW1);
+  const h2=buildTickerHtml(TICKER_ROW2);
+  const h3=buildTickerHtml(TICKER_ROW3);
+  const i1=document.getElementById('ticker-inner-1');
+  const i2=document.getElementById('ticker-inner-2');
+  const i3=document.getElementById('ticker-inner-3');
+  if(i1)i1.innerHTML=h1+h1;
+  if(i2)i2.innerHTML=h2+h2;
+  if(i3)i3.innerHTML=h3+h3;
 }
 
 // ── NEWS: GNews → Mediastack → RSS fallback ──
