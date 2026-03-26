@@ -396,34 +396,47 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
       <div class="col-l" style="width:300px">
         <div class="card"><div class="ci">
           <div class="sec t-hold-add-sec">Positie toevoegen</div>
-          <!-- Type toggle -->
           <div class="type-toggle">
             <button class="ttbtn act-s" id="htype-stock" onclick="setHoldType('stock')">📊 <span class="t-htype-s">Aandeel</span></button>
             <button class="ttbtn" id="htype-crypto" onclick="setHoldType('crypto')">🪙 <span class="t-htype-c">Crypto</span></button>
             <button class="ttbtn" id="htype-metal" onclick="setHoldType('metal')">🥇 <span class="t-htype-m">Edelmetaal</span></button>
           </div>
-          <div class="hform-grid">
-            <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-name">Naam</span><div class="iw"><input type="text" id="hf-name" placeholder="Apple / Bitcoin..."></div></div>
-            <div class="fg" id="fg-ticker-wrap"><span class="fl t-hf-ticker">Ticker</span><div class="iw"><input type="text" id="hf-ticker" placeholder="AAPL / BTC" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div></div>
-            <!-- Metal fields -->
-            <div class="fg" id="fg-metal-type" style="display:none;grid-column:1/-1"><span class="fl">Metaal</span>
-              <div class="iw"><select id="hf-metal-type" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
-                <option value="gold">🥇 Goud</option>
-                <option value="silver">🥈 Zilver</option>
-              </select></div>
+
+          <!-- Normaal formulier (aandeel/crypto) -->
+          <div id="form-normal">
+            <div class="hform-grid">
+              <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-name">Naam</span><div class="iw"><input type="text" id="hf-name" placeholder="Apple / Bitcoin..."></div></div>
+              <div class="fg"><span class="fl t-hf-ticker">Ticker</span><div class="iw"><input type="text" id="hf-ticker" placeholder="AAPL / BTC" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div></div>
+              <div class="fg"><span class="fl t-hf-qty">Aantal</span><div class="iw"><span class="px">#</span><input type="number" id="hf-qty" placeholder="10" step="any"></div></div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-buy">Gem. aankoopprijs (€)</span><div class="iw"><span class="px">€</span><input type="number" id="hf-buy" placeholder="150.00" step="0.01"></div></div>
             </div>
-            <div class="fg" id="fg-metal-unit" style="display:none"><span class="fl">Eenheid</span>
-              <div class="iw"><select id="hf-metal-unit" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
-                <option value="g">gram (g)</option>
-                <option value="kg">kilogram (kg)</option>
-                <option value="oz">troy ounce (oz)</option>
-              </select></div>
-            </div>
-            <div class="fg"><span class="fl t-hf-qty">Aantal</span><div class="iw"><span class="px">#</span><input type="number" id="hf-qty" placeholder="10" step="any"></div></div>
-            <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-buy">Gem. aankoopprijs (€)</span><div class="iw"><span class="px">€</span><input type="number" id="hf-buy" placeholder="150.00" step="0.01"></div></div>
-            <div id="fg-metal-hint" style="display:none;grid-column:1/-1;font-size:10px;color:var(--muted);padding:4px 0">⚠️ Vul aankoopprijs <strong>per gram</strong> in · 1 oz = 31.10g · 1 kg = 1000g</div>
+            <button class="btn-add t-hadd-btn" onclick="addHolding()" style="margin-bottom:0">+ Toevoegen</button>
           </div>
-          <button class="btn-add t-hadd-btn" onclick="addHolding()" style="margin-bottom:0">+ Toevoegen</button>
+
+          <!-- Edelmetaal formulier -->
+          <div id="form-metal" style="display:none">
+            <div class="hform-grid">
+              <div class="fg" style="grid-column:1/-1"><span class="fl">Naam</span><div class="iw"><input type="text" id="mf-name" placeholder="Zilver munten / Goud baar..."></div></div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl">Metaal</span>
+                <div class="iw"><select id="mf-metal" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
+                  <option value="gold">🥇 Goud</option>
+                  <option value="silver">🥈 Zilver</option>
+                </select></div>
+              </div>
+              <div class="fg"><span class="fl">Hoeveelheid</span><div class="iw"><span class="px">#</span><input type="number" id="mf-qty" placeholder="100" step="any"></div></div>
+              <div class="fg"><span class="fl">Eenheid</span>
+                <div class="iw"><select id="mf-unit" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
+                  <option value="g">gram</option>
+                  <option value="kg">kilogram</option>
+                  <option value="oz">troy oz</option>
+                </select></div>
+              </div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl">Aankoopprijs per gram (€)</span><div class="iw"><span class="px">€</span><input type="number" id="mf-buy" placeholder="0.85" step="0.001"></div></div>
+              <div style="grid-column:1/-1;font-size:10px;color:var(--muted)">1 oz = 31.10g · 1 kg = 1000g</div>
+            </div>
+            <button class="btn-add" onclick="addMetal()" style="margin-bottom:0;background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.4);color:#c8a800">+ Edelmetaal toevoegen</button>
+          </div>
+
         </div></div>
 
         <div class="card"><div class="ci">
@@ -1008,22 +1021,29 @@ function setHoldType(t){
   fe('htype-crypto').className='ttbtn'+(t==='crypto'?' act-c':'');
   fe('htype-metal').className='ttbtn'+(t==='metal'?' act-m':'');
   const isMetal=t==='metal';
-  fe('fg-ticker-wrap').style.display=isMetal?'none':'';
-  fe('fg-metal-type').style.display=isMetal?'':'none';
-  fe('fg-metal-unit').style.display=isMetal?'':'none';
-  fe('fg-metal-hint').style.display=isMetal?'':'none';
+  fe('form-normal').style.display=isMetal?'none':'block';
+  fe('form-metal').style.display=isMetal?'block':'none';
   if(!isMetal)fe('hf-ticker').placeholder=t==='stock'?'AAPL / ABI.BR':'BTC / ETH';
-  if(isMetal){
-    fe('hf-name').placeholder='Zilver munten / Goud baar...';
-    fe('hf-buy').placeholder='0.85';
-    const buyLabel=document.querySelector('.t-hf-buy');
-    if(buyLabel)buyLabel.textContent='Aankoopprijs per gram (€)';
-  } else {
-    fe('hf-name').placeholder='Apple / Bitcoin...';
-    fe('hf-buy').placeholder='150.00';
-    const buyLabel=document.querySelector('.t-hf-buy');
-    if(buyLabel)buyLabel.textContent=lang==='nl'?'Gem. aankoopprijs (€)':'Avg buy price (€)';
+}
+
+function addMetal(){
+  const name=fe('mf-name').value.trim();
+  const qty=parseFloat(fe('mf-qty').value)||0;
+  const avgBuy=parseFloat(fe('mf-buy').value)||0;
+  const metalType=fe('mf-metal').value;
+  const unit=fe('mf-unit').value;
+  if(!name||qty<=0||avgBuy<=0){
+    alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;
   }
+  let grams=qty;
+  if(unit==='kg')grams=qty*1000;
+  if(unit==='oz')grams=qty*31.1035;
+  const unitLabel=unit==='g'?qty+'g':unit==='kg'?qty+'kg':qty+' oz';
+  const ticker=metalType==='gold'?'XAU':'XAG';
+  holdings.push({id:Date.now(),name,ticker,type:'metal',metalType,unit,qtyOrig:qty,qty:grams,avgBuy,livePrice:null,err:null,unitLabel});
+  saveHoldings();
+  fe('mf-name').value='';fe('mf-qty').value='';fe('mf-buy').value='';
+  renderHoldingsTable();renderHoldingPie();
 }
 function saveHoldings(){
   try{localStorage.setItem('us3-holdings',JSON.stringify(holdings));}catch(e){}
@@ -1033,32 +1053,19 @@ function savePortHistory(){
   try{localStorage.setItem('us3-porthist',JSON.stringify(portHistory));}catch(e){}
 }
 function addHolding(){
-  // Lees actief type direct van de knoppen
   const currentType=document.querySelector('#htype-metal.act-m')?'metal':document.querySelector('#htype-crypto.act-c')?'crypto':'stock';
   hTypeNew=currentType;
+  if(hTypeNew==='metal'){addMetal();return;}
   const name=fe('hf-name').value.trim();
+  const ticker=fe('hf-ticker').value.trim().toUpperCase();
   const qty=parseFloat(fe('hf-qty').value)||0;
   const avgBuy=parseFloat(fe('hf-buy').value)||0;
-  if(hTypeNew==='metal'){
-    if(!name||qty<=0||avgBuy<=0){alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;}
-    const metalType=fe('hf-metal-type').value; // 'gold' or 'silver'
-    const unit=fe('hf-metal-unit').value;
-    // Convert to grams
-    let grams=qty;
-    if(unit==='kg')grams=qty*1000;
-    if(unit==='oz')grams=qty*31.1035;
-    const ticker=metalType==='gold'?'XAU':'XAG';
-    const unitLabel=unit==='g'?qty+'g':unit==='kg'?qty+'kg':qty+' oz';
-    holdings.push({id:Date.now(),name,ticker,type:'metal',metalType,unit,qtyOrig:qty,qty:grams,avgBuy,livePrice:null,err:null,unitLabel});
-  } else {
-    const ticker=fe('hf-ticker').value.trim().toUpperCase();
-    if(!name||!ticker||qty<=0||avgBuy<=0){alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;}
-    holdings.push({id:Date.now(),name,ticker,type:hTypeNew,qty,avgBuy,livePrice:null,err:null});
+  if(!name||!ticker||qty<=0||avgBuy<=0){
+    alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;
   }
+  holdings.push({id:Date.now(),name,ticker,type:hTypeNew,qty,avgBuy,livePrice:null,err:null});
   saveHoldings();
-  fe('hf-name').value='';fe('hf-qty').value='';fe('hf-buy').value='';
-  if(hTypeNew!=='metal')fe('hf-ticker').value='';
-  else setHoldType('metal');
+  fe('hf-name').value='';fe('hf-ticker').value='';fe('hf-qty').value='';fe('hf-buy').value='';
   renderHoldingsTable();renderHoldingPie();
 }
 function delHolding(id){
