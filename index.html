@@ -1,298 +1,80 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unda · Trading Suite</title>
+<title>Unda · Trade Smart</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--red:#ff4444;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.03)}
+:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.035)}
 html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:var(--text);overflow-x:hidden}
 .bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 20%,#001f0f 0%,#000d1a 50%,#000508 100%)}
 .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,178,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,.018) 1px,transparent 1px);background-size:44px 44px}
 .orb{position:absolute;border-radius:50%;pointer-events:none}
-.orb1{width:800px;height:800px;top:-300px;left:-200px;background:radial-gradient(circle,rgba(0,255,178,.07) 0%,transparent 60%);animation:drift 16s ease-in-out infinite alternate}
-.orb2{width:600px;height:600px;bottom:-200px;right:-150px;background:radial-gradient(circle,rgba(255,217,122,.06) 0%,transparent 60%);animation:drift2 19s ease-in-out infinite alternate}
-@keyframes drift{from{transform:translate(0,0)}to{transform:translate(50px,35px)}}
-@keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-40px,-50px)}}
-.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:200;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 8px 2px var(--g),0 0 40px 12px rgba(0,255,178,.25);animation:fl 9s ease-in-out infinite}
+.orb1{width:700px;height:700px;top:-200px;left:-200px;background:radial-gradient(circle,rgba(0,255,178,.07) 0%,transparent 60%);animation:drift 16s ease-in-out infinite alternate}
+.orb2{width:500px;height:500px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(255,217,122,.06) 0%,transparent 60%);animation:drift2 19s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(40px,30px)}}
+@keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-30px,-40px)}}
+.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:100;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 8px 2px var(--g),0 0 40px 12px rgba(0,255,178,.25);animation:fl 9s ease-in-out infinite}
 @keyframes fl{0%,100%{opacity:1}93%{opacity:.6}94.5%{opacity:1}96%{opacity:.8}97%{opacity:1}}
-@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.a1{animation:up .6s .05s both}.a2{animation:up .6s .15s both}.a3{animation:up .6s .22s both}
-.a4{animation:up .6s .30s both}.a5{animation:up .6s .38s both}
+@keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── TICKER ── */
-.ticker-wrap{position:fixed;top:2px;left:0;right:0;z-index:150;display:flex;flex-direction:column}
-.ticker-bar{height:26px;background:rgba(0,8,5,.92);backdrop-filter:blur(20px);display:flex;align-items:center;overflow:hidden}
-.ticker-bar-1{border-bottom:1px solid rgba(0,255,178,.1)}
-.ticker-bar-2{border-bottom:1px solid rgba(255,217,122,.1);background:rgba(0,5,10,.92)}
-.ticker-bar-3{border-bottom:1px solid rgba(0,200,255,.1);background:rgba(0,3,12,.92)}
-.ticker-label{flex-shrink:0;padding:0 10px;font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
-.ticker-bar-2 .ticker-label{color:var(--gold);border-right-color:rgba(255,217,122,.15);background:rgba(255,217,122,.04)}
-.ticker-bar-3 .ticker-label{color:#00d4ff;border-right-color:rgba(0,212,255,.15);background:rgba(0,212,255,.04)}
-.ticker-track{flex:1;overflow:hidden;position:relative;height:100%}
-.ticker-inner{display:flex;align-items:center;height:100%;gap:0;white-space:nowrap;animation:tickerScroll 180s linear infinite}
-.ticker-inner-rev{animation:tickerScrollRev 160s linear infinite}
-.ticker-inner:hover,.ticker-inner-rev:hover{animation-play-state:paused}
-@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes tickerScrollRev{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
-.tick-item{display:inline-flex;align-items:center;gap:5px;padding:0 14px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:10px;cursor:default}
-.ticker-bar-2 .tick-item{border-right-color:rgba(255,217,122,.07)}
-.ticker-bar-3 .tick-item{border-right-color:rgba(0,212,255,.07)}
-.tick-sym{color:rgba(200,255,235,.7);font-weight:500;font-size:9px}
-.ticker-bar-2 .tick-sym{color:rgba(255,235,180,.7)}
-.ticker-bar-3 .tick-sym{color:rgba(180,230,255,.7)}
-.tick-price{color:var(--text)}
-.tick-chg{font-size:9px}
-.tick-up{color:#00ff88}
-.tick-dn{color:var(--red)}
-.tick-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
-.tick-dot-up{background:#00ff88;box-shadow:0 0 4px #00ff8888}
-.tick-dot-dn{background:var(--red);box-shadow:0 0 4px #ff444488}
-.tick-dot-neu{background:rgba(255,255,255,.3)}
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:2px;left:0;right:0;z-index:90;display:flex;align-items:center;justify-content:flex-end;padding:10px 24px}
+.lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.22);border-radius:8px;padding:5px 14px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;font-weight:500}
+.lang-btn:hover{background:rgba(0,255,178,.16);color:var(--g)}
 
 /* ── PAGE ── */
-.page{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:86px 28px 48px}
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;animation:up .6s both}
 
-/* ── HEADER ── */
-.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-.logo-wrap{display:flex;align-items:center;gap:14px}
-.logo-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(0,255,178,.2),rgba(0,255,178,.05));border:1px solid rgba(0,255,178,.3);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px rgba(0,255,178,.12)}
-.logo-text{font-size:20px;font-weight:600;background:linear-gradient(130deg,#9effd9 0%,#fff 50%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.logo-sub{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-top:1px}
-.lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.22);border-radius:9px;padding:7px 18px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;letter-spacing:.06em;font-weight:500}
-.lang-btn:hover{background:rgba(0,255,178,.16);color:var(--g);border-color:rgba(0,255,178,.4)}
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:52px}
+.eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--g2);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+.eyebrow::before,.eyebrow::after{content:'';flex:0 0 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
+.eyebrow::after{background:linear-gradient(90deg,rgba(0,255,178,.4),transparent)}
+.hero-title{font-size:100px;font-weight:700;line-height:1;letter-spacing:-4px;background:linear-gradient(135deg,#c8ffec 0%,#ffffff 40%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 40px rgba(0,255,178,.15));margin-bottom:14px}
+.hero-tag{font-size:14px;font-style:italic;color:rgba(200,255,235,.35);letter-spacing:.05em;margin-bottom:20px}
+.cert{display:inline-flex;align-items:center;gap:7px;background:rgba(255,217,122,.06);border:1px solid rgba(255,217,122,.18);border-radius:20px;padding:6px 18px;font-size:10px;color:rgba(255,217,122,.75);letter-spacing:.04em}
 
-/* ── FEAR & GREED ── */
-.fg-hero{display:grid;grid-template-columns:200px 1fr 200px;gap:20px;align-items:center;margin-bottom:24px}
-.fg-widget{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:14px 12px 10px;text-align:center;position:relative;overflow:hidden}
-.fg-widget::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4),transparent)}
-.fg-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px}
-.fg-subtitle{font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
-.fg-gauge-wrap{display:flex;justify-content:center}
-.fg-gauge{width:110px;height:65px}
-.fg-value{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;margin-top:4px;line-height:1}
-.fg-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
-.fg-prev{font-size:9px;color:rgba(255,255,255,.25);margin-top:4px}
-/* Colour classes */
-.fg-extreme-fear{color:#ff4444}
-.fg-fear{color:#ff8c00}
-.fg-neutral{color:#ffd97a}
-.fg-greed{color:#90ee90}
-.fg-extreme-greed{color:#00ff88}
+/* ── NAV BUTTONS ── */
+.nav{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 30px;border-radius:18px;border:1px solid var(--border);background:var(--card);cursor:pointer;min-width:160px;text-decoration:none;color:inherit;transition:all .2s;position:relative;backdrop-filter:blur(20px)}
+.nav-btn::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2) 35%,rgba(0,255,178,.5) 50%,rgba(255,255,255,.2) 65%,transparent);pointer-events:none}
+.nav-btn:hover{border-color:rgba(0,255,178,.35);background:rgba(0,255,178,.05);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(0,255,178,.06)}
+.nav-btn.gold{border-color:rgba(255,217,122,.2)}
+.nav-btn.gold::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(255,217,122,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
+.nav-btn.gold:hover{border-color:rgba(255,217,122,.45);background:rgba(255,217,122,.06);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(255,217,122,.06)}
+.nav-btn.blue{border-color:rgba(0,212,255,.2)}
+.nav-btn.blue::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(0,212,255,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
+.nav-btn.blue:hover{border-color:rgba(0,212,255,.45);background:rgba(0,212,255,.06);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(0,212,255,.06)}
+.nav-icon{font-size:26px;line-height:1}
+.nav-label{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px}
+.nav-arr{font-size:10px;color:rgba(200,255,235,.35)}
+.nav-sub{font-size:10px;color:rgba(200,255,235,.32);text-align:center;line-height:1.4}
 
-/* Responsive F&G */
-@media(max-width:1023px){.fg-hero{grid-template-columns:160px 1fr 160px;gap:12px}}
-@media(max-width:599px){.fg-hero{grid-template-columns:1fr 1fr;gap:10px}.fg-hero .hero{grid-column:1/-1;order:-1}}
-@media(max-width:400px){.fg-hero{grid-template-columns:1fr 1fr}.fg-value{font-size:22px}}
-
-/* dark mode toggle */
-.dark-toggle-wrap{display:flex;align-items:center;gap:5px}
-.dm-sun,.dm-moon{font-size:13px;line-height:1}
-.dm-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0}
-.dm-toggle input{opacity:0;width:0;height:0;position:absolute}
-.dm-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:20px;transition:background .25s}
-.dm-slider::before{content:'';position:absolute;width:13px;height:13px;left:3px;top:3px;background:rgba(255,255,255,.7);border-radius:50%;transition:transform .25s}
-.dm-toggle input:checked + .dm-slider{background:rgba(99,102,241,.5);border-color:rgba(99,102,241,.6)}
-.dm-toggle input:checked + .dm-slider::before{transform:translateX(16px);background:#fff}
-
-/* light mode overrides */
-
-.hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
-.hero-label::before,.hero-label::after{content:'';flex:0 0 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
-.hero-label::after{background:linear-gradient(90deg,rgba(0,255,178,.4),transparent)}
-.hero-title{font-size:50px;font-weight:700;line-height:1.0;letter-spacing:-.5px;background:linear-gradient(135deg,#c8ffec 0%,#ffffff 40%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 28px rgba(0,255,178,.18));margin-bottom:10px}
-.hero-sub{font-size:14px;color:rgba(200,255,235,.4);line-height:1.6;margin-bottom:16px}
-.hero-tags{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
-.htag{font-size:10px;padding:4px 12px;border-radius:20px;border:1px solid;letter-spacing:.04em;font-weight:500}
-.htag-g{background:rgba(0,255,178,.08);border-color:rgba(0,255,178,.22);color:rgba(0,255,178,.75)}
-.htag-gold{background:rgba(255,217,122,.08);border-color:rgba(255,217,122,.22);color:rgba(255,217,122,.75)}
-.htag-b{background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.22);color:rgba(0,212,255,.75)}
-
-/* ── WORKFLOW ── */
-.workflow{background:linear-gradient(90deg,rgba(0,255,178,.04),rgba(0,255,178,.02));border:1px solid rgba(0,255,178,.1);border-radius:12px;padding:10px 18px;margin-bottom:24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.wf-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--g2);white-space:nowrap;font-weight:600}
-.wf-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
-.wf-step{background:rgba(0,255,178,.07);border:1px solid rgba(0,255,178,.14);border-radius:8px;padding:4px 11px;font-size:11px;color:rgba(200,255,235,.8);white-space:nowrap}
-.wf-arr{color:rgba(0,255,178,.28);font-size:12px}
-
-/* ── MAIN 3-COL GRID ── */
-.grid{display:grid;grid-template-columns:1fr 1fr 320px;gap:18px;align-items:start}
-
-/* ── SECTIONS ── */
-.sec{display:flex;flex-direction:column;gap:10px}
-.sec-head{display:flex;align-items:center;gap:10px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.06)}
-.sec-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.icon-g{background:rgba(0,255,178,.12);border:1px solid rgba(0,255,178,.25)}
-.icon-gold{background:rgba(255,217,122,.12);border:1px solid rgba(255,217,122,.25)}
-.icon-blue{background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25)}
-.icon-red{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.25)}
-.sec-title{font-size:14px;font-weight:600;color:var(--text)}
-.sec-sub{font-size:10px;color:var(--muted);margin-top:1px}
-
-/* ── CARDS ── */
-.card{background:var(--card);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);border-radius:14px;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .18s,border-color .2s,box-shadow .2s;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
-.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.3) 35%,rgba(0,255,178,.7) 50%,rgba(255,255,255,.3) 65%,transparent 95%);pointer-events:none}
-.card.gold::after{background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 35%,rgba(255,217,122,.7) 50%,rgba(255,255,255,.2) 65%,transparent 95%)}
-a.card{text-decoration:none;color:inherit}
-a.card:hover{transform:translateY(-3px);border-color:rgba(0,255,178,.32);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 24px rgba(0,255,178,.08),inset 0 1px 0 rgba(255,255,255,.1)}
-a.card.gold:hover{border-color:rgba(255,217,122,.32);box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 24px rgba(255,217,122,.08),inset 0 1px 0 rgba(255,255,255,.1)}
-.card.soon{opacity:.38;pointer-events:none}
-.card-inner{padding:14px 16px}
-.featured-bar{height:3px;background:linear-gradient(90deg,var(--g),rgba(0,255,178,.1));border-radius:14px 14px 0 0}
-.featured-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-.feat-icon{font-size:26px;flex-shrink:0;line-height:1}
-.feat-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:3px}
-.feat-desc{font-size:10px;color:rgba(200,255,235,.45);line-height:1.6}
-.feat-arr{color:rgba(0,255,178,.3);font-size:15px;margin-left:auto;padding-left:8px;transition:color .2s,transform .2s;flex-shrink:0}
-a.card:hover .feat-arr{color:var(--g);transform:translateX(4px)}
-.feat-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
-.fst{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:8px;padding:6px 3px;text-align:center}
-.fst-l{font-size:7px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
-.fst-v{font-family:'DM Mono',monospace;font-size:10px;color:#b8ffe0;font-weight:500}
-.tool-row{display:flex;align-items:center;gap:11px}
-.tool-emoji{font-size:20px;flex-shrink:0;width:32px;text-align:center}
-.tool-info{flex:1;min-width:0}
-.tool-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
-.tool-desc{font-size:10px;color:rgba(200,255,235,.42);line-height:1.5}
-.tool-arr{color:rgba(0,255,178,.25);font-size:13px;flex-shrink:0;transition:color .2s,transform .2s}
-a.card:hover .tool-arr{color:var(--g);transform:translateX(3px)}
-.gold .tool-arr{color:rgba(255,217,122,.22)}
-a.card.gold:hover .tool-arr{color:var(--gold)}
-.soon-badge{font-size:8px;color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 6px;flex-shrink:0;letter-spacing:.1em;text-transform:uppercase}
-.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.tag{font-size:8px;padding:2px 7px;border-radius:10px;letter-spacing:.04em;font-weight:500}
-.tg{background:rgba(0,255,178,.06);border:1px solid rgba(0,255,178,.16);color:rgba(0,255,178,.65)}
-.tgold{background:rgba(255,217,122,.06);border:1px solid rgba(255,217,122,.16);color:rgba(255,217,122,.7)}
-.tb{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.16);color:rgba(0,212,255,.7)}
-.tdim{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.22)}
-
-/* ── NEWS COLUMN ── */
-.news-col{display:flex;flex-direction:column;gap:10px;position:sticky;top:70px}
-.news-card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07)}
-.news-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,.2) 35%,rgba(255,68,68,.6) 50%,rgba(255,255,255,.2) 65%,transparent 95%);pointer-events:none}
-.news-head{padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between}
-.news-title-bar{font-size:11px;font-weight:600;color:var(--text);letter-spacing:.04em;display:flex;align-items:center;gap:7px}
-.live-dot{width:6px;height:6px;border-radius:50%;background:#ff4444;box-shadow:0 0 6px #ff444488;animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.news-src{font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
-.news-list{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto}
-.news-list::-webkit-scrollbar{width:2px}
-.news-list::-webkit-scrollbar-thumb{background:rgba(0,255,178,.2);border-radius:2px}
-.news-item{border-bottom:1px solid rgba(255,255,255,.04);padding-bottom:10px;cursor:pointer;transition:background .15s;border-radius:8px;padding:8px;margin:-2px}
-.news-item:last-child{border-bottom:none}
-.news-item:hover{background:rgba(0,255,178,.03)}
-.news-item:hover .news-headline{color:rgba(0,255,178,.9)}
-.news-img{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:7px;display:block;border:1px solid rgba(255,255,255,.06)}
-.news-text{}
-.news-headline{font-size:11px;color:rgba(200,255,235,.78);line-height:1.5;margin-bottom:4px;transition:color .2s;font-weight:500}
-.news-desc{font-size:10px;color:rgba(180,240,220,.35);line-height:1.5;margin-bottom:5px}
-.news-meta{display:flex;align-items:center;gap:8px}
-.news-source{font-size:9px;color:var(--muted);font-weight:600}
-.news-time{font-size:9px;color:rgba(255,255,255,.2)}
-.news-loading{padding:20px 14px;text-align:center;font-size:11px;color:var(--muted)}
-.ncat-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:3px 7px;font-size:12px;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.4)}
-.ncat-btn:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
-.ncat-btn.ncat-act{background:rgba(0,255,178,.12);border-color:rgba(0,255,178,.3);color:var(--g)}
-.refresh-news{background:transparent;border:none;color:rgba(0,255,178,.35);cursor:pointer;font-size:12px;padding:2px 4px;transition:color .2s}
-.refresh-news:hover{color:var(--g)}
-.news-spin{display:inline-block;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── DROPDOWN ── */
+.dd-wrap{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.dropdown{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(0,12,8,.97);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:200px;z-index:200;display:none;box-shadow:0 16px 40px rgba(0,0,0,.6)}
+.dropdown.open{display:block;animation:up .15s ease}
+.dd-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:8px;font-size:12px;color:rgba(200,255,235,.8);cursor:pointer;text-decoration:none;color:inherit;white-space:nowrap;transition:background .15s}
+.dd-item:hover{background:rgba(0,255,178,.07);color:var(--text)}
+.dd-item.gold:hover{background:rgba(255,217,122,.07)}
+.dd-item.blue:hover{background:rgba(0,212,255,.07)}
+.dd-sep{height:1px;background:rgba(255,255,255,.05);margin:4px 0}
 
 /* ── FOOTER ── */
-.footer{text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.05);font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase}
+.footer{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:12px;font-size:9px;color:rgba(0,255,178,.16);letter-spacing:.2em;text-transform:uppercase;z-index:1}
 
-/* ════════════════════════════════════════
-   RESPONSIVE — alle schermformaten
-   Z Fold 6 buiten  : ~390px
-   Z Flip 6 binnen  : ~390px
-   Z Fold 6 binnen  : ~928px (tablet)
-   Tablet           : 600-900px
-   Desktop          : 1024px+
-════════════════════════════════════════ */
-
-/* ── TABLET: Z Fold 6 inner + gewone tablet (600–1023px) ── */
-@media(max-width:1023px){
-  .page{padding:88px 18px 40px}
-  .grid{grid-template-columns:1fr 1fr;gap:14px}
-  /* Nieuws schuift onder de twee kolommen */
-  .news-col{grid-column:1/-1;position:static;flex-direction:row;flex-wrap:wrap;gap:12px}
-  .news-card{flex:1;min-width:280px}
-  .news-list{max-height:320px}
-  .hero-title{font-size:40px}
-  .workflow{gap:7px}
-  .wf-step{font-size:10px;padding:3px 9px}
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .hero-title{font-size:64px;letter-spacing:-2px}
+  .nav-btn{min-width:130px;padding:18px 20px}
+  .nav{gap:10px}
 }
-
-/* ── SMALL TABLET: 600–767px ── */
-@media(max-width:767px){
-  .ticker-label{padding:0 10px;font-size:8px}
-  .tick-item{padding:0 14px;font-size:10px}
-  .hero-title{font-size:34px}
-  .hero-sub{font-size:12px}
-  .htag{font-size:9px;padding:3px 9px}
-  .feat-stats{grid-template-columns:repeat(2,1fr)}
-}
-
-/* ── MOBIEL: GSM + Z Fold buiten + Z Flip binnen (max 599px) ── */
-@media(max-width:599px){
-  .page{padding:84px 12px 32px}
-  .ticker-bar{height:28px}
-  .ticker-label{display:none} /* meer ruimte voor tickers */
-  .tick-item{padding:0 10px;font-size:10px;gap:4px}
-  .tick-price{font-size:10px}
-  .tick-chg{font-size:9px}
-
-  .header{margin-bottom:16px}
-  .logo-icon{width:36px;height:36px;font-size:17px}
-  .logo-text{font-size:16px}
-  .logo-sub{display:none}
-  .lang-btn{padding:5px 12px;font-size:10px}
-
-  .hero{margin-bottom:16px}
-  .hero-label{font-size:9px;letter-spacing:.2em}
-  .hero-title{font-size:30px;letter-spacing:-.3px;margin-bottom:8px}
-  .hero-sub{font-size:12px;margin-bottom:12px}
-  .htag{font-size:9px;padding:3px 8px}
-
-  .workflow{padding:8px 12px;margin-bottom:16px;gap:5px}
-  .wf-label{font-size:8px}
-  .wf-step{font-size:9px;padding:3px 7px}
-  .wf-arr{font-size:10px}
-
-  /* 1 kolom op gsm */
-  .grid{grid-template-columns:1fr;gap:12px}
-  .news-col{position:static;gap:10px}
-  .news-list{max-height:400px}
-  .news-img{height:140px}
-
-  .card-inner{padding:12px 13px}
-  .featured-top{gap:10px}
-  .feat-icon{font-size:22px}
-  .feat-title{font-size:14px}
-  .feat-stats{grid-template-columns:repeat(2,1fr);gap:4px}
-  .fst{padding:5px 3px}
-  .fst-l{font-size:6px}
-  .fst-v{font-size:10px}
-
-  .sec-head{padding-bottom:8px;margin-bottom:2px}
-  .sec-title{font-size:13px}
-  .tool-name{font-size:12px}
-  .tool-desc{font-size:10px}
-
-  .news-head{padding:10px 12px 6px}
-  .news-headline{font-size:12px}
-  .news-desc{display:none} /* verberg beschrijving op gsm voor compactheid */
-}
-
-/* ── Z FLIP BUITEN (klein vierkant scherm ~260px) ── */
-@media(max-width:320px){
-  .hero-title{font-size:24px}
-  .hero-tags{display:none}
-  .workflow{display:none}
-  .page{padding:80px 10px 24px}
-  .tick-item{padding:0 8px;font-size:9px}
+@media(max-width:380px){
+  .hero-title{font-size:52px}
+  .nav{flex-direction:column;align-items:center}
 }
 </style>
 </head>
@@ -300,729 +82,141 @@ a.card.gold:hover .tool-arr{color:var(--gold)}
 <div class="bg"><div class="bg-grid"></div><div class="orb orb1"></div><div class="orb orb2"></div></div>
 <div class="tl"></div>
 
-<!-- ── TICKER BAR ── -->
-<div class="ticker-wrap">
-  <!-- Rij 1 → rechts: Indices + ETFs + Aandelen -->
-  <div class="ticker-bar ticker-bar-1">
-    <div class="ticker-label">📊 MARKTEN</div>
-    <div class="ticker-track">
-      <div class="ticker-inner" id="ticker-inner-1">
-        <div class="tick-item"><span class="tick-sym">laden...</span></div>
-      </div>
-    </div>
-  </div>
-  <!-- Rij 2 ← links: Forex + Commodities + Rente -->
-  <div class="ticker-bar ticker-bar-2">
-    <div class="ticker-label">💹 GRONDSTOFFEN & FOREX</div>
-    <div class="ticker-track">
-      <div class="ticker-inner ticker-inner-rev" id="ticker-inner-2">
-        <div class="tick-item"><span class="tick-sym">laden...</span></div>
-      </div>
-    </div>
-  </div>
-  <!-- Rij 3 → rechts: Crypto -->
-  <div class="ticker-bar ticker-bar-3">
-    <div class="ticker-label">🪙 CRYPTO</div>
-    <div class="ticker-track">
-      <div class="ticker-inner" id="ticker-inner-3">
-        <div class="tick-item"><span class="tick-sym">laden...</span></div>
-      </div>
-    </div>
-  </div>
+<!-- Topbar -->
+<div class="topbar">
+  <button class="lang-btn" id="lang-btn" onclick="cycleLang()">NL</button>
 </div>
 
+<!-- Page -->
 <div class="page">
 
-  <!-- Header -->
-  <div class="header a1">
-    <div class="logo-wrap">
-      <div class="logo-icon">🌊</div>
-      <div>
-        <div class="logo-text">Unda</div>
-        <div class="logo-sub" id="l-sub">Elliott Wave · Trading Suite</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="lang-btn" id="lang-btn" onclick="cycleLang()">NL</button>
-    </div>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="eyebrow" id="h-eyebrow">Elliott Wave</div>
+    <div class="hero-title">Unda</div>
+    <div class="hero-tag" id="h-tag">Trade Smart.</div>
+    <div class="cert">🎓 <span id="h-cert">CEWA I · Elliott International</span></div>
   </div>
 
-  <!-- Hero + Fear & Greed -->
-  <div class="fg-hero a2">
+  <!-- Navigation -->
+  <div class="nav">
 
-    <!-- Stock Fear & Greed (links) -->
-    <div class="fg-widget" id="fg-stock">
-      <div class="fg-title" id="vix-title">📈 VIX</div>
-      <div class="fg-subtitle" id="vix-sub">Volatility Index</div>
-      <div class="fg-gauge-wrap">
-        <svg class="fg-gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="gStock" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#ff4444"/>
-              <stop offset="25%" stop-color="#ff8c00"/>
-              <stop offset="50%" stop-color="#ffd97a"/>
-              <stop offset="75%" stop-color="#90ee90"/>
-              <stop offset="100%" stop-color="#00ff88"/>
-            </linearGradient>
-          </defs>
-          <path d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="10" stroke-linecap="round"/>
-          <path id="sg-arc" d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="url(#gStock)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 157"/>
-          <line id="sg-needle" x1="60" y1="65" x2="60" y2="20" stroke="white" stroke-width="1.5" stroke-linecap="round" transform="rotate(0,60,65)" opacity=".7"/>
-          <circle cx="60" cy="65" r="3" fill="white" opacity=".8"/>
-        </svg>
+    <!-- Stock Dashboard -->
+    <a class="nav-btn" href="unda-stocks.html">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label" id="n1-label">Stock Dashboard</span>
+      <span class="nav-sub" id="n1-sub">Positions & live prices</span>
+    </a>
+
+    <!-- Trading Suite dropdown -->
+    <div class="dd-wrap">
+      <div class="nav-btn gold" onclick="toggleDD('dd-trading')">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label" id="n2-label">Trading Suite <span class="nav-arr">▾</span></span>
+        <span class="nav-sub" id="n2-sub">Calculators & simulation</span>
       </div>
-      <div class="fg-value" id="fg-stock-val">—</div>
-      <div class="fg-label" id="fg-stock-lbl">laden...</div>
-      <div class="fg-prev" id="fg-stock-prev"></div>
-    </div>
-
-    <!-- Center hero -->
-    <div class="hero">
-      <div class="hero-label" id="h-label">Unda · Elliott Wave</div>
-      <div class="hero-title" id="h-title">Trading Suite</div>
-      <div class="hero-sub" id="h-sub">Professionele risicobeheer tools voor elke trader</div>
-      <div class="hero-tags">
-        <span class="htag htag-gold" id="ht1">⚡ Leverage &amp; crypto</span>
-        <span class="htag htag-g" id="ht2">📊 Monte Carlo</span>
-        <span class="htag htag-g" id="ht3">📐 Kelly Criterion</span>
-        <span class="htag htag-b" id="ht4">💼 Live posities</span>
-        <span class="htag htag-b" id="ht5">📈 Technische analyse</span>
+      <div class="dropdown" id="dd-trading">
+        <a class="dd-item gold" href="unda-calculator.html">⚖️ <span id="dd-calc">Risk Calculator</span></a>
+        <a class="dd-item gold" href="unda-simulator.html">🎲 <span id="dd-sim">Trade Simulator</span></a>
+        <a class="dd-item gold" href="unda-kelly.html">📐 <span id="dd-kelly">Kelly Criterion</span></a>
+        <a class="dd-item gold" href="unda-logbook.html">📒 <span id="dd-log">Trade Logbook</span></a>
       </div>
     </div>
 
-    <!-- Crypto Fear & Greed (rechts) -->
-    <div class="fg-widget" id="fg-crypto">
-      <div class="fg-title">🪙 Crypto Market</div>
-      <div class="fg-subtitle">Fear &amp; Greed Index</div>
-      <div class="fg-gauge-wrap">
-        <svg class="fg-gauge" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="gCrypto" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#ff4444"/>
-              <stop offset="25%" stop-color="#ff8c00"/>
-              <stop offset="50%" stop-color="#ffd97a"/>
-              <stop offset="75%" stop-color="#90ee90"/>
-              <stop offset="100%" stop-color="#00ff88"/>
-            </linearGradient>
-          </defs>
-          <path d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="10" stroke-linecap="round"/>
-          <path id="cg-arc" d="M10,65 A50,50 0 0,1 110,65" fill="none" stroke="url(#gCrypto)" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 157"/>
-          <line id="cg-needle" x1="60" y1="65" x2="60" y2="20" stroke="white" stroke-width="1.5" stroke-linecap="round" transform="rotate(0,60,65)" opacity=".7"/>
-          <circle cx="60" cy="65" r="3" fill="white" opacity=".8"/>
-        </svg>
+    <!-- Educational dropdown -->
+    <div class="dd-wrap">
+      <div class="nav-btn blue" onclick="toggleDD('dd-edu')">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label" id="n3-label">Educational <span class="nav-arr">▾</span></span>
+        <span class="nav-sub" id="n3-sub">Elliott Wave & more</span>
       </div>
-      <div class="fg-value" id="fg-crypto-val">—</div>
-      <div class="fg-label" id="fg-crypto-lbl">laden...</div>
-      <div class="fg-prev" id="fg-crypto-prev"></div>
+      <div class="dropdown" id="dd-edu">
+        <a class="dd-item blue" href="unda-elliottwave.html">🌊 <span id="dd-ew">Elliott Wave</span></a>
+        <div class="dd-item blue" style="opacity:.4;cursor:default">📈 <span id="dd-ma">Moving Averages</span> <span style="font-size:9px;margin-left:auto;color:rgba(0,212,255,.4)" id="dd-soon">Soon</span></div>
+        <div class="dd-item blue" style="opacity:.4;cursor:default">🎬 <span id="dd-vid">Videos</span> <span style="font-size:9px;margin-left:auto;color:rgba(0,212,255,.4)">Soon</span></div>
+        <div class="dd-sep"></div>
+        <a class="dd-item blue" href="unda-guide.html">📖 <span id="dd-guide">Guide</span></a>
+      </div>
     </div>
 
   </div>
-
-  <!-- Workflow -->
-  <div class="workflow a3">
-    <span class="wf-label" id="wf-lbl">⚡ Workflow</span>
-    <div class="wf-flow">
-      <span class="wf-step" id="wf1">📐 Kelly</span><span class="wf-arr">→</span>
-      <span class="wf-step" id="wf2">⚖️ Positie</span><span class="wf-arr">→</span>
-      <span class="wf-step" id="wf3">📈 Trade</span><span class="wf-arr">→</span>
-      <span class="wf-step" id="wf4">📒 Logboek</span><span class="wf-arr">→</span>
-      <span class="wf-step" id="wf5">🎲 Simuleren</span><span class="wf-arr">→</span>
-      <span class="wf-step" id="wf6">🔁 Optimaliseren</span>
-    </div>
-  </div>
-
-  <!-- 3-col grid -->
-  <div class="grid">
-
-    <!-- COL 1: Stocks + Learn -->
-    <div class="sec a4">
-      <div class="sec-head">
-        <div class="sec-icon icon-g">📊</div>
-        <div><div class="sec-title" id="s1t">Stock Dashboard</div><div class="sec-sub" id="s1s">Aandelen &amp; ETF's — zonder hefboom</div></div>
-      </div>
-      <a class="card" href="unda-stocks.html">
-        <div class="featured-bar"></div>
-        <div class="card-inner">
-          <div class="featured-top">
-            <div class="feat-icon">📊</div>
-            <div style="flex:1"><div class="feat-title" id="fc-t">Stock Dashboard</div><div class="feat-desc" id="fc-d">Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.</div></div>
-            <div class="feat-arr">→</div>
-          </div>
-          <div class="feat-stats">
-            <div class="fst"><div class="fst-l" id="fs1">Calculator</div><div class="fst-v">TOB+tax</div></div>
-            <div class="fst"><div class="fst-l" id="fs2">Logboek</div><div class="fst-v" id="fs2v">+stats</div></div>
-            <div class="fst"><div class="fst-l" id="fs3">Posities</div><div class="fst-v" id="fs3v">live</div></div>
-            <div class="fst"><div class="fst-l" id="fs4">Vrijstelling</div><div class="fst-v">€10K/jr</div></div>
-          </div>
-          <div class="tags"><span class="tag tg">TOB 0,35%</span><span class="tag tg" id="fc-t1">Meerwaardebelasting</span><span class="tag tg" id="fc-t2">Break-even</span><span class="tag tgold" id="fc-t3">Live koersen</span></div>
-        </div>
-      </a>
-
-      <div class="sec-head" style="margin-top:6px">
-        <div class="sec-icon icon-blue">📖</div>
-        <div><div class="sec-title" id="s3t">Leren</div><div class="sec-sub" id="s3s">Elliott Wave, indicators &amp; video's</div></div>
-      </div>
-      <a class="card" href="unda-guide.html">
-        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📖</div><div class="tool-info"><div class="tool-name" id="gd-t">Handleiding</div><div class="tool-desc" id="gd-d">Stap-voor-stap gids voor alle tools samen</div><div class="tags"><span class="tag tb">Guide</span><span class="tag tb">Workflow</span></div></div><div class="tool-arr">→</div></div></div>
-      </a>
-      <a href="unda-elliottwave.html" class="card" style="text-decoration:none"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">🌊</div><div class="tool-info"><div class="tool-name" id="ew-t">Elliott Wave</div><div class="tool-desc" id="ew-d">Visuele gids: impulsgolven &amp; correcties</div><div class="tags"><span class="tag">Elliott Wave</span><span class="tag">Impuls</span></div></div></div></div></a>
-      <div class="card soon"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">📈</div><div class="tool-info"><div class="tool-name" id="ma-t">Moving Averages</div><div class="tool-desc" id="ma-d">EMA, SMA, VWAP</div><div class="tags"><span class="tag tdim">EMA</span><span class="tag tdim">SMA</span></div></div><span class="soon-badge" id="sb2">Binnenkort</span></div></div></div>
-      <div class="card soon"><div class="card-inner"><div class="tool-row"><div class="tool-emoji">🎬</div><div class="tool-info"><div class="tool-name" id="vid-t">Video's</div><div class="tool-desc" id="vid-d">Analyses &amp; live setups</div><div class="tags"><span class="tag tdim">Analyse</span><span class="tag tdim">Live</span></div></div><span class="soon-badge" id="sb3">Binnenkort</span></div></div></div>
-    </div>
-
-    <!-- COL 2: Trading Suite -->
-    <div class="sec a4">
-      <div class="sec-head">
-        <div class="sec-icon icon-gold">⚡</div>
-        <div><div class="sec-title" id="s2t">Trading Suite</div><div class="sec-sub" id="s2s">Leverage, crypto &amp; futures</div></div>
-      </div>
-      <a class="card gold" href="unda-calculator.html">
-        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">⚖️</div><div class="tool-info"><div class="tool-name" id="rc-t">Risk Calculator</div><div class="tool-desc" id="rc-d">Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.</div><div class="tags"><span class="tag tgold">Leverage</span><span class="tag tg" id="rc-t2">Positiegrootte</span><span class="tag tg" id="rc-t3">Stop loss</span></div></div><div class="tool-arr">→</div></div></div>
-      </a>
-      <a class="card gold" href="unda-simulator.html">
-        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">🎲</div><div class="tool-info"><div class="tool-name" id="ts-t">Trade Simulator</div><div class="tool-desc" id="ts-d">Monte Carlo simulatie — hoe evolueert je account over honderden trades?</div><div class="tags"><span class="tag tgold">Monte Carlo</span><span class="tag tg" id="ts-t2">Win rate</span><span class="tag tg" id="ts-t3">R:R ratio</span></div></div><div class="tool-arr">→</div></div></div>
-      </a>
-      <a class="card gold" href="unda-kelly.html">
-        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📐</div><div class="tool-info"><div class="tool-name" id="kc-t">Kelly Criterion</div><div class="tool-desc" id="kc-d">Mathematisch optimale inzetgrootte per trade op basis van je edge.</div><div class="tags"><span class="tag tgold">Kelly criterion</span><span class="tag tg" id="kc-t2">Bet sizing</span><span class="tag tg" id="kc-t3">Edge</span></div></div><div class="tool-arr">→</div></div></div>
-      </a>
-      <a class="card gold" href="unda-logbook.html">
-        <div class="card-inner"><div class="tool-row"><div class="tool-emoji">📒</div><div class="tool-info"><div class="tool-name" id="lb-t">Trade Logboek</div><div class="tool-desc" id="lb-d">Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.</div><div class="tags"><span class="tag tgold">Journal</span><span class="tag tg" id="lb-t2">Statistieken</span><span class="tag tg" id="lb-t3">Profit factor</span></div></div><div class="tool-arr">→</div></div></div>
-      </a>
-    </div>
-
-    <!-- COL 3: News -->
-    <div class="news-col a5">
-      <div class="sec-head">
-        <div class="sec-icon icon-red">📰</div>
-        <div><div class="sec-title" id="nws-t">Marktnieuws</div><div class="sec-sub" id="nws-s">Financieel &amp; wereldnieuws</div></div>
-      </div>
-      <div class="news-card">
-        <div class="news-head">
-          <div class="news-title-bar"><div class="live-dot"></div><span id="nws-live">Live nieuws</span></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="ncat-btn ncat-act" id="news-cat-world" onclick="loadNews('world')" title="Wereldnieuws">🌍</button>
-            <button class="ncat-btn" id="news-cat-be" onclick="loadNews('be')" title="België">🇧🇪</button>
-            <button class="ncat-btn" id="news-cat-nl" onclick="loadNews('nl')" title="Nederland">🇳🇱</button>
-            <button class="ncat-btn" id="news-cat-uk" onclick="loadNews('uk')" title="United Kingdom">🇬🇧</button>
-            <button class="refresh-news" onclick="loadNews()" id="news-refresh-btn" title="Ververs">↻</button>
-          </div>
-        </div>
-        <div id="news-list" class="news-list">
-          <div class="news-loading" id="news-loading">📡 Nieuws laden...</div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /grid -->
-
-  <div class="footer" id="footer-txt">Unda · Elliott Wave · Trading Suite · Wave your risk</div>
 </div>
+
+<div class="footer" id="footer-txt">Unda · Elliott Wave · Trade Smart</div>
 
 <script>
 // ── Lang ──
-const LANGS=['nl','en','es','fr'];
-let langIdx=0;
-let lang='nl';
-const T={
-  nl:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professionele risicobeheer tools voor elke trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live posities','ht5':'📈 Technische analyse','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Positie','wf3':'📈 Trade','wf4':'📒 Logboek','wf5':'🎲 Simuleren','wf6':'🔁 Optimaliseren','s1t':'Stock Dashboard','s1s':'Aandelen & ETF\'s — zonder hefboom','fc-t':'Stock Dashboard','fc-d':'Alles-in-één: kosten, TOB, meerwaardebelasting, logboek, grafieken en live portfolio tracking.','fs1':'Calculator','fs2':'Logboek','fs2v':'+stats','fs3':'Posities','fs3v':'live','fs4':'Vrijstelling','fc-t1':'Meerwaardebelasting','fc-t2':'Break-even','fc-t3':'Live koersen','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimale leverage, positiegrootte en contracten op basis van portfolio en stop loss.','rc-t2':'Positiegrootte','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulatie — hoe evolueert je account over honderden trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematisch optimale inzetgrootte per trade op basis van je edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logboek','lb-d':'Log elke leveraged trade. Win rate, R:R en profit factor automatisch bijgehouden.','lb-t2':'Statistieken','lb-t3':'Profit factor','s3t':'Leren','s3s':'Elliott Wave, indicators & video\'s','gd-t':'Handleiding','gd-d':'Stap-voor-stap gids voor alle tools samen','ew-t':'Elliott Wave','ew-d':'Visuele gids: impulsgolven & correcties','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Video\'s','vid-d':'Analyses & live setups','sb1':'Binnenkort','sb2':'Binnenkort','sb3':'Binnenkort','nws-t':'Marktnieuws','nws-s':'Financieel & wereldnieuws','nws-live':'Live nieuws','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
-  en:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Professional risk management tools for every trader','ht1':'⚡ Leverage & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Kelly Criterion','ht4':'💼 Live positions','ht5':'📈 Technical analysis','wf-lbl':'⚡ Workflow','wf1':'📐 Kelly','wf2':'⚖️ Size','wf3':'📈 Trade','wf4':'📒 Log','wf5':'🎲 Simulate','wf6':'🔁 Optimise','s1t':'Stock Dashboard','s1s':'Stocks & ETFs — no leverage','fc-t':'Stock Dashboard','fc-d':'All-in-one: costs, transaction tax, capital gains tax, logbook, charts and live portfolio tracking.','fs1':'Calculator','fs2':'Logbook','fs2v':'+stats','fs3':'Positions','fs3v':'live','fs4':'Exemption','fc-t1':'Capital gains tax','fc-t2':'Break-even','fc-t3':'Live prices','s2t':'Trading Suite','s2s':'Leverage, crypto & futures','rc-t':'Risk Calculator','rc-d':'Optimal leverage, position size and contracts based on portfolio and stop loss.','rc-t2':'Position size','rc-t3':'Stop loss','ts-t':'Trade Simulator','ts-d':'Monte Carlo simulation — how does your account evolve over hundreds of trades?','ts-t2':'Win rate','ts-t3':'R:R ratio','kc-t':'Kelly Criterion','kc-d':'Mathematically optimal bet size per trade based on your edge.','kc-t2':'Bet sizing','kc-t3':'Edge','lb-t':'Trade Logbook','lb-d':'Log every leveraged trade. Win rate, R:R and profit factor tracked automatically.','lb-t2':'Statistics','lb-t3':'Profit factor','s3t':'Learn','s3s':'Elliott Wave, indicators & videos','gd-t':'Guide','gd-d':'Step-by-step guide for using all tools together','ew-t':'Elliott Wave','ew-d':'Visual guide: impulse waves & corrections','ma-t':'Moving Averages','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Analysis & live setups','sb1':'Coming soon','sb2':'Coming soon','sb3':'Coming soon','nws-t':'Market News','nws-s':'Financial & world news','nws-live':'Live news','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
-  es:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Herramientas profesionales de gestión de riesgo para traders','ht1':'⚡ Apalancamiento & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Criterio Kelly','ht4':'💼 Posiciones en vivo','ht5':'📈 Análisis técnico','wf-lbl':'⚡ Flujo de trabajo','wf1':'📐 Kelly','wf2':'⚖️ Posición','wf3':'📈 Trade','wf4':'📒 Diario','wf5':'🎲 Simular','wf6':'🔁 Optimizar','s1t':'Panel de acciones','s1s':'Acciones & ETFs — sin apalancamiento','fc-t':'Panel de acciones','fc-d':'Todo en uno: costes, impuestos, diario, gráficos y seguimiento de cartera en vivo.','fs1':'Calculadora','fs2':'Diario','fs2v':'+stats','fs3':'Posiciones','fs3v':'vivo','fs4':'Exención','fc-t1':'Impuesto ganancias','fc-t2':'Break-even','fc-t3':'Precios en vivo','s2t':'Suite de trading','s2s':'Apalancamiento, crypto & futuros','rc-t':'Calculadora de riesgo','rc-d':'Apalancamiento óptimo, tamaño de posición y contratos basados en cartera y stop loss.','rc-t2':'Tamaño posición','rc-t3':'Stop loss','ts-t':'Simulador de trades','ts-d':'Simulación Monte Carlo — cómo evoluciona tu cuenta en cientos de trades.','ts-t2':'Win rate','ts-t3':'Ratio R:R','kc-t':'Criterio de Kelly','kc-d':'Tamaño óptimo de apuesta por trade basado en tu ventaja.','kc-t2':'Apuesta','kc-t3':'Ventaja','lb-t':'Diario de trades','lb-d':'Registra cada trade apalancado. Win rate, R:R y factor de beneficio automáticos.','lb-t2':'Estadísticas','lb-t3':'Factor beneficio','s3t':'Aprender','s3s':'Elliott Wave, indicadores & videos','gd-t':'Guía','gd-d':'Guía paso a paso para usar todas las herramientas','ew-t':'Elliott Wave','ew-d':'Guía visual: ondas impulsivas & correctivas','ma-t':'Medias móviles','ma-d':'EMA, SMA, VWAP','vid-t':'Videos','vid-d':'Análisis & setups en vivo','sb1':'Próximamente','sb2':'Próximamente','sb3':'Próximamente','nws-t':'Noticias del mercado','nws-s':'Noticias financieras & mundiales','nws-live':'En directo','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'},
-  fr:{'l-sub':'Elliott Wave · Trading Suite','h-label':'Unda · Elliott Wave','h-title':'Trading Suite','h-sub':'Outils professionnels de gestion des risques pour chaque trader','ht1':'⚡ Levier & crypto','ht2':'📊 Monte Carlo','ht3':'📐 Critère de Kelly','ht4':'💼 Positions en direct','ht5':'📈 Analyse technique','wf-lbl':'⚡ Flux de travail','wf1':'📐 Kelly','wf2':'⚖️ Position','wf3':'📈 Trade','wf4':'📒 Journal','wf5':'🎲 Simuler','wf6':'🔁 Optimiser','s1t':'Tableau de bord','s1s':'Actions & ETFs — sans levier','fc-t':'Tableau de bord','fc-d':'Tout-en-un: coûts, taxes, journal, graphiques et suivi de portefeuille en direct.','fs1':'Calculatrice','fs2':'Journal','fs2v':'+stats','fs3':'Positions','fs3v':'direct','fs4':'Exonération','fc-t1':'Impôt sur gains','fc-t2':'Seuil de rentabilité','fc-t3':'Prix en direct','s2t':'Suite de trading','s2s':'Levier, crypto & futures','rc-t':'Calculatrice de risque','rc-d':'Levier optimal, taille de position et contrats basés sur le portefeuille et stop loss.','rc-t2':'Taille position','rc-t3':'Stop loss','ts-t':'Simulateur de trades','ts-d':'Simulation Monte Carlo — comment évolue votre compte sur des centaines de trades.','ts-t2':'Win rate','ts-t3':'Ratio R:R','kc-t':'Critère de Kelly','kc-d':'Taille de mise optimale par trade basée sur votre avantage.','kc-t2':'Mise','kc-t3':'Avantage','lb-t':'Journal de trades','lb-d':'Enregistrez chaque trade avec levier. Win rate, R:R et facteur de profit automatiques.','lb-t2':'Statistiques','lb-t3':'Facteur profit','s3t':'Apprendre','s3s':'Elliott Wave, indicateurs & vidéos','gd-t':'Guide','gd-d':'Guide étape par étape pour utiliser tous les outils','ew-t':'Elliott Wave','ew-d':'Guide visuel: vagues impulsives & correctives','ma-t':'Moyennes mobiles','ma-d':'EMA, SMA, VWAP','vid-t':'Vidéos','vid-d':'Analyses & setups en direct','sb1':'Bientôt','sb2':'Bientôt','sb3':'Bientôt','nws-t':'Actualités marché','nws-s':'Actualités financières & mondiales','nws-live':'En direct','footer-txt':'Unda · Elliott Wave · Trading Suite · Wave your risk','vix-sub':'Volatility Index'}
+const LANGS=['en','nl','es','fr'];
+const LANG_LABELS={en:'NL',nl:'ES',es:'FR',fr:'EN'};
+let langIdx=0, lang='en';
+
+const TX={
+  en:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
+    'n1-label':'Stock Dashboard','n1-sub':'Positions & live prices',
+    'n2-label':'Trading Suite','n2-sub':'Calculators & simulation',
+    'n3-label':'Educational','n3-sub':'Elliott Wave & more',
+    'dd-calc':'Risk Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook',
+    'dd-ew':'Elliott Wave','dd-ma':'Moving Averages','dd-vid':'Videos','dd-guide':'Guide','dd-soon':'Soon',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  nl:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
+    'n1-label':'Stock Dashboard','n1-sub':'Posities & live koersen',
+    'n2-label':'Trading Suite','n2-sub':'Calculators & simulatie',
+    'n3-label':'Educatief','n3-sub':'Elliott Wave & meer',
+    'dd-calc':'Risico Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterium','dd-log':'Trade Logboek',
+    'dd-ew':'Elliott Wave','dd-ma':'Voortschrijdende gemiddelden','dd-vid':'Video\'s','dd-guide':'Handleiding','dd-soon':'Binnenkort',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  es:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott Internacional',
+    'n1-label':'Panel de acciones','n1-sub':'Posiciones & precios en vivo',
+    'n2-label':'Trading Suite','n2-sub':'Calculadoras & simulación',
+    'n3-label':'Educación','n3-sub':'Elliott Wave & más',
+    'dd-calc':'Calculadora de riesgo','dd-sim':'Simulador','dd-kelly':'Criterio Kelly','dd-log':'Diario de trades',
+    'dd-ew':'Elliott Wave','dd-ma':'Medias móviles','dd-vid':'Videos','dd-guide':'Guía','dd-soon':'Pronto',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  fr:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
+    'n1-label':'Tableau de bord','n1-sub':'Positions & prix en direct',
+    'n2-label':'Trading Suite','n2-sub':'Calculatrices & simulation',
+    'n3-label':'Éducation','n3-sub':'Elliott Wave & plus',
+    'dd-calc':'Calculatrice de risque','dd-sim':'Simulateur','dd-kelly':'Critère Kelly','dd-log':'Journal de trades',
+    'dd-ew':'Elliott Wave','dd-ma':'Moyennes mobiles','dd-vid':'Vidéos','dd-guide':'Guide','dd-soon':'Bientôt',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  }
 };
+
 function applyLang(){
-  const t=T[lang]||T.nl;
-  Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
+  const t=TX[lang];
+  Object.keys(t).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.textContent=t[id];
+  });
 }
+
 function cycleLang(){
   langIdx=(langIdx+1)%LANGS.length;
   lang=LANGS[langIdx];
-  document.getElementById('lang-btn').textContent=lang.toUpperCase();
+  document.getElementById('lang-btn').textContent=LANG_LABELS[lang];
   applyLang();
-  if(fgValues.crypto!=null)_renderFG('crypto',fgValues.crypto,fgValues.cryptoPrev);
-  if(fgValues.stock!=null)_renderFG('stock',fgValues.stock,fgValues.stockPrev);
 }
 
-// ── Dark / Light mode ──
-function toggleDark(){}
-(function(){
-  try{const chk=document.getElementById('dark-chk');if(chk)chk.checked=true;}catch(e){}
-})();
+// ── Dropdowns ──
+function toggleDD(id){
+  const el=document.getElementById(id);
+  const isOpen=el.classList.contains('open');
+  document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'));
+  if(!isOpen)el.classList.add('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.dd-wrap'))
+    document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'));
+});
 
 applyLang();
-
-// ── TICKER ──
-// Rij 1: Indices + ETFs + Aandelen
-const TICKER_ROW1=[
-  {sym:'^GSPC',   type:'stock', label:'S&P 500'},
-  {sym:'^IXIC',   type:'stock', label:'NASDAQ'},
-  {sym:'^DJI',    type:'stock', label:'DOW'},
-  {sym:'^BFX',    type:'stock', label:'BEL 20'},
-  {sym:'^GDAXI',  type:'stock', label:'DAX'},
-  {sym:'^FCHI',   type:'stock', label:'CAC 40'},
-  {sym:'^AEX',    type:'stock', label:'AEX'},
-  {sym:'^FTSE',   type:'stock', label:'FTSE 100'},
-  {sym:'^N225',   type:'stock', label:'Nikkei'},
-  {sym:'^HSI',    type:'stock', label:'Hang Seng'},
-  {sym:'^NSEI',   type:'stock', label:'Nifty 50'},
-  {sym:'^AXJO',   type:'stock', label:'ASX 200'},
-  {sym:'^SSMI',   type:'stock', label:'SMI'},
-  {sym:'^IBEX',   type:'stock', label:'IBEX 35'},
-  {sym:'SPY',     type:'stock', label:'SPY ETF'},
-  {sym:'QQQ',     type:'stock', label:'QQQ ETF'},
-  {sym:'IWDA.AS', type:'stock', label:'IWDA'},
-  {sym:'VWCE.DE', type:'stock', label:'VWCE'},
-  {sym:'EEM',     type:'stock', label:'iSh EM'},
-  {sym:'AAPL',    type:'stock', label:'Apple'},
-  {sym:'NVDA',    type:'stock', label:'Nvidia'},
-  {sym:'MSFT',    type:'stock', label:'Microsoft'},
-  {sym:'TSLA',    type:'stock', label:'Tesla'},
-  {sym:'ASML.AS', type:'stock', label:'ASML'},
-  {sym:'MC.PA',   type:'stock', label:'LVMH'},
-  {sym:'SAP.DE',  type:'stock', label:'SAP'},
-  {sym:'ABI.BR',  type:'stock', label:'AB InBev'},
-  {sym:'KBC.BR',  type:'stock', label:'KBC'},
-  {sym:'SIE.DE',  type:'stock', label:'Siemens'},
-  {sym:'AMZN',    type:'stock', label:'Amazon'},
-];
-
-// Rij 2: Forex + Commodities + Rente
-const TICKER_ROW2=[
-  {sym:'EURUSD=X', type:'stock', label:'EUR/USD'},
-  {sym:'EURGBP=X', type:'stock', label:'EUR/GBP'},
-  {sym:'EURJPY=X', type:'stock', label:'EUR/JPY'},
-  {sym:'JPY=X',    type:'stock', label:'USD/JPY'},
-  {sym:'GBPUSD=X', type:'stock', label:'GBP/USD'},
-  {sym:'EURCHF=X', type:'stock', label:'EUR/CHF'},
-  {sym:'CHFUSD=X', type:'stock', label:'USD/CHF'},
-  {sym:'AUDUSD=X', type:'stock', label:'AUD/USD'},
-  {sym:'CADUSD=X', type:'stock', label:'USD/CAD'},
-  {sym:'GC=F',     type:'stock', label:'GOLD'},
-  {sym:'SI=F',     type:'stock', label:'SILVER'},
-  {sym:'CL=F',     type:'stock', label:'OIL WTI'},
-  {sym:'BZ=F',     type:'stock', label:'BRENT'},
-  {sym:'NG=F',     type:'stock', label:'NAT GAS'},
-  {sym:'HG=F',     type:'stock', label:'COPPER'},
-  {sym:'PL=F',     type:'stock', label:'PLATINUM'},
-  {sym:'PA=F',     type:'stock', label:'PALLADIUM'},
-  {sym:'ZW=F',     type:'stock', label:'WHEAT'},
-  {sym:'KC=F',     type:'stock', label:'COFFEE'},
-  {sym:'CC=F',     type:'stock', label:'COCOA'},
-  {sym:'^TNX',     type:'stock', label:'US 10Y'},
-  {sym:'^TYX',     type:'stock', label:'US 30Y'},
-  {sym:'^IRX',     type:'stock', label:'US 3M'},
-  {sym:'^IRDE',    type:'stock', label:'DE 10Y'},
-];
-
-// Rij 3: Top 20 Crypto
-const TICKER_ROW3=[
-  {sym:'BTC',   type:'crypto', label:'BTC'},
-  {sym:'ETH',   type:'crypto', label:'ETH'},
-  {sym:'BNB',   type:'crypto', label:'BNB'},
-  {sym:'SOL',   type:'crypto', label:'SOL'},
-  {sym:'XRP',   type:'crypto', label:'XRP'},
-  {sym:'ADA',   type:'crypto', label:'ADA'},
-  {sym:'AVAX',  type:'crypto', label:'AVAX'},
-  {sym:'DOGE',  type:'crypto', label:'DOGE'},
-  {sym:'DOT',   type:'crypto', label:'DOT'},
-  {sym:'MATIC', type:'crypto', label:'MATIC'},
-  {sym:'LINK',  type:'crypto', label:'LINK'},
-  {sym:'TRX',   type:'crypto', label:'TRX'},
-  {sym:'SHIB',  type:'crypto', label:'SHIB'},
-  {sym:'LTC',   type:'crypto', label:'LTC'},
-  {sym:'UNI',   type:'crypto', label:'UNI'},
-  {sym:'ATOM',  type:'crypto', label:'ATOM'},
-  {sym:'XLM',   type:'crypto', label:'XLM'},
-  {sym:'ALGO',  type:'crypto', label:'ALGO'},
-  {sym:'FIL',   type:'crypto', label:'FIL'},
-  {sym:'NEAR',  type:'crypto', label:'NEAR'},
-];
-
-const TICKER_SYMBOLS=[...TICKER_ROW1,...TICKER_ROW2,...TICKER_ROW3];
-
-let tickerData={};
-
-async function fetchTickerPrices(){
-  // Crypto via Binance
-  const cryptos=TICKER_SYMBOLS.filter(s=>s.type==='crypto');
-  for(const s of cryptos){
-    try{
-      // Try EUR first
-      let r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}EUR`);
-      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData[s.sym]={price:+d.lastPrice,chg:+d.priceChangePercent};continue;}}
-      // Fallback USDT
-      r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}USDT`);
-      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData[s.sym]={price:+d.lastPrice*0.92,chg:+d.priceChangePercent};}}
-    }catch(e){}
-  }
-  // Stocks/indices via Yahoo Finance proxy
-  const stocks=TICKER_SYMBOLS.filter(s=>s.type==='stock');
-  for(const s of stocks){
-    try{
-      const url=`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.sym)}?interval=1d&range=1d`;
-      const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
-      const r=await fetch(proxy,{cache:'no-store'});
-      if(!r.ok)continue;
-      const data=await r.json();
-      const meta=data?.chart?.result?.[0]?.meta;
-      if(meta?.regularMarketPrice>0){
-        const price=meta.regularMarketPrice;
-        const prev=meta.chartPreviousClose||meta.previousClose||price;
-        const chg=prev>0?((price-prev)/prev*100):0;
-        const cur=(meta.currency||'USD').toUpperCase();
-        const eur=cur==='EUR'?price:price*0.92;
-        tickerData[s.sym]={price:eur,chg,cur};
-      }
-    }catch(e){}
-  }
-  renderTicker();
-}
-
-function buildTickerHtml(symbols){
-  let html='';
-  for(const s of symbols){
-    const d=tickerData[s.sym];
-    if(!d){
-      html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="opacity:.4">—</span></div>`;
-      continue;
-    }
-    const up=d.chg>=0;
-    const dotCls=up?'tick-dot-up':'tick-dot-dn';
-    const chgCls=up?'tick-up':'tick-dn';
-    const sign=up?'+':'';
-    const p=d.price;
-    const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
-    const isForex=s.label.includes('/')||s.label.includes('Y')||s.label.includes('3M');
-    const prefix=isForex?'':' €';
-    html+=`<div class="tick-item"><div class="tick-dot ${dotCls}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}</span><span class="tick-chg ${chgCls}">${sign}${d.chg.toFixed(2)}%</span></div>`;
-  }
-  return html;
-}
-
-function renderTicker(){
-  const h1=buildTickerHtml(TICKER_ROW1);
-  const h2=buildTickerHtml(TICKER_ROW2);
-  const h3=buildTickerHtml(TICKER_ROW3);
-  const i1=document.getElementById('ticker-inner-1');
-  const i2=document.getElementById('ticker-inner-2');
-  const i3=document.getElementById('ticker-inner-3');
-  if(i1)i1.innerHTML=h1+h1;
-  if(i2)i2.innerHTML=h2+h2;
-  if(i3)i3.innerHTML=h3+h3;
-}
-
-// ── NEWS: GNews → Mediastack → RSS fallback ──
-const GNEWS_KEY='6a2d4ea4b91083733b9afa3d8157714a';
-const MEDIASTACK_KEY='cfa39b8e4d4c1711450cd1313f6f2a43';
-const RSS_FEEDS=[
-  {url:'https://feeds.reuters.com/reuters/businessNews',name:'Reuters'},
-  {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
-  {url:'https://www.ft.com/rss/home/uk',name:'Financial Times'},
-];
-const RSS_BE_FEEDS=[
-  {url:'https://www.tijd.be/rss/home.xml',name:'De Tijd'},
-  {url:'https://trends.knack.be/rss.xml',name:'Trends'},
-  {url:'https://www.vrt.be/vrtnws/nl.rss.economics.xml',name:'VRT Economie'},
-];
-const RSS_NL_FEEDS=[
-  {url:'https://feeds.feedburner.com/rtl-nieuws/binnenland',name:'RTL Nieuws'},
-  {url:'https://www.nu.nl/rss/Economie',name:'NU.nl Economie'},
-  {url:'https://www.nos.nl/rss/economie',name:'NOS Economie'},
-  {url:'https://fd.nl/rss',name:'Financieele Dagblad'},
-];
-const RSS_UK_FEEDS=[
-  {url:'https://feeds.bbci.co.uk/news/uk/rss.xml',name:'BBC UK'},
-  {url:'https://feeds.bbci.co.uk/news/business/rss.xml',name:'BBC Business'},
-  {url:'https://www.theguardian.com/uk/rss',name:'The Guardian'},
-  {url:'https://www.ft.com/rss/home/uk',name:'Financial Times'},
-];
-
-let newsCategory='world'; // 'world' or 'be'
-
-async function loadNews(cat){
-  if(cat)newsCategory=cat;
-  const btn=document.getElementById('news-refresh-btn');
-  const btnW=document.getElementById('news-cat-world');
-  const btnB=document.getElementById('news-cat-be');
-  const btnN=document.getElementById('news-cat-nl');
-  const btnU=document.getElementById('news-cat-uk');
-  if(btn)btn.innerHTML='<span class="news-spin">↻</span>';
-  if(btnW){btnW.classList.toggle('ncat-act',newsCategory==='world');btnB.classList.toggle('ncat-act',newsCategory==='be');if(btnN)btnN.classList.toggle('ncat-act',newsCategory==='nl');if(btnU)btnU.classList.toggle('ncat-act',newsCategory==='uk');}
-  const list=document.getElementById('news-list');
-  list.innerHTML='<div class="news-loading">📡 Nieuws laden...</div>';
-
-  if(newsCategory==='be'){
-    await loadBelgianNews();
-  } else if(newsCategory==='nl'){
-    await loadDutchNews();
-  } else if(newsCategory==='uk'){
-    await loadUKNews();
-  } else {
-    await loadWorldNews();
-  }
-  if(btn)btn.textContent='↻';
-}
-
-async function loadWorldNews(){
-  // ── Bron 1: GNews ──
-  try{
-    const url=`https://gnews.io/api/v4/top-headlines?category=business&lang=en&max=10&apikey=${GNEWS_KEY}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('GNews '+r.status);
-    const data=await r.json();
-    if(data.articles&&data.articles.length>0){
-      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'GNews',date:new Date(a.publishedAt)})));
-      return;
-    }
-  }catch(e){}
-  // ── Bron 2: Mediastack ──
-  try{
-    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&categories=business,technology&languages=en&limit=10`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('Mediastack '+r.status);
-    const data=await r.json();
-    if(data.data&&data.data.length>0){
-      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'Mediastack',date:new Date(a.published_at)})));
-      return;
-    }
-  }catch(e){}
-  // ── Bron 3: RSS ──
-  await loadRSSFallback(RSS_FEEDS);
-}
-
-async function loadBelgianNews(){
-  // ── GNews België ──
-  try{
-    const url=`https://gnews.io/api/v4/top-headlines?country=be&lang=nl&max=10&apikey=${GNEWS_KEY}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('GNews BE '+r.status);
-    const data=await r.json();
-    if(data.articles&&data.articles.length>0){
-      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'België',date:new Date(a.publishedAt)})));
-      return;
-    }
-  }catch(e){}
-  // ── Mediastack België ──
-  try{
-    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=be&languages=nl&limit=10`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('Mediastack BE '+r.status);
-    const data=await r.json();
-    if(data.data&&data.data.length>0){
-      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'België',date:new Date(a.published_at)})));
-      return;
-    }
-  }catch(e){}
-  // ── Belgische RSS feeds ──
-  await loadRSSFallback(RSS_BE_FEEDS);
-}
-
-async function loadDutchNews(){
-  try{
-    const url=`https://gnews.io/api/v4/top-headlines?country=nl&lang=nl&max=10&apikey=${GNEWS_KEY}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-    if(data.articles&&data.articles.length>0){
-      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'NL',date:new Date(a.publishedAt)})));
-      return;
-    }
-  }catch(e){}
-  try{
-    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=nl&languages=nl&limit=10`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-    if(data.data&&data.data.length>0){
-      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'NL',date:new Date(a.published_at)})));
-      return;
-    }
-  }catch(e){}
-  await loadRSSFallback(RSS_NL_FEEDS);
-}
-
-async function loadUKNews(){
-  try{
-    const url=`https://gnews.io/api/v4/top-headlines?country=gb&lang=en&max=10&apikey=${GNEWS_KEY}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-    if(data.articles&&data.articles.length>0){
-      renderNewsArticles(data.articles.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source?.name||'UK',date:new Date(a.publishedAt)})));
-      return;
-    }
-  }catch(e){}
-  try{
-    const url=`https://api.mediastack.com/v1/news?access_key=${MEDIASTACK_KEY}&countries=gb&languages=en&limit=10`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error();
-    const data=await r.json();
-    if(data.data&&data.data.length>0){
-      renderNewsArticles(data.data.map(a=>({title:a.title,desc:a.description,img:a.image,url:a.url,source:a.source||'UK',date:new Date(a.published_at)})));
-      return;
-    }
-  }catch(e){}
-  await loadRSSFallback(RSS_UK_FEEDS);
-}
-
-async function loadRSSFallback(feeds){
-  const allItems=[];
-  for(const feed of feeds){
-    try{
-      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`;
-      const r=await fetch(proxy,{cache:'no-store'});
-      if(!r.ok)continue;
-      const j=await r.json();
-      const parser=new DOMParser();
-      const xml=parser.parseFromString(j.contents,'text/xml');
-      xml.querySelectorAll('item').forEach(item=>{
-        const title=item.querySelector('title')?.textContent?.trim();
-        const link=item.querySelector('link')?.textContent?.trim()||item.querySelector('link')?.nextSibling?.textContent?.trim();
-        const pubDate=item.querySelector('pubDate')?.textContent?.trim();
-        const desc=item.querySelector('description')?.textContent?.trim();
-        if(title&&title.length>10)allItems.push({title,desc,img:null,url:link,source:feed.name,date:pubDate?new Date(pubDate):new Date()});
-      });
-    }catch(e){}
-  }
-  if(allItems.length>0){allItems.sort((a,b)=>b.date-a.date);renderNewsArticles(allItems.slice(0,15));}
-  else document.getElementById('news-list').innerHTML='<div class="news-loading">Nieuws tijdelijk niet beschikbaar</div>';
-}
-
-function renderNewsArticles(articles){
-  const list=document.getElementById('news-list');
-  list.innerHTML=articles.map(a=>{
-    const timeStr=a.date&&!isNaN(a.date)?timeAgo(a.date):'';
-    const clean=(a.title||'').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/<[^>]*>/g,'');
-    const desc=a.desc?(a.desc.replace(/<[^>]*>/g,'').slice(0,90)+'…'):'';
-    const img=a.img?`<img src="${a.img}" class="news-img" onerror="this.style.display='none'" loading="lazy">`:'';
-    return `<div class="news-item" onclick="window.open('${a.url}','_blank')">
-      ${img}
-      <div class="news-text">
-        <div class="news-headline">${clean}</div>
-        ${desc?`<div class="news-desc">${desc}</div>`:''}
-        <div class="news-meta"><span class="news-source">${a.source}</span>${timeStr?`<span class="news-time">${timeStr}</span>`:''}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function timeAgo(date){
-  const mins=Math.round((Date.now()-date.getTime())/60000);
-  if(mins<1)return 'nu';
-  if(mins<60)return mins+'m';
-  if(mins<1440)return Math.round(mins/60)+'u';
-  return Math.round(mins/1440)+'d';
-}
-
-// ── FEAR & GREED ──
-function fgColor(val){
-  if(val<=24)return'fg-extreme-fear';
-  if(val<=44)return'fg-fear';
-  if(val<=55)return'fg-neutral';
-  if(val<=74)return'fg-greed';
-  return'fg-extreme-greed';
-}
-function fgText(val,l){
-  if(val<=24)return l==='en'?'Extreme Fear':'Extreme Angst';
-  if(val<=44)return l==='en'?'Fear':'Angst';
-  if(val<=55)return l==='en'?'Neutral':'Neutraal';
-  if(val<=74)return l==='en'?'Greed':'Hebzucht';
-  return l==='en'?'Extreme Greed':'Extreme Hebzucht';
-}
-function renderGauge(arcId, needleId, val){
-  // Arc: total length of semicircle path = ~157px
-  const pct=val/100;
-  const arcEl=document.getElementById(arcId);
-  const needleEl=document.getElementById(needleId);
-  if(arcEl)arcEl.setAttribute('stroke-dasharray',`${pct*157} 157`);
-  // Needle: rotate from -90 (left=0) to +90 (right=100)
-  if(needleEl)needleEl.setAttribute('transform',`rotate(${-90+pct*180},60,65)`);
-}
-let fgValues={crypto:null,cryptoPrev:null,stock:null,stockPrev:null};
-
-function setFG(prefix, val, prev){
-  if(prefix==='crypto'){fgValues.crypto=val;fgValues.cryptoPrev=prev;}
-  else{fgValues.stock=val;fgValues.stockPrev=prev;}
-  _renderFG(prefix,val,prev);
-}
-function _renderFG(prefix,val,prev){
-  const cls=fgColor(val);
-  const lbl=fgText(val,lang);
-  const valEl=document.getElementById(`fg-${prefix}-val`);
-  const lblEl=document.getElementById(`fg-${prefix}-lbl`);
-  const prevEl=document.getElementById(`fg-${prefix}-prev`);
-  if(valEl){valEl.textContent=val;valEl.className=`fg-value ${cls}`;}
-  if(lblEl){lblEl.textContent=lbl;lblEl.className=`fg-label ${cls}`;}
-  if(prevEl&&prev!=null&&prefix==='crypto'){
-    prevEl.textContent=(lang==='nl'?'Gisteren: ':'Yesterday: ')+prev+' — '+fgText(prev,lang);
-  }
-  renderGauge(prefix==='crypto'?'cg-arc':'sg-arc',prefix==='crypto'?'cg-needle':'sg-needle',val);
-}
-
-async function fetchFearGreed(){
-  // Crypto via alternative.me (gratis, geen key, CORS OK)
-  try{
-    const r=await fetch('https://api.alternative.me/fng/?limit=2');
-    if(r.ok){
-      const d=await r.json();
-      const today=+d.data[0].value;
-      const yesterday=+d.data[1].value;
-      setFG('crypto',today,yesterday);
-    }
-  }catch(e){
-    document.getElementById('fg-crypto-lbl').textContent='Niet beschikbaar';
-  }
-
-  // Stock market via VIX (Yahoo Finance — zelfde proxy als ticker)
-  try{
-    const url=`https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=2d`;
-    const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
-    const r=await fetch(proxy,{cache:'no-store'});
-    if(r.ok){
-      const data=await r.json();
-      const meta=data?.chart?.result?.[0]?.meta;
-      const vix=meta?.regularMarketPrice;
-      const prevVix=meta?.chartPreviousClose;
-      if(vix>0){
-        // VIX omzetten naar 0-100 schaal (omgekeerd: hoge VIX = angst)
-        // VIX 10 = 90/100, VIX 20 = 60/100, VIX 30 = 30/100, VIX 40+ = 0-15/100
-        const score=Math.round(Math.max(0,Math.min(100,100-(vix-10)*3)));
-        const prevScore=prevVix?Math.round(Math.max(0,Math.min(100,100-(prevVix-10)*3))):null;
-        setFG('stock',score,prevScore);
-        // Voeg VIX waarde toe als extra info
-        const prevEl=document.getElementById('fg-stock-prev');
-        if(prevEl)prevEl.textContent=`VIX: ${vix.toFixed(2)} ${vix>prevVix?'▲':'▼'}${Math.abs(vix-prevVix).toFixed(2)}`;
-      }else throw new Error('no vix');
-    }
-  }catch(e){
-    // Fallback: probeer allorigins proxy
-    try{
-      const url=`https://query2.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=1d`;
-      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const r=await fetch(proxy,{cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        const data=JSON.parse(j.contents);
-        const vix=data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-        if(vix>0){
-          const score=Math.round(Math.max(0,Math.min(100,100-(vix-10)*3)));
-          setFG('stock',score,null);
-          const prevEl=document.getElementById('fg-stock-prev');
-          if(prevEl)prevEl.textContent=`VIX: ${vix.toFixed(2)}`;
-        }else throw new Error();
-      }
-    }catch(e2){
-      document.getElementById('fg-stock-lbl').textContent='Niet beschikbaar';
-      document.getElementById('fg-stock-val').textContent='—';
-    }
-  }
-}
-renderTicker();
-fetchTickerPrices();
-setInterval(fetchTickerPrices,60000);
-fetchFearGreed();
-setInterval(fetchFearGreed,300000);
-loadNews();
-setInterval(loadNews,300000);
 </script>
 </body>
 </html>
