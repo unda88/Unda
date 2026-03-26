@@ -425,13 +425,13 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
               </div>
               <div class="fg"><span class="fl">Hoeveelheid</span><div class="iw"><span class="px">#</span><input type="number" id="mf-qty" placeholder="100" step="any"></div></div>
               <div class="fg"><span class="fl">Eenheid</span>
-                <div class="iw"><select id="mf-unit" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
+                <div class="iw"><select id="mf-unit" onchange="updateMetalUnitLabel()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
                   <option value="g">gram</option>
                   <option value="kg">kilogram</option>
                   <option value="oz">troy oz</option>
                 </select></div>
               </div>
-              <div class="fg" style="grid-column:1/-1"><span class="fl">Aankoopprijs per gram (€)</span><div class="iw"><span class="px">€</span><input type="number" id="mf-buy" placeholder="0.85" step="0.001"></div></div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl">Aankoopprijs per <span id="mf-unit-lbl">gram</span> (€)</span><div class="iw"><span class="px">€</span><input type="number" id="mf-buy" placeholder="0.85" step="0.001"></div></div>
               <div style="grid-column:1/-1;font-size:10px;color:var(--muted)">1 oz = 31.10g · 1 kg = 1000g</div>
             </div>
             <button class="btn-add" onclick="addMetal()" style="margin-bottom:0;background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.4);color:#c8a800">+ Edelmetaal toevoegen</button>
@@ -1026,21 +1026,35 @@ function setHoldType(t){
   if(!isMetal)fe('hf-ticker').placeholder=t==='stock'?'AAPL / ABI.BR':'BTC / ETH';
 }
 
+function updateMetalUnitLabel(){
+  const unit=fe('mf-unit').value;
+  const lbl=fe('mf-unit-lbl');
+  const inp=fe('mf-buy');
+  if(unit==='oz'){lbl.textContent='troy ounce';inp.placeholder='27.00';}
+  else if(unit==='kg'){lbl.textContent='kilogram';inp.placeholder='850.00';}
+  else{lbl.textContent='gram';inp.placeholder='0.85';}
+}
+
 function addMetal(){
   const name=fe('mf-name').value.trim();
   const qty=parseFloat(fe('mf-qty').value)||0;
-  const avgBuy=parseFloat(fe('mf-buy').value)||0;
+  const buyInput=parseFloat(fe('mf-buy').value)||0;
   const metalType=fe('mf-metal').value;
   const unit=fe('mf-unit').value;
-  if(!name||qty<=0||avgBuy<=0){
+  if(!name||qty<=0||buyInput<=0){
     alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;
   }
+  // Convert qty to grams
   let grams=qty;
   if(unit==='kg')grams=qty*1000;
   if(unit==='oz')grams=qty*31.1035;
+  // Convert buy price to per gram
+  let avgBuyPerGram=buyInput;
+  if(unit==='kg')avgBuyPerGram=buyInput/1000;
+  if(unit==='oz')avgBuyPerGram=buyInput/31.1035;
   const unitLabel=unit==='g'?qty+'g':unit==='kg'?qty+'kg':qty+' oz';
   const ticker=metalType==='gold'?'XAU':'XAG';
-  holdings.push({id:Date.now(),name,ticker,type:'metal',metalType,unit,qtyOrig:qty,qty:grams,avgBuy,livePrice:null,err:null,unitLabel});
+  holdings.push({id:Date.now(),name,ticker,type:'metal',metalType,unit,qtyOrig:qty,qty:grams,avgBuy:avgBuyPerGram,livePrice:null,err:null,unitLabel});
   saveHoldings();
   fe('mf-name').value='';fe('mf-qty').value='';fe('mf-buy').value='';
   renderHoldingsTable();renderHoldingPie();
