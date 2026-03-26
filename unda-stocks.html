@@ -18,9 +18,37 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
 @keyframes d1{from{transform:translate(0,0)}to{transform:translate(30px,20px)}}
 @keyframes d2{from{transform:translate(0,0)}to{transform:translate(-20px,-30px)}}
 .tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:10;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 6px 2px var(--g),0 0 30px 10px rgba(0,255,178,.3);animation:fl 9s ease-in-out infinite}
+.ticker-wrap{position:fixed;top:2px;left:0;right:0;z-index:150;display:flex;flex-direction:column}
+.ticker-bar{height:24px;background:rgba(0,8,5,.95);backdrop-filter:blur(20px);display:flex;align-items:center;overflow:hidden}
+.ticker-bar-1{border-bottom:1px solid rgba(0,255,178,.1)}
+.ticker-bar-2{border-bottom:1px solid rgba(255,217,122,.1);background:rgba(0,5,10,.95)}
+.ticker-bar-3{border-bottom:1px solid rgba(0,200,255,.1);background:rgba(0,3,12,.95)}
+.ticker-label{flex-shrink:0;padding:0 10px;font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
+.ticker-bar-2 .ticker-label{color:var(--gold);border-right-color:rgba(255,217,122,.15);background:rgba(255,217,122,.04)}
+.ticker-bar-3 .ticker-label{color:#00d4ff;border-right-color:rgba(0,212,255,.15);background:rgba(0,212,255,.04)}
+.ticker-track{flex:1;overflow:hidden;position:relative;height:100%}
+.ticker-inner{display:flex;align-items:center;height:100%;white-space:nowrap;animation:tickerScroll 180s linear infinite}
+.ticker-inner-rev{animation:tickerScrollRev 160s linear infinite}
+.ticker-inner:hover,.ticker-inner-rev:hover{animation-play-state:paused}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes tickerScrollRev{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+.tick-item{display:inline-flex;align-items:center;gap:5px;padding:0 12px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:10px;cursor:default}
+.ticker-bar-2 .tick-item{border-right-color:rgba(255,217,122,.07)}
+.ticker-bar-3 .tick-item{border-right-color:rgba(0,212,255,.07)}
+.tick-sym{color:rgba(200,255,235,.65);font-weight:500;font-size:9px}
+.ticker-bar-2 .tick-sym{color:rgba(255,235,180,.65)}
+.ticker-bar-3 .tick-sym{color:rgba(180,230,255,.65)}
+.tick-price{color:var(--text)}
+.tick-chg{font-size:9px}
+.tick-up{color:#00ff88}
+.tick-dn{color:var(--red)}
+.tick-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.tick-dot-up{background:#00ff88}
+.tick-dot-dn{background:var(--red)}
+.tick-dot-neu{background:rgba(255,255,255,.3)}
 @keyframes fl{0%,100%{opacity:1}93%{opacity:.7}94%{opacity:1}96%{opacity:.85}97%{opacity:1}}
 
-.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;padding:10px 14px}
+.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;padding:10px 14px;padding-top:84px}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0}
 .brand-logo{font-size:17px;font-weight:500;background:linear-gradient(130deg,#9effd9 0%,#fff 45%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .brand-sub{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
@@ -205,6 +233,22 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
 <div class="tl"></div>
+
+<!-- 3 Ticker banners -->
+<div class="ticker-wrap">
+  <div class="ticker-bar ticker-bar-1">
+    <div class="ticker-label">📊 MARKTEN</div>
+    <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-1"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+  <div class="ticker-bar ticker-bar-2">
+    <div class="ticker-label">💹 GRONDSTOFFEN & FOREX</div>
+    <div class="ticker-track"><div class="ticker-inner ticker-inner-rev" id="ticker-inner-2"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+  <div class="ticker-bar ticker-bar-3">
+    <div class="ticker-label">🪙 CRYPTO</div>
+    <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-3"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+</div>
 
 <div class="shell">
   <div class="topbar">
@@ -1461,7 +1505,108 @@ if(typeof renderHoldingsTable!=='undefined'){renderHoldingsTable();renderHolding
 // Restore fiscal state
 if(useExemption){const cb=fe('tog-exempt');if(cb){cb.checked=true;fe('exempt-panel').style.display='block';if(fe('exempt-amt'))fe('exempt-amt').value=exemptionAmount;updateExemptDisplay();}}
 if(lossCarryEnabled){const cb=fe('tog-loss');if(cb){cb.checked=true;fe('loss-panel').style.display='block';renderLossList();}}
--e 
+
+// ── TICKER ──
+const TICKER_ROW1=[
+  {sym:'^GSPC',label:'S&P 500'},{sym:'^IXIC',label:'NASDAQ'},{sym:'^DJI',label:'DOW'},
+  {sym:'^BFX',label:'BEL 20'},{sym:'^GDAXI',label:'DAX'},{sym:'^FCHI',label:'CAC 40'},
+  {sym:'^AEX',label:'AEX'},{sym:'^FTSE',label:'FTSE 100'},{sym:'^N225',label:'Nikkei'},
+  {sym:'^HSI',label:'Hang Seng'},{sym:'^NSEI',label:'Nifty 50'},{sym:'^AXJO',label:'ASX 200'},
+  {sym:'SPY',label:'SPY ETF'},{sym:'QQQ',label:'QQQ ETF'},{sym:'IWDA.AS',label:'IWDA'},
+  {sym:'VWCE.DE',label:'VWCE'},{sym:'AAPL',label:'Apple'},{sym:'NVDA',label:'Nvidia'},
+  {sym:'MSFT',label:'Microsoft'},{sym:'TSLA',label:'Tesla'},{sym:'ASML.AS',label:'ASML'},
+  {sym:'MC.PA',label:'LVMH'},{sym:'SAP.DE',label:'SAP'},{sym:'ABI.BR',label:'AB InBev'},
+  {sym:'KBC.BR',label:'KBC'},{sym:'AMZN',label:'Amazon'},{sym:'SIE.DE',label:'Siemens'},
+];
+const TICKER_ROW2=[
+  {sym:'EURUSD=X',label:'EUR/USD'},{sym:'EURGBP=X',label:'EUR/GBP'},{sym:'EURJPY=X',label:'EUR/JPY'},
+  {sym:'JPY=X',label:'USD/JPY'},{sym:'GBPUSD=X',label:'GBP/USD'},{sym:'EURCHF=X',label:'EUR/CHF'},
+  {sym:'AUDUSD=X',label:'AUD/USD'},{sym:'GC=F',label:'GOLD'},{sym:'SI=F',label:'SILVER'},
+  {sym:'CL=F',label:'OIL WTI'},{sym:'BZ=F',label:'BRENT'},{sym:'NG=F',label:'NAT GAS'},
+  {sym:'HG=F',label:'COPPER'},{sym:'PL=F',label:'PLATINUM'},{sym:'ZW=F',label:'WHEAT'},
+  {sym:'KC=F',label:'COFFEE'},{sym:'CC=F',label:'COCOA'},{sym:'^TNX',label:'US 10Y'},
+  {sym:'^TYX',label:'US 30Y'},{sym:'^IRX',label:'US 3M'},
+];
+const TICKER_ROW3=[
+  {sym:'BTC',label:'BTC'},{sym:'ETH',label:'ETH'},{sym:'BNB',label:'BNB'},
+  {sym:'SOL',label:'SOL'},{sym:'XRP',label:'XRP'},{sym:'ADA',label:'ADA'},
+  {sym:'AVAX',label:'AVAX'},{sym:'DOGE',label:'DOGE'},{sym:'DOT',label:'DOT'},
+  {sym:'MATIC',label:'MATIC'},{sym:'LINK',label:'LINK'},{sym:'TRX',label:'TRX'},
+  {sym:'SHIB',label:'SHIB'},{sym:'LTC',label:'LTC'},{sym:'UNI',label:'UNI'},
+  {sym:'ATOM',label:'ATOM'},{sym:'XLM',label:'XLM'},{sym:'ALGO',label:'ALGO'},
+  {sym:'FIL',label:'FIL'},{sym:'NEAR',label:'NEAR'},
+];
+
+let tickerPrices={};
+
+function buildTickerHtml(symbols){
+  let html='';
+  for(const s of symbols){
+    const d=tickerPrices[s.sym];
+    if(!d){html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="opacity:.3">—</span></div>`;continue;}
+    const up=d.chg>=0;
+    const p=d.price;
+    const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
+    const isForex=s.label.includes('/')||['US 10Y','US 30Y','US 3M'].includes(s.label);
+    const prefix=isForex?'':' €';
+    const sign=up?'+':'';
+    html+=`<div class="tick-item"><div class="tick-dot ${up?'tick-dot-up':'tick-dot-dn'}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}</span><span class="tick-chg ${up?'tick-up':'tick-dn'}">${sign}${d.chg.toFixed(2)}%</span></div>`;
+  }
+  return html;
+}
+
+function renderTicker(){
+  const i1=document.getElementById('ticker-inner-1');
+  const i2=document.getElementById('ticker-inner-2');
+  const i3=document.getElementById('ticker-inner-3');
+  const h1=buildTickerHtml(TICKER_ROW1);
+  const h2=buildTickerHtml(TICKER_ROW2);
+  const h3=buildTickerHtml(TICKER_ROW3);
+  if(i1)i1.innerHTML=h1+h1;
+  if(i2)i2.innerHTML=h2+h2;
+  if(i3)i3.innerHTML=h3+h3;
+}
+
+async function fetchTickerPrices(){
+  const allSymbols=[...TICKER_ROW1,...TICKER_ROW2];
+  const usdeur=await(async()=>{try{const r=await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');const d=await r.json();return d.rates?.EUR||0.92;}catch(e){return 0.92;}})();
+  for(const s of allSymbols){
+    try{
+      const url='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(s.sym)+'?interval=1d&range=2d';
+      const proxies=['https://corsproxy.io/?'+encodeURIComponent(url),'https://api.allorigins.win/get?url='+encodeURIComponent(url)];
+      let data=null;
+      for(const proxy of proxies){
+        try{const r=await fetch(proxy,{cache:'no-store'});if(!r.ok)continue;const j=await r.json();const txt=j.contents||JSON.stringify(j);data=JSON.parse(txt);break;}catch(e){}
+      }
+      if(!data){try{const r=await fetch(url,{cache:'no-store'});data=await r.json();}catch(e){}}
+      const meta=data?.chart?.result?.[0]?.meta;
+      if(meta?.regularMarketPrice>0){
+        const p=meta.regularMarketPrice;
+        const prev=meta.chartPreviousClose||p;
+        const cur=(meta.currency||'USD').toUpperCase();
+        const eur=cur==='EUR'?p:cur==='GBp'?(p/100)*usdeur*1.27:p*usdeur;
+        const chg=prev>0?((p-prev)/prev*100):0;
+        tickerPrices[s.sym]={price:eur,chg};
+      }
+    }catch(e){}
+  }
+  // Crypto via Binance
+  for(const s of TICKER_ROW3){
+    try{
+      const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol='+s.sym+'EUR',{cache:'no-store'});
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerPrices[s.sym]={price:+d.lastPrice,chg:+d.priceChangePercent};continue;}}
+    }catch(e){}
+    try{
+      const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol='+s.sym+'USDT',{cache:'no-store'});
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){const usdeur2=await(async()=>{try{const r2=await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');const d2=await r2.json();return d2.rates?.EUR||0.92;}catch(e){return 0.92;}})();tickerPrices[s.sym]={price:+d.lastPrice*usdeur2,chg:+d.priceChangePercent};}}
+    }catch(e){}
+  }
+  renderTicker();
+}
+
+renderTicker();
+fetchTickerPrices();
+setInterval(fetchTickerPrices,60000);
 </script>
 </body>
 </html>
