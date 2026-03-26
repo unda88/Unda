@@ -86,9 +86,8 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .dm-toggle input:checked + .dm-slider::before{transform:translateX(16px);background:#fff}
 
 /* light mode overrides */
-body.light-mode{background:#ffffff}
-body.light-mode .bg{background:#ffffff}
-body.light-mode .bg-grid{background-image:linear-gradient(rgba(0,0,0,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.04) 1px,transparent 1px);background-size:44px 44px}
+body.light-mode .bg{background:#ffffff !important}
+body.light-mode .bg-grid{display:none}
 body.light-mode .orb1,body.light-mode .orb2{display:none}
 .hero-label{font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--g2);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
 .hero-label::before,.hero-label::after{content:'';flex:0 0 28px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,178,.4))}
