@@ -437,9 +437,12 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
           <div class="ci">
             <div class="hhdr">
               <div class="sec t-hold-tbl-sec" style="margin-bottom:0">Huidige posities</div>
-              <button class="refresh-btn" id="refresh-btn" onclick="fetchPrices()">
-                <span id="refresh-spin">↻</span> <span class="t-refresh-btn">Prijzen vernieuwen</span>
-              </button>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button class="refresh-btn" id="currency-btn" onclick="toggleCurrency()" style="font-family:'DM Mono',sans-serif;font-weight:600;min-width:64px">€ EUR</button>
+                <button class="refresh-btn" id="refresh-btn" onclick="fetchPrices()">
+                  <span id="refresh-spin">↻</span> <span class="t-refresh-btn">Prijzen vernieuwen</span>
+                </button>
+              </div>
             </div>
             <div id="last-upd" class="last-upd" style="margin-bottom:6px"></div>
             <div class="htwrap" style="max-height:210px;overflow-y:auto">
@@ -1011,6 +1014,39 @@ function delHolding(id){
   holdings=holdings.filter(h=>h.id!==id);
   saveHoldings();renderHoldingsTable();renderHoldingPie();renderPortHistory();
 }
+// ── Currency toggle EUR/USD ──
+let displayCurrency='EUR';
+let usdToEurRate=null; // bijv. 0.92 betekent 1 USD = 0.92 EUR
+
+async function getUsdEurRate(){
+  if(usdToEurRate)return usdToEurRate;
+  try{const r=await safeFetch('https://api.frankfurter.app/latest?from=USD&to=EUR');const d=await r.json();if(d.rates?.EUR>0){usdToEurRate=d.rates.EUR;return usdToEurRate;}}catch(e){}
+  try{const r=await safeFetch('https://open.er-api.com/v6/latest/USD');const d=await r.json();if(d.rates?.EUR>0){usdToEurRate=d.rates.EUR;return usdToEurRate;}}catch(e){}
+  return 0.92; // fallback
+}
+
+async function toggleCurrency(){
+  displayCurrency=displayCurrency==='EUR'?'USD':'EUR';
+  const btn=fe('currency-btn');
+  if(btn)btn.textContent=displayCurrency==='EUR'?'€ EUR':'$ USD';
+  if(displayCurrency==='USD')await getUsdEurRate();
+  renderHoldingsTable();
+}
+
+function toDisplay(amountEur){
+  if(displayCurrency==='USD'&&usdToEurRate){
+    return '$'+(amountEur/usdToEurRate).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  return '€'+amountEur.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toDisplayPrice(priceEur,decimals){
+  if(displayCurrency==='USD'&&usdToEurRate){
+    const usd=priceEur/usdToEurRate;
+    return '$'+usd.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:decimals||2});
+  }
+  return '€'+priceEur.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:decimals||2});
+}
+
 function renderHoldingsTable(){
   const tbody=fe('htbody');
   if(!holdings.length){
@@ -1031,13 +1067,13 @@ function renderHoldingsTable(){
     const liveTd=h.err
       ?`<td><span class="live-err" title="${h.err}">fout</span></td>`
       :h.manualPrice!=null
-        ?`<td class="live-price" title="Manuele prijs">€${h.manualPrice.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:h.manualPrice<1?6:2})} <span style="font-size:8px;color:var(--gold)">✎</span></td>`
+        ?`<td class="live-price" title="Manuele prijs">${toDisplayPrice(h.manualPrice,h.manualPrice<1?6:2)} <span style="font-size:8px;color:var(--gold)">✎</span></td>`
         :h.livePrice==null
           ?`<td><span class="live-load">laden…</span></td>`
-          :`<td class="live-price">€${h.livePrice.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:h.livePrice<1?6:2})} <span style="font-size:8px;color:var(--muted)">${h.src||''}</span></td>`;
-    const valTd=val!=null?`<td>€${val.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`:`<td style="color:var(--muted)">€${cost.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+          :`<td class="live-price">${toDisplayPrice(h.livePrice,h.livePrice<1?6:2)} <span style="font-size:8px;color:var(--muted)">${h.src||''}</span></td>`;
+    const valTd=val!=null?`<td>${toDisplay(val)}</td>`:`<td style="color:var(--muted)">${toDisplay(cost)}</td>`;
     const plTd=pl!=null
-      ?`<td class="${pl>=0?'cg':'cr'}">${pl>=0?'+':''}€${Math.abs(pl).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="font-size:9px;opacity:.7">${pl>=0?'+':''}${plp.toFixed(1)}%</span></td>`
+      ?`<td class="${pl>=0?'cg':'cr'}">${pl>=0?'+':''}${toDisplay(Math.abs(pl))} <span style="font-size:9px;opacity:.7">${pl>=0?'+':''}${plp.toFixed(1)}%</span></td>`
       :`<td style="color:var(--muted)">—</td>`;
     const badge=h.type==='stock'
       ?`<span class="type-badge type-stock">📊 ${lang==='nl'?'Aandeel':'Stock'}</span>`
@@ -1046,7 +1082,7 @@ function renderHoldingsTable(){
       <td><strong style="font-size:11px">${h.name}</strong></td>
       <td>${badge}</td>
       <td>${h.qty%1===0?h.qty:h.qty.toFixed(4)}</td>
-      <td>€${h.avgBuy.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${toDisplayPrice(h.avgBuy,2)}</td>
       ${liveTd}${valTd}${plTd}
       <td><input type="number" step="0.01" placeholder="—" value="${h.manualPrice||''}" 
         style="background:transparent;border:1px solid rgba(255,217,122,.2);border-radius:5px;color:var(--gold);font-family:'DM Mono',monospace;font-size:10px;width:70px;padding:2px 5px;outline:none"
@@ -1055,11 +1091,11 @@ function renderHoldingsTable(){
     </tr>`;
   }).join('');
   fe('h-npos').textContent=holdings.length;
-  fe('h-totval').textContent='€'+totalVal.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  fe('h-totval').textContent=toDisplay(totalVal);
   const totalPL=totalVal-totalCost;
   const plEl=fe('h-totpl');
   if(hasLive){
-    plEl.textContent=(totalPL>=0?'+':'')+'€'+Math.abs(totalPL).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+    plEl.textContent=(totalPL>=0?'+':'')+toDisplay(Math.abs(totalPL));
     plEl.className='hstatv '+(totalPL>=0?'cg':'cr');
   } else {plEl.textContent='—';plEl.className='hstatv';}
 }
