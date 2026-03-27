@@ -862,18 +862,132 @@ const TX = {
     'mf-metal-lbl':'Metal','mf-qty-lbl':'Quantity','mf-unit-lbl2':'Unit',
     'mf-opt-gold':'🥇 Gold','mf-opt-silver':'🥈 Silver',
     'mf-opt-g':'gram','mf-opt-kg':'kilogram','mf-opt-oz':'troy oz','t-empty-stock':'No stocks.','t-empty-crypto':'No crypto.','t-empty-metal':'No precious metals.','t-total-val':'Total:','t-total-pl':'P&L:'
+  },
+  fr:{
+    'brand-sub':'Investisseurs belges · Bolero · sans effet de levier',
+    't-calc':'Calculatrice','t-log':'Journal','t-charts':'Graphiques','t-port':'Portefeuille',
+    't-name':'Action / nom','t-bp':'Prix d\'achat par action','t-sp':'Prix de vente par action',
+    't-sh':'Nombre d\'actions','t-dv':'Dividende (optionnel)',
+    't-btb':'Taxe boursière achat (%)','t-bts':'Taxe boursière vente (%)',
+    't-brb':'Frais courtier achat (€)','t-brs':'Frais courtier vente (€)',
+    't-fx':'Frais de change (% — 0 si EUR)','t-dvt':'Taxe sur dividende (%)',
+    't-tax-sec':'Impôt sur les plus-values','t-part':'Particulier','t-spec':'Spéculatif','t-prof':'Professionnel',
+    't-custom':'Pourcentage personnalisé',
+    'tax-info':'🇧🇪 L\'impôt minimum sur les plus-values en Belgique est de <strong>10%</strong>. 33% pour le trading spéculatif, 50% comme activité principale. Consultez toujours un conseiller fiscal.',
+    't-result-sec':'Résultat','t-invest':'Investissement','t-gross':'Produit brut',
+    't-costs':'Coûts totaux','t-taxamt':'Impôt sur le bénéfice','t-net':'Bénéfice net / perte',
+    't-ret':'Rendement net','t-be':'Prix de vente seuil de rentabilité',
+    't-detail-sec':'Détail des coûts','t-btb-d':'Taxe boursière achat','t-bts-d':'Taxe boursière vente',
+    't-brb-d':'Frais courtier achat','t-brs-d':'Frais courtier vente','t-fx-d':'Frais de change','t-dvt-d':'Taxe dividende',
+    't-total':'Coûts totaux','t-compare-sec':'Comparaison fiscale',
+    't-h-net':'Bénéfice net','t-h-ret':'Rendement','t-h-rr':'R:R min.',
+    't-part2':'particulier','t-spec2':'spéculatif','t-prof2':'professionnel',
+    't-rr-info':'💡 <strong>R:R min.</strong> = Risk/Reward minimum après tous les coûts et impôts. Utilisez ceci comme entrée pour le simulateur Monte Carlo.',
+    't-save-btn':'+ Enregistrer dans le journal',
+    't-clear-btn':'Tout effacer','t-empty-log':'Aucun trade. Allez dans Calculatrice, calculez un trade et enregistrez-le.',
+    't-yr-trades':'Trades','t-yr-net':'Total net','t-yr-avg':'Rendement moy.',
+    't-yr-wr':'Taux de réussite','t-yr-costs':'Coûts payés','t-yr-tax':'Impôts payés',
+    't-all-trades':'Tous les trades','t-total-net':'Total net','t-avg-ret':'Rendement moy.','t-wr':'Taux de réussite',
+    't-th-name':'Action','t-th-date':'Date','t-th-buy':'Achat','t-th-sell':'Vente',
+    't-th-gross':'Brut','t-th-costs':'Coûts','t-th-tax':'Impôt','t-th-net':'Net',
+    't-ch-cum':'📈 Croissance cumulative','t-ch-bar':'📊 Bénéfice par trade','t-ch-cmp':'⚖️ Brut vs Net','t-ch-ret':'🎯 Rendement %',
+    't-empty-chart':'Ajoutez des trades via la Calculatrice pour voir les graphiques.','t-hover-tip':'Survolez pour les détails',
+    't-pos-sec':'Saisir positions','t-col-name':'Nom','t-col-price':'Prix/action','t-col-qty':'Qté','t-col-cat':'Catégorie',
+    't-add-pos':'+ Ajouter position','t-alloc-info':'Entrez le nom, le prix par action et la quantité.',
+    't-summary-sec':'Résumé','t-total-inv':'Total investi','t-biggest':'Position la plus grande',
+    't-alloc-sec':'Allocation du portefeuille','s-trade':'Détails du trade','t-costs-sec':'Coûts & frais',
+    'back-lnk':'← Suite','t-all-years':'Toutes années',
+    'ch-cum':'Croissance nette cumulative','ch-bar':'Bénéfice net par trade','ch-cmp':'Comparaison Brut vs Net','ch-ret':'Rendement % par trade',
+    'yr-prefix':'Aperçu',
+    't-hold':'Positions','t-hold-add-sec':'Ajouter position','t-htype-s':'Action','t-htype-c':'Crypto','t-htype-m':'Métaux précieux',
+    't-hf-name':'Nom','t-hf-ticker':'Ticker','t-hf-qty':'Quantité','t-hf-buy':'Prix d\'achat moy. (€)',
+    't-hadd-btn':'+ Ajouter','t-api-sec':'Prix en direct — API','t-fhkey-lbl':'Clé Finnhub (actions)',
+    't-h-totval':'Valeur totale','t-h-totpl':'P&L total','t-h-npos':'Positions',
+    't-hold-tbl-sec':'Positions actuelles','t-refresh-btn':'Actualiser les prix',
+    't-hth-name':'Nom','t-hth-qty':'Qté','t-hth-buy':'Achat moy.','t-hth-live':'Prix actuel','t-hth-val':'Valeur','t-hth-pl':'P&L',
+    't-hempty':'Aucune position. Ajoutez des actions ou crypto via le formulaire.',
+    't-halloc-sec':'Allocation','t-hevol-sec':'Évolution du portefeuille',
+    't-hevol-empty':'Actualisez les prix pour suivre l\'évolution.',
+    'sec-stocks':'📊 Actions','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Métaux précieux',
+    'sec-stocks-evo':'📊 Évolution actions','sec-crypto-evo':'🪙 Évolution crypto','sec-metal-evo':'🥇 Évolution métaux',
+    'api-stocks-lbl':'Actions','api-metal-lbl':'Or & Argent',
+    'api-fx-lbl':'USD/GBP converti automatiquement en EUR',
+    'api-vpn-lbl':'VPN activé ?','api-vpn-txt':'Désactivez temporairement le VPN pour les prix en direct',
+    't-metal-add-btn':'+ Ajouter métaux précieux',
+    'mf-metal-lbl':'Métal','mf-qty-lbl':'Quantité','mf-unit-lbl2':'Unité',
+    'mf-opt-gold':'🥇 Or','mf-opt-silver':'🥈 Argent',
+    'mf-opt-g':'gramme','mf-opt-kg':'kilogramme','mf-opt-oz':'once troy',
+    't-empty-stock':'Aucune action.','t-empty-crypto':'Aucune crypto.','t-empty-metal':'Aucun métal précieux.','t-total-val':'Total :','t-total-pl':'P&L :'
+  },
+  es:{
+    'brand-sub':'Inversores belgas · Bolero · sin apalancamiento',
+    't-calc':'Calculadora','t-log':'Diario','t-charts':'Gráficos','t-port':'Cartera',
+    't-name':'Acción / nombre','t-bp':'Precio de compra por acción','t-sp':'Precio de venta por acción',
+    't-sh':'Número de acciones','t-dv':'Dividendo (opcional)',
+    't-btb':'Impuesto bursátil compra (%)','t-bts':'Impuesto bursátil venta (%)',
+    't-brb':'Comisión broker compra (€)','t-brs':'Comisión broker venta (€)',
+    't-fx':'Coste de cambio (% — 0 si EUR)','t-dvt':'Impuesto sobre dividendo (%)',
+    't-tax-sec':'Impuesto sobre ganancias','t-part':'Particular','t-spec':'Especulativo','t-prof':'Profesional',
+    't-custom':'Porcentaje personalizado',
+    'tax-info':'🇧🇪 El impuesto mínimo sobre ganancias en Bélgica es del <strong>10%</strong>. 33% para trading especulativo, 50% como actividad principal. Consulte siempre a un asesor fiscal.',
+    't-result-sec':'Resultado','t-invest':'Inversión','t-gross':'Ingresos brutos',
+    't-costs':'Costes totales','t-taxamt':'Impuesto sobre beneficio','t-net':'Beneficio neto / pérdida',
+    't-ret':'Rendimiento neto','t-be':'Precio de venta de equilibrio',
+    't-detail-sec':'Desglose de costes','t-btb-d':'Impuesto bursátil compra','t-bts-d':'Impuesto bursátil venta',
+    't-brb-d':'Comisión broker compra','t-brs-d':'Comisión broker venta','t-fx-d':'Costes de cambio','t-dvt-d':'Impuesto dividendo',
+    't-total':'Costes totales','t-compare-sec':'Comparación fiscal',
+    't-h-net':'Beneficio neto','t-h-ret':'Rendimiento','t-h-rr':'R:R mín.',
+    't-part2':'particular','t-spec2':'especulativo','t-prof2':'profesional',
+    't-rr-info':'💡 <strong>R:R mín.</strong> = Risk/Reward mínimo después de todos los costes e impuestos. Úselo como entrada para el simulador Monte Carlo.',
+    't-save-btn':'+ Guardar en el diario',
+    't-clear-btn':'Borrar todo','t-empty-log':'Sin trades. Ve a la Calculadora, calcula un trade y guárdalo.',
+    't-yr-trades':'Trades','t-yr-net':'Total neto','t-yr-avg':'Rendimiento med.',
+    't-yr-wr':'Tasa de éxito','t-yr-costs':'Costes pagados','t-yr-tax':'Impuestos pagados',
+    't-all-trades':'Todos los trades','t-total-net':'Total neto','t-avg-ret':'Rendimiento med.','t-wr':'Tasa de éxito',
+    't-th-name':'Acción','t-th-date':'Fecha','t-th-buy':'Compra','t-th-sell':'Venta',
+    't-th-gross':'Bruto','t-th-costs':'Costes','t-th-tax':'Impuesto','t-th-net':'Neto',
+    't-ch-cum':'📈 Crecimiento acumulativo','t-ch-bar':'📊 Beneficio por trade','t-ch-cmp':'⚖️ Bruto vs Neto','t-ch-ret':'🎯 Rendimiento %',
+    't-empty-chart':'Añade trades en la Calculadora para ver gráficos.','t-hover-tip':'Pasa el ratón para detalles',
+    't-pos-sec':'Introducir posiciones','t-col-name':'Nombre','t-col-price':'Precio/acc','t-col-qty':'Cant','t-col-cat':'Categoría',
+    't-add-pos':'+ Añadir posición','t-alloc-info':'Introduce nombre, precio por acción y cantidad.',
+    't-summary-sec':'Resumen','t-total-inv':'Total invertido','t-biggest':'Posición más grande',
+    't-alloc-sec':'Asignación de cartera','s-trade':'Detalles del trade','t-costs-sec':'Costes y comisiones',
+    'back-lnk':'← Suite','t-all-years':'Todos los años',
+    'ch-cum':'Crecimiento neto acumulativo','ch-bar':'Beneficio neto por trade','ch-cmp':'Comparación Bruto vs Neto','ch-ret':'Rendimiento % por trade',
+    'yr-prefix':'Resumen',
+    't-hold':'Posiciones','t-hold-add-sec':'Añadir posición','t-htype-s':'Acción','t-htype-c':'Crypto','t-htype-m':'Metales preciosos',
+    't-hf-name':'Nombre','t-hf-ticker':'Ticker','t-hf-qty':'Cantidad','t-hf-buy':'Precio compra med. (€)',
+    't-hadd-btn':'+ Añadir','t-api-sec':'Precios en vivo — API','t-fhkey-lbl':'Clave Finnhub (acciones)',
+    't-h-totval':'Valor total','t-h-totpl':'P&L total','t-h-npos':'Posiciones',
+    't-hold-tbl-sec':'Posiciones actuales','t-refresh-btn':'Actualizar precios',
+    't-hth-name':'Nombre','t-hth-qty':'Cant','t-hth-buy':'Compra med.','t-hth-live':'Precio actual','t-hth-val':'Valor','t-hth-pl':'P&L',
+    't-hempty':'Sin posiciones. Añade acciones o crypto en el formulario.',
+    't-halloc-sec':'Asignación','t-hevol-sec':'Evolución del portafolio',
+    't-hevol-empty':'Actualiza precios para ver la evolución.',
+    'sec-stocks':'📊 Acciones','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Metales preciosos',
+    'sec-stocks-evo':'📊 Evolución acciones','sec-crypto-evo':'🪙 Evolución crypto','sec-metal-evo':'🥇 Evolución metales',
+    'api-stocks-lbl':'Acciones','api-metal-lbl':'Oro & Plata',
+    'api-fx-lbl':'USD/GBP convertido automáticamente a EUR',
+    'api-vpn-lbl':'¿VPN activado?','api-vpn-txt':'Desactiva temporalmente el VPN para precios en vivo',
+    't-metal-add-btn':'+ Añadir metales preciosos',
+    'mf-metal-lbl':'Metal','mf-qty-lbl':'Cantidad','mf-unit-lbl2':'Unidad',
+    'mf-opt-gold':'🥇 Oro','mf-opt-silver':'🥈 Plata',
+    'mf-opt-g':'gramo','mf-opt-kg':'kilogramo','mf-opt-oz':'onza troy',
+    't-empty-stock':'Sin acciones.','t-empty-crypto':'Sin crypto.','t-empty-metal':'Sin metales preciosos.','t-total-val':'Total:','t-total-pl':'P&L:'
   }
 };
 const chartTitles = {
   nl:{cum:'Cumulatieve netto groei',bar:'Netto winst per trade',cmp:'Bruto vs Netto vergelijking',ret:'Rendement % per trade'},
-  en:{cum:'Cumulative net growth',bar:'Net profit per trade',cmp:'Gross vs Net comparison',ret:'Return % per trade'}
+  en:{cum:'Cumulative net growth',bar:'Net profit per trade',cmp:'Gross vs Net comparison',ret:'Return % per trade'},
+  fr:{cum:'Croissance nette cumulative',bar:'Bénéfice net par trade',cmp:'Comparaison Brut vs Net',ret:'Rendement % par trade'},
+  es:{cum:'Crecimiento neto acumulativo',bar:'Beneficio neto por trade',cmp:'Comparación Bruto vs Neto',ret:'Rendimiento % por trade'}
 };
 
 function applyLang() {
-  const t = TX[lang];
+  const t = TX[lang]||TX.en;
   const bs=document.getElementById('brand-sub'); if(bs)bs.textContent=t['brand-sub'];
   const bl=document.getElementById('back-lnk'); if(bl)bl.textContent=t['back-lnk'];
-  document.getElementById('lang-btn').textContent = lang==='nl'?'EN':'NL';
+  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang]||'EN';
   Object.keys(t).forEach(cls => {
     document.querySelectorAll('.'+cls).forEach(el => {
       if (cls==='tax-info'||cls==='t-rr-info') el.innerHTML=t[cls];
@@ -899,8 +1013,13 @@ function applyLang() {
   renderLog();
 }
 
+const LANGS_STOCKS=['nl','en','fr','es'];
+const LANG_NEXT={nl:'en',en:'fr',fr:'es',es:'nl'};
+const LANG_BTN_LBL={nl:'EN',en:'FR',fr:'ES',es:'NL'};
+
 function toggleLang() {
-  lang = lang==='nl'?'en':'nl';
+  lang=LANG_NEXT[lang]||'en';
+  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang];
   applyLang();
   renderPortHistory();
   renderTypeCharts();
