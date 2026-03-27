@@ -64,6 +64,12 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
 .back-link:hover{color:var(--g)}
 .lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.25);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;letter-spacing:.05em}
 .lang-btn:hover{background:rgba(0,255,178,.15);color:var(--g)}
+.lang-dd-wrap{position:relative;display:inline-block}
+.lang-dd{position:absolute;top:calc(100% + 4px);right:0;background:rgba(0,12,8,.97);border:1px solid rgba(0,255,178,.2);border-radius:10px;padding:4px;min-width:90px;z-index:999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.lang-dd.open{display:block}
+.lang-dd-item{padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif;transition:background .15s}
+.lang-dd-item:hover{background:rgba(0,255,178,.08);color:#e0fff5}
+.lang-dd-item.active{color:var(--g);font-weight:600;background:rgba(0,255,178,.06)}
 
 .tabs{display:flex;gap:4px;background:rgba(0,255,178,.04);border:1px solid var(--border);border-radius:14px;padding:4px;flex-shrink:0;margin-bottom:10px}
 .tab{flex:1;padding:9px 0;border-radius:10px;border:none;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:grab;transition:all .2s;user-select:none}
@@ -325,7 +331,15 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
       <div class="brand-logo">Unda · Stock Dashboard</div>
     </div>
     <div class="topbar-right">
-      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">EN</button>
+      <div class="lang-dd-wrap">
+        <button class="lang-btn" onclick="toggleLangDD()" id="lang-btn">🇧🇪 NL ▾</button>
+        <div class="lang-dd" id="lang-dd">
+          <div class="lang-dd-item" onclick="setLang('nl')" id="ldi-nl">🇧🇪 NL</div>
+          <div class="lang-dd-item" onclick="setLang('en')" id="ldi-en">🇬🇧 EN</div>
+          <div class="lang-dd-item" onclick="setLang('fr')" id="ldi-fr">🇫🇷 FR</div>
+          <div class="lang-dd-item" onclick="setLang('es')" id="ldi-es">🇪🇸 ES</div>
+        </div>
+      </div>
       <a class="back-link" href="index.html" id="back-lnk">← Suite</a>
     </div>
   </div>
@@ -987,7 +1001,7 @@ function applyLang() {
   const t = TX[lang]||TX.en;
   const bs=document.getElementById('brand-sub'); if(bs)bs.textContent=t['brand-sub'];
   const bl=document.getElementById('back-lnk'); if(bl)bl.textContent=t['back-lnk'];
-  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang]||'EN';
+  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang]||'🇬🇧 EN ▾';
   Object.keys(t).forEach(cls => {
     document.querySelectorAll('.'+cls).forEach(el => {
       if (cls==='tax-info'||cls==='t-rr-info') el.innerHTML=t[cls];
@@ -1015,15 +1029,33 @@ function applyLang() {
 
 const LANGS_STOCKS=['nl','en','fr','es'];
 const LANG_NEXT={nl:'en',en:'fr',fr:'es',es:'nl'};
-const LANG_BTN_LBL={nl:'EN',en:'FR',fr:'ES',es:'NL'};
+const LANG_BTN_LBL={nl:'🇧🇪 NL ▾',en:'🇬🇧 EN ▾',fr:'🇫🇷 FR ▾',es:'🇪🇸 ES ▾'};
+const LANG_FLAGS={nl:'🇧🇪',en:'🇬🇧',fr:'🇫🇷',es:'🇪🇸'};
 
-function toggleLang() {
-  lang=LANG_NEXT[lang]||'en';
-  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang];
+function toggleLangDD(){
+  const dd=document.getElementById('lang-dd');
+  dd.classList.toggle('open');
+}
+function setLang(l){
+  lang=l;
+  const dd=document.getElementById('lang-dd');
+  if(dd)dd.classList.remove('open');
+  const btn=document.getElementById('lang-btn');
+  if(btn)btn.textContent=LANG_BTN_LBL[lang];
+  document.querySelectorAll('.lang-dd-item').forEach(el=>el.classList.remove('active'));
+  const active=document.getElementById('ldi-'+lang);
+  if(active)active.classList.add('active');
   applyLang();
   renderPortHistory();
   renderTypeCharts();
 }
+function toggleLang(){setLang(LANG_NEXT[lang]||'en');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.lang-dd-wrap')){
+    const dd=document.getElementById('lang-dd');
+    if(dd)dd.classList.remove('open');
+  }
+});
 
 // ── Tab navigation ──
 function goTab(id, btn) {
