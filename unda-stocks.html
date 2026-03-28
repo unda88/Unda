@@ -466,7 +466,10 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
     <div class="panel col" id="panel-log">
       <div class="lhdr">
         <div class="yfilter" id="yfilter"></div>
-        <button class="btn-sm t-clear-btn" onclick="clearLog()">Wis alles</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm" onclick="document.getElementById('csv-modal').style.display='flex'" style="background:rgba(0,255,178,.08);border-color:rgba(0,255,178,.25);color:var(--g2)">📥 <span class="t-csv-import">CSV Import</span></button>
+          <button class="btn-sm t-clear-btn" onclick="clearLog()">Wis alles</button>
+        </div>
       </div>
       <div class="yr-banner" id="yr-banner" style="display:none">
         <div style="font-size:11px;color:var(--g);font-weight:500" id="yr-title">2025</div>
@@ -814,7 +817,7 @@ const TX = {
     'yr-prefix':'Overzicht',
     't-hold':'Posities','t-hold-add-sec':'Positie toevoegen','t-htype-s':'Aandeel','t-htype-c':'Crypto','t-htype-m':'Edelmetaal',
     't-hf-name':'Naam','t-hf-ticker':'Ticker','t-hf-qty':'Aantal','t-hf-buy':'Gem. aankoopprijs (€)',
-    't-hadd-btn':'+ Toevoegen','t-api-sec':'Live prijzen — API','t-fhkey-lbl':'Finnhub key (aandelen)',
+    't-csv-import':'CSV Importeren','t-fhkey-lbl':'Finnhub key (aandelen)',
     't-h-totval':'Totale waarde','t-h-totpl':'Totale P&L','t-h-npos':'Posities',
     't-hold-tbl-sec':'Huidige posities','t-refresh-btn':'Prijzen vernieuwen',
     't-hth-name':'Naam','t-hth-qty':'Aantal','t-hth-buy':'Aankoop','t-hth-live':'Live prijs','t-hth-val':'Waarde','t-hth-pl':'P&L',
@@ -869,7 +872,7 @@ const TX = {
     'yr-prefix':'Overview',
     't-hold':'Holdings','t-hold-add-sec':'Add position','t-htype-s':'Stock','t-htype-c':'Crypto','t-htype-m':'Precious Metals',
     't-hf-name':'Name','t-hf-ticker':'Ticker','t-hf-qty':'Quantity','t-hf-buy':'Avg buy price (€)',
-    't-hadd-btn':'+ Add','t-api-sec':'Live prices — API','t-fhkey-lbl':'Finnhub key (stocks)',
+    't-csv-import':'CSV Import','t-fhkey-lbl':'Finnhub key (stocks)',
     't-h-totval':'Total value','t-h-totpl':'Total P&L','t-h-npos':'Positions',
     't-hold-tbl-sec':'Current holdings','t-refresh-btn':'Refresh prices',
     't-hth-name':'Name','t-hth-qty':'Qty','t-hth-buy':'Avg buy','t-hth-live':'Live price','t-hth-val':'Value','t-hth-pl':'P&L',
@@ -2376,6 +2379,396 @@ function renderTicker(){
 renderTicker();
 fetchTickerPrices();
 setInterval(fetchTickerPrices,60000);
+</script>
+<!-- CSV IMPORT MODAL -->
+<div id="csv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#050f0a;border:1px solid rgba(0,255,178,.2);border-radius:16px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:24px;font-family:'Outfit',sans-serif">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600;color:var(--g)">📥 <span id="csv-title">CSV Import</span></div>
+      <button onclick="closeCSVModal()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer">×</button>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div id="csv-step1">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="csv-desc">Upload een CSV bestand van je broker of exchange.</div>
+      <label style="display:block;border:1.5px dashed rgba(0,255,178,.2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;transition:border .2s" id="csv-drop-zone">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <span id="csv-drop-lbl">Klik om CSV te selecteren of sleep het hier</span>
+        <input type="file" accept=".csv,.txt" id="csv-file-input" style="display:none" onchange="handleCSVFile(this.files[0])">
+      </label>
+      <div style="margin-top:12px;font-size:10px;color:rgba(0,255,178,.3)" id="csv-brokers-lbl">
+        ✅ Automatisch herkend: Bolero · Keytrade · Lynx · Degiro · eToro · Trading212 · Revolut · Interactive Brokers · Binance · Bybit · Coinbase · Kraken · Bitget · OKX · KuCoin · MetaTrader
+      </div>
+    </div>
+
+    <!-- Step 2: Preview / mapping -->
+    <div id="csv-step2" style="display:none">
+      <div style="font-size:11px;color:var(--g);margin-bottom:4px" id="csv-broker-detected"></div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px" id="csv-preview-lbl">Kolom mapping — controleer of alles klopt:</div>
+      <div id="csv-mapping" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px" id="csv-rows-found"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="csv_step=1;showCSVStep(1)" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px;color:var(--muted);font-size:11px;cursor:pointer" id="csv-back-btn">← Terug</button>
+        <button onclick="importCSVTrades()" style="flex:2;background:rgba(0,255,178,.1);border:1px solid rgba(0,255,178,.3);border-radius:8px;padding:8px;color:var(--g);font-size:11px;cursor:pointer;font-weight:600" id="csv-import-btn">✅ Importeren</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Result -->
+    <div id="csv-step3" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:32px;margin-bottom:8px">✅</div>
+      <div style="font-size:14px;color:var(--g);font-weight:600" id="csv-result-msg"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px" id="csv-result-sub"></div>
+      <button onclick="closeCSVModal()" style="margin-top:16px;background:rgba(0,255,178,.1);border:1px solid rgba(0,255,178,.3);border-radius:8px;padding:8px 20px;color:var(--g);font-size:11px;cursor:pointer">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CSV IMPORT ENGINE ──────────────────────────────────────────────────────────
+let csvParsed=[], csvColMap={}, csv_step=1;
+
+// Known broker profiles: {name, detect(headers), map(row)→{name,date,buy,sell,shares,net}}
+const BROKER_PROFILES = [
+  {
+    name:'Bolero',
+    detect:h=>h.some(c=>/transactie/i.test(c))&&h.some(c=>/koers/i.test(c)),
+    map:r=>({
+      name:r['Naam']||r['Instrument']||r['naam']||'—',
+      date:r['Datum']||r['datum']||'',
+      buy:parseFloat((r['Aankoopkoers']||r['Koers']||'').replace(',','.'))||0,
+      sell:parseFloat((r['Verkoopkoers']||r['Koers']||'').replace(',','.'))||0,
+      shares:parseFloat((r['Aantal']||'').replace(',','.'))||0,
+      net:parseFloat((r['Nettobedrag']||r['Bedrag']||'').replace(',','.'))||0,
+    })
+  },
+  {
+    name:'Keytrade',
+    detect:h=>h.some(c=>/keytrade/i.test(c))||( h.some(c=>/ordre/i.test(c))&&h.some(c=>/titre/i.test(c))),
+    map:r=>({
+      name:r['Titre']||r['Instrument']||'—',
+      date:r['Date']||r['Datum']||'',
+      buy:parseFloat((r['Prix achat']||r['Aankoopprijs']||'').replace(',','.'))||0,
+      sell:parseFloat((r['Prix vente']||r['Verkoopprijs']||'').replace(',','.'))||0,
+      shares:parseFloat((r['Quantité']||r['Aantal']||'').replace(',','.'))||0,
+      net:parseFloat((r['Montant net']||r['Nettobedrag']||'').replace(',','.'))||0,
+    })
+  },
+  {
+    name:'Degiro',
+    detect:h=>h.some(c=>/product/i.test(c))&&h.some(c=>/isin/i.test(c)),
+    map:r=>({
+      name:r['Product']||r['product']||'—',
+      date:r['Datum']||r['Date']||'',
+      buy:parseFloat((r['Koers']||r['Price']||'').replace(',','.'))||0,
+      sell:parseFloat((r['Koers']||r['Price']||'').replace(',','.'))||0,
+      shares:parseFloat((r['Aantal']||r['Quantity']||'').replace(',','.'))||0,
+      net:parseFloat((r['Totaal']||r['Total']||'').replace(',','.'))||0,
+    })
+  },
+  {
+    name:'eToro',
+    detect:h=>h.some(c=>/etoro/i.test(c))||h.some(c=>/copied trader/i.test(c)),
+    map:r=>({
+      name:r['Action']||r['Instrument']||'—',
+      date:r['Date']||r['Open Date']||'',
+      buy:parseFloat(r['Open Rate']||0),
+      sell:parseFloat(r['Close Rate']||0),
+      shares:parseFloat(r['Units']||r['Amount']||0),
+      net:parseFloat(r['Profit']||r['Net Profit']||0),
+    })
+  },
+  {
+    name:'Trading212',
+    detect:h=>h.some(c=>/trading 212/i.test(c))||h.some(c=>/currency conversion fee/i.test(c)),
+    map:r=>({
+      name:r['Ticker']||r['Name']||'—',
+      date:r['Time']||r['Date']||'',
+      buy:parseFloat(r['Price / share']||r['Price']||0),
+      sell:parseFloat(r['Price / share']||r['Price']||0),
+      shares:parseFloat(r['No. of shares']||r['Shares']||0),
+      net:parseFloat(r['Total']||r['Result']||0),
+    })
+  },
+  {
+    name:'Revolut',
+    detect:h=>h.some(c=>/revolut/i.test(c))||( h.some(c=>/symbol/i.test(c))&&h.some(c=>/side/i.test(c))&&h.some(c=>/quantity/i.test(c))),
+    map:r=>({
+      name:r['Symbol']||r['Ticker']||'—',
+      date:r['Date']||r['Completed Date']||'',
+      buy:parseFloat(r['Price per share']||r['Price']||0),
+      sell:parseFloat(r['Price per share']||r['Price']||0),
+      shares:parseFloat(r['Quantity']||0),
+      net:parseFloat(r['Total Amount']||r['Total']||0),
+    })
+  },
+  {
+    name:'Interactive Brokers',
+    detect:h=>h.some(c=>/ibkr/i.test(c)||/interactive brokers/i.test(c))||(h.some(c=>/conid/i.test(c))),
+    map:r=>({
+      name:r['Symbol']||r['Description']||'—',
+      date:r['Date/Time']||r['TradeDate']||'',
+      buy:parseFloat(r['Price']||r['T. Price']||0),
+      sell:parseFloat(r['Price']||r['T. Price']||0),
+      shares:parseFloat(r['Quantity']||0),
+      net:parseFloat(r['Realized P/L']||r['Comm/Fee']||0),
+    })
+  },
+  {
+    name:'Binance',
+    detect:h=>h.some(c=>/pair/i.test(c)&&/side/i.test(c))||(h.some(c=>/Date\(UTC\)/i.test(c))&&h.some(c=>/pair/i.test(c))),
+    map:r=>({
+      name:r['Pair']||r['Symbol']||'—',
+      date:r['Date(UTC)']||r['Date']||'',
+      buy:parseFloat(r['Price']||r['Avg. Price']||0),
+      sell:parseFloat(r['Price']||r['Avg. Price']||0),
+      shares:parseFloat(r['Quantity']||r['Amount']||0),
+      net:parseFloat(r['Total']||r['Net']||0),
+    })
+  },
+  {
+    name:'Bybit',
+    detect:h=>h.some(c=>/bybit/i.test(c))||( h.some(c=>/contract/i.test(c))&&h.some(c=>/entry price/i.test(c))),
+    map:r=>({
+      name:r['Symbol']||r['Contract']||'—',
+      date:r['Create Time']||r['Date']||'',
+      buy:parseFloat(r['Entry Price']||r['Avg Entry Price']||0),
+      sell:parseFloat(r['Exit Price']||r['Avg Exit Price']||0),
+      shares:parseFloat(r['Qty']||r['Size']||0),
+      net:parseFloat(r['Realized P&L']||r['PNL']||0),
+    })
+  },
+  {
+    name:'Coinbase',
+    detect:h=>h.some(c=>/coinbase/i.test(c))||( h.some(c=>/asset/i.test(c))&&h.some(c=>/quantity transacted/i.test(c))),
+    map:r=>({
+      name:r['Asset']||r['Pair']||'—',
+      date:r['Timestamp']||r['Date']||'',
+      buy:parseFloat(r['Spot Price at Transaction']||r['Price']||0),
+      sell:parseFloat(r['Spot Price at Transaction']||r['Price']||0),
+      shares:parseFloat(r['Quantity Transacted']||r['Amount']||0),
+      net:parseFloat(r['Subtotal']||r['Total']||0),
+    })
+  },
+  {
+    name:'Kraken',
+    detect:h=>h.some(c=>/txid/i.test(c))&&h.some(c=>/vol/i.test(c)),
+    map:r=>({
+      name:r['pair']||r['Pair']||'—',
+      date:r['time']||r['Date']||'',
+      buy:parseFloat(r['price']||0),
+      sell:parseFloat(r['price']||0),
+      shares:parseFloat(r['vol']||r['volume']||0),
+      net:parseFloat(r['cost']||r['net']||0),
+    })
+  },
+  {
+    name:'OKX',
+    detect:h=>h.some(c=>/okx/i.test(c))||( h.some(c=>/instid/i.test(c))||h.some(c=>/inst id/i.test(c))),
+    map:r=>({
+      name:r['Inst ID']||r['instId']||r['Symbol']||'—',
+      date:r['Fill Time']||r['Date']||'',
+      buy:parseFloat(r['Fill Px']||r['Price']||0),
+      sell:parseFloat(r['Fill Px']||r['Price']||0),
+      shares:parseFloat(r['Fill Sz']||r['Size']||0),
+      net:parseFloat(r['PnL']||r['Net']||0),
+    })
+  },
+  {
+    name:'KuCoin',
+    detect:h=>h.some(c=>/kucoin/i.test(c))||( h.some(c=>/symbol/i.test(c))&&h.some(c=>/deal price/i.test(c))),
+    map:r=>({
+      name:r['Symbol']||r['Pair']||'—',
+      date:r['Order Time']||r['Date']||'',
+      buy:parseFloat(r['Deal Price']||r['Price']||0),
+      sell:parseFloat(r['Deal Price']||r['Price']||0),
+      shares:parseFloat(r['Deal Amount']||r['Quantity']||0),
+      net:parseFloat(r['Total Deal Value']||r['Total']||0),
+    })
+  },
+  {
+    name:'Bitget',
+    detect:h=>h.some(c=>/bitget/i.test(c))||( h.some(c=>/symbol/i.test(c))&&h.some(c=>/realized p&l/i.test(c))),
+    map:r=>({
+      name:r['Symbol']||'—',
+      date:r['Open time']||r['Date']||'',
+      buy:parseFloat(r['Open price']||r['Entry Price']||0),
+      sell:parseFloat(r['Close price']||r['Exit Price']||0),
+      shares:parseFloat(r['Size']||r['Quantity']||0),
+      net:parseFloat(r['Realized P&L']||r['PNL']||0),
+    })
+  },
+  {
+    name:'MetaTrader',
+    detect:h=>h.some(c=>/open time/i.test(c))&&h.some(c=>/s\.l\./i.test(c)||/stop loss/i.test(c)),
+    map:r=>({
+      name:r['Symbol']||r['symbol']||'—',
+      date:r['Open Time']||r['open time']||'',
+      buy:parseFloat(r['Open Price']||r['open price']||0),
+      sell:parseFloat(r['Close Price']||r['close price']||0),
+      shares:parseFloat(r['Volume']||r['Lots']||0),
+      net:parseFloat(r['Profit']||r['profit']||0),
+    })
+  },
+  {
+    name:'Lynx',
+    detect:h=>h.some(c=>/lynx/i.test(c))||(h.some(c=>/financial instrument/i.test(c))&&h.some(c=>/transaction type/i.test(c))),
+    map:r=>({
+      name:r['Financial Instrument']||r['Symbol']||'—',
+      date:r['Trade Date']||r['Date']||'',
+      buy:parseFloat(r['Price']||r['T. Price']||0),
+      sell:parseFloat(r['Price']||r['T. Price']||0),
+      shares:parseFloat(r['Quantity']||0),
+      net:parseFloat(r['Realized P/L']||0),
+    })
+  },
+];
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(lines.length<2)return{headers:[],rows:[]};
+  // Detect delimiter
+  const delimiters=[',',';','\t','|'];
+  let delim=',';
+  let maxCols=0;
+  delimiters.forEach(d=>{const c=(lines[0].match(new RegExp('\\'+d,'g'))||[]).length;if(c>maxCols){maxCols=c;delim=d;}});
+  const parseRow=l=>{const r=[];let cur='',inQ=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){inQ=!inQ;}else if(ch===delim&&!inQ){r.push(cur.trim());cur='';}else cur+=ch;}r.push(cur.trim());return r;};
+  const headers=parseRow(lines[0]).map(h=>h.replace(/^"|"$/g,'').trim());
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const vals=parseRow(lines[i]);
+    const row={};
+    headers.forEach((h,j)=>row[h]=(vals[j]||'').replace(/^"|"$/g,'').trim());
+    rows.push(row);
+  }
+  return{headers,rows};
+}
+
+function detectBroker(headers){
+  for(const p of BROKER_PROFILES){
+    if(p.detect(headers))return p;
+  }
+  return null;
+}
+
+function handleCSVFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const {headers,rows}=parseCSV(text);
+    csvParsed=rows;
+    const broker=detectBroker(headers);
+    if(broker){
+      csvColMap={broker:broker.name,profile:broker,auto:true};
+      showCSVStep2Auto(broker,rows,headers);
+    } else {
+      showCSVStep2Manual(headers,rows);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showCSVStep2Auto(broker,rows,headers){
+  document.getElementById('csv-broker-detected').innerHTML=
+    `✅ <strong style="color:var(--g)">${broker.name}</strong> ${lang==='nl'?'herkend':'detected'} — ${rows.length} ${lang==='nl'?'rijen gevonden':'rows found'}`;
+  document.getElementById('csv-rows-found').textContent=
+    lang==='nl'?`Voorbeeld (eerste 3 rijen):`:`Preview (first 3 rows):`;
+  // Show preview table
+  const mapped=rows.slice(0,3).map(r=>broker.map(r));
+  let html=`<div style="grid-column:1/-1;overflow-x:auto"><table style="width:100%;font-size:9px;border-collapse:collapse">
+    <tr>${['Naam','Datum','Koop','Verkoop','Aandelen','Net'].map(h=>`<th style="padding:4px;color:var(--g2);text-align:left;border-bottom:1px solid rgba(0,255,178,.1)">${h}</th>`).join('')}</tr>
+    ${mapped.map(r=>`<tr>${[r.name,r.date,r.buy,r.sell,r.shares,r.net].map(v=>`<td style="padding:4px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.04)">${v}</td>`).join('')}</tr>`).join('')}
+  </table></div>`;
+  document.getElementById('csv-mapping').innerHTML=html;
+  showCSVStep(2);
+}
+
+function showCSVStep2Manual(headers,rows){
+  document.getElementById('csv-broker-detected').innerHTML=
+    `⚠️ <span style="color:var(--gold)">${lang==='nl'?'Broker niet herkend — wijs kolommen manueel toe':'Broker not detected — map columns manually'}</span>`;
+  document.getElementById('csv-rows-found').textContent=`${rows.length} ${lang==='nl'?'rijen gevonden':'rows found'}`;
+  const fields=['name','date','buy','sell','shares','net'];
+  const labels={name:'Naam/Symbool',date:'Datum',buy:'Aankoopprijs',sell:'Verkoopprijs',shares:'Aantal',net:'Netto P&L'};
+  const opts=['—',...headers].map(h=>`<option value="${h}">${h}</option>`).join('');
+  let html=fields.map(f=>`
+    <div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:3px">${labels[f]}</div>
+      <select id="csv-map-${f}" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-size:10px">${opts}</select>
+    </div>`).join('');
+  document.getElementById('csv-mapping').innerHTML=html;
+  csvColMap={broker:'Manueel',auto:false};
+  showCSVStep(2);
+}
+
+function importCSVTrades(){
+  let imported=0, skipped=0;
+  const now=new Date();
+  if(csvColMap.auto){
+    const profile=csvColMap.profile;
+    csvParsed.forEach(r=>{
+      const t=profile.map(r);
+      if(!t.name||t.name==='—'||(!t.buy&&!t.sell&&!t.net)){skipped++;return;}
+      const dateStr=t.date?new Date(t.date).toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'}):now.toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'});
+      const yr=t.date?new Date(t.date).getFullYear():now.getFullYear();
+      trades.push({id:Date.now()+imported,name:t.name,buy:t.buy||0,sell:t.sell||0,shares:t.shares||0,
+        gross:t.net||0,costs:0,tax:0,net:t.net||0,pct:t.buy&&t.sell&&t.buy>0?((t.sell-t.buy)/t.buy*100):0,
+        taxPct:0,year:isNaN(yr)?now.getFullYear():yr,date:dateStr,source:csvColMap.broker});
+      imported++;
+    });
+  } else {
+    const map={};
+    ['name','date','buy','sell','shares','net'].forEach(f=>{
+      const sel=document.getElementById('csv-map-'+f);
+      map[f]=sel?sel.value:'—';
+    });
+    csvParsed.forEach(r=>{
+      const name=map.name!=='—'?r[map.name]:'—';
+      if(!name||name==='—'){skipped++;return;}
+      const buy=parseFloat((r[map.buy]||'').replace(',','.'))||0;
+      const sell=parseFloat((r[map.sell]||'').replace(',','.'))||0;
+      const shares=parseFloat((r[map.shares]||'').replace(',','.'))||0;
+      const net=parseFloat((r[map.net]||'').replace(',','.'))||0;
+      const dateRaw=map.date!=='—'?r[map.date]:'';
+      const dateObj=dateRaw?new Date(dateRaw):now;
+      const dateStr=dateObj.toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'});
+      const yr=isNaN(dateObj.getFullYear())?now.getFullYear():dateObj.getFullYear();
+      trades.push({id:Date.now()+imported,name,buy,sell,shares,gross:net,costs:0,tax:0,net,
+        pct:buy&&sell&&buy>0?((sell-buy)/buy*100):0,taxPct:0,year:yr,date:dateStr,source:'CSV'});
+      imported++;
+    });
+  }
+  // Sort by date descending
+  trades.sort((a,b)=>b.id-a.id);
+  if(trades.length>500)trades.splice(500);
+  save();renderLog();renderCharts();
+  document.getElementById('csv-result-msg').textContent=
+    `${imported} ${lang==='nl'?'trades geïmporteerd':'trades imported'}`;
+  document.getElementById('csv-result-sub').textContent=
+    skipped>0?`${skipped} ${lang==='nl'?'rijen overgeslagen (onvolledig)':'rows skipped (incomplete)'}`:
+    lang==='nl'?`Van ${csvColMap.broker}`:`From ${csvColMap.broker}`;
+  showCSVStep(3);
+}
+
+function showCSVStep(n){
+  [1,2,3].forEach(i=>document.getElementById('csv-step'+i).style.display=i===n?'block':'none');
+  csv_step=n;
+}
+function closeCSVModal(){
+  document.getElementById('csv-modal').style.display='none';
+  showCSVStep(1);
+  document.getElementById('csv-file-input').value='';
+  csvParsed=[];csvColMap={};
+}
+
+// Drag & drop support
+document.getElementById('csv-drop-zone').addEventListener('click',()=>document.getElementById('csv-file-input').click());
+document.getElementById('csv-drop-zone').addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.style.borderColor='rgba(0,255,178,.6)';});
+document.getElementById('csv-drop-zone').addEventListener('dragleave',e=>{e.currentTarget.style.borderColor='rgba(0,255,178,.2)';});
+document.getElementById('csv-drop-zone').addEventListener('drop',e=>{
+  e.preventDefault();e.currentTarget.style.borderColor='rgba(0,255,178,.2)';
+  const f=e.dataTransfer.files[0];if(f)handleCSVFile(f);
+});
 </script>
 </body>
 </html>
