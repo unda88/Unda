@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +18,16 @@
     @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
     .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
     @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    /* ── Language Switcher ── */
+    .lang-sw { position: fixed; top: 14px; right: 18px; z-index: 100; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: var(--g2); cursor: pointer; user-select: none; background: rgba(0,255,178,0.06); border: 1px solid rgba(0,255,178,0.15); border-radius: 8px; padding: 5px 10px; transition: background .2s; }
+    .lang-sw:hover { background: rgba(0,255,178,0.12); }
+    .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #000d07; border: 1px solid rgba(0,255,178,0.18); border-radius: 12px; padding: 6px; min-width: 110px; box-shadow: 0 16px 40px rgba(0,0,0,0.7); flex-direction: column; gap: 2px; }
+    .lang-sw.open .lang-menu { display: flex; }
+    .lang-menu div { padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: 11px; }
+    .lang-menu div:hover { background: rgba(0,255,178,0.1); color: var(--g); }
+    .lang-menu div.active { color: var(--g); background: rgba(0,255,178,0.07); }
+
     .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 900px; margin: 0 auto; }
     .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
     .nav:hover { color: var(--g); }
@@ -37,6 +47,7 @@
     .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); }
     .px { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--g2); margin-right: 7px; }
     .iw input, .iw select { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; width: 100%; }
+    .iw select option { background: #000d07; color: var(--text); }
     .add-btn { background: rgba(0,255,178,0.1); border: 1px solid rgba(0,255,178,0.3); border-radius: 10px; padding: 11px 20px; color: var(--g); font-family: 'Outfit', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; width: 100%; }
     .add-btn:hover { background: rgba(0,255,178,0.18); }
     .stats-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
@@ -73,81 +84,91 @@
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
 <div class="tl"></div>
+
+<!-- Language switcher -->
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
 <div class="page">
-  <a class="nav" href="unda-index.html">← Terug naar suite</a>
-  <div class="header">
-    <div class="header-wave">Unda · Elliott Wave</div>
-    <div class="header-title">Trade Logbook</div>
+  <a class="nav" id="t-nav" href="unda-index.html">← Back to suite</a>
+  <div class="header" style="text-align:center;margin-bottom:1.75rem;">
+    <div class="header-wave">Unda</div>
+    <div class="header-title" id="t-title">Trade Logbook</div>
   </div>
 
   <!-- Add trade -->
   <div class="card">
     <div class="card-inner">
-      <div class="sec">Log a trade</div>
+      <div class="sec" id="t-sec-log">Log a trade</div>
       <div class="form-grid">
-        <div class="fg">
-          <span class="fl">Date</span>
-          <div class="iw"><input type="date" id="t-date"></div>
+        <div class="fg"><span class="fl" id="t-f-date">Date</span>
+          <div class="iw"><input type="date" id="f-date"></div>
         </div>
-        <div class="fg">
-          <span class="fl">Pair / Asset</span>
-          <div class="iw"><input type="text" id="t-pair" placeholder="BTCUSDT"></div>
+        <div class="fg"><span class="fl" id="t-f-pair">Pair / Asset</span>
+          <div class="iw"><input type="text" id="f-pair" placeholder="BTCUSDT"></div>
         </div>
-        <div class="fg">
-          <span class="fl">Direction</span>
+        <div class="fg"><span class="fl" id="t-f-dir">Direction</span>
           <div class="iw">
-            <select id="t-dir">
-              <option value="Long">Long</option>
-              <option value="Short">Short</option>
+            <select id="f-dir">
+              <option value="Long" id="opt-long">Long</option>
+              <option value="Short" id="opt-short">Short</option>
             </select>
           </div>
         </div>
-        <div class="fg">
-          <span class="fl">Result</span>
+        <div class="fg"><span class="fl" id="t-f-result">Result</span>
           <div class="iw">
-            <select id="t-result">
-              <option value="Win">Win</option>
-              <option value="Loss">Loss</option>
-              <option value="Break even">Break even</option>
+            <select id="f-result">
+              <option value="Win" id="opt-win">Win</option>
+              <option value="Loss" id="opt-loss">Loss</option>
+              <option value="Break even" id="opt-be">Break even</option>
             </select>
           </div>
         </div>
-        <div class="fg">
-          <span class="fl">Risk ($)</span>
-          <div class="iw"><span class="px">$</span><input type="number" id="t-risk" placeholder="100" min="0" step="0.01"></div>
+        <div class="fg"><span class="fl" id="t-f-risk">Risk ($)</span>
+          <div class="iw"><span class="px">$</span><input type="number" id="f-risk" placeholder="100" min="0" step="0.01"></div>
         </div>
-        <div class="fg">
-          <span class="fl">Profit / Loss ($)</span>
-          <div class="iw"><span class="px">$</span><input type="number" id="t-pnl" placeholder="200" step="0.01"></div>
+        <div class="fg"><span class="fl" id="t-f-pnl">Profit / Loss ($)</span>
+          <div class="iw"><span class="px">$</span><input type="number" id="f-pnl" placeholder="200" step="0.01"></div>
         </div>
-        <div class="fg">
-          <span class="fl">R:R ratio</span>
-          <div class="iw"><span class="px">R</span><input type="number" id="t-rr" placeholder="2" min="0" step="0.1"></div>
+        <div class="fg"><span class="fl" id="t-f-rr">R:R ratio</span>
+          <div class="iw"><span class="px">R</span><input type="number" id="f-rr" placeholder="2" min="0" step="0.1"></div>
         </div>
-        <div class="fg">
-          <span class="fl">Notes</span>
-          <div class="iw"><input type="text" id="t-notes" placeholder="Optional..."></div>
+        <div class="fg"><span class="fl" id="t-f-notes">Notes</span>
+          <div class="iw"><input type="text" id="f-notes" placeholder="Optional..."></div>
         </div>
       </div>
-      <button class="add-btn" onclick="addTrade()">+ Add trade to log</button>
+      <button class="add-btn" id="t-add-btn" onclick="addTrade()">+ Add trade to log</button>
     </div>
   </div>
 
   <!-- Stats -->
-  <div class="card" id="stats-card">
+  <div class="card">
     <div class="card-inner">
-      <div class="sec">Statistics</div>
+      <div class="sec" id="t-sec-stats">Statistics</div>
       <div class="stats-grid">
-        <div class="stat"><div class="stat-label">Total trades</div><div class="stat-val c-white" id="st-total">0</div></div>
-        <div class="stat"><div class="stat-label">Win rate</div><div class="stat-val c-green" id="st-wr">—</div></div>
-        <div class="stat"><div class="stat-label">Avg R:R</div><div class="stat-val c-gold" id="st-rr">—</div></div>
-        <div class="stat"><div class="stat-label">Profit factor</div><div class="stat-val c-blue" id="st-pf">—</div></div>
-        <div class="stat"><div class="stat-label">Net P&L</div><div class="stat-val" id="st-pnl">—</div></div>
-        <div class="stat"><div class="stat-label">Wins</div><div class="stat-val c-green" id="st-wins">0</div></div>
-        <div class="stat"><div class="stat-label">Losses</div><div class="stat-val c-red" id="st-losses">0</div></div>
-        <div class="stat"><div class="stat-label">Break even</div><div class="stat-val c-gold" id="st-be">0</div></div>
-        <div class="stat"><div class="stat-label">Avg win $</div><div class="stat-val c-green" id="st-avgwin">—</div></div>
-        <div class="stat"><div class="stat-label">Avg loss $</div><div class="stat-val c-red" id="st-avgloss">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-total">Total trades</div><div class="stat-val c-white" id="st-total">0</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-wr">Win rate</div><div class="stat-val c-green" id="st-wr">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-rr">Avg R:R</div><div class="stat-val c-gold" id="st-rr">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-pf">Profit factor</div><div class="stat-val c-blue" id="st-pf">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-pnl">Net P&amp;L</div><div class="stat-val" id="st-pnl">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-wins">Wins</div><div class="stat-val c-green" id="st-wins">0</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-losses">Losses</div><div class="stat-val c-red" id="st-losses">0</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-be">Break even</div><div class="stat-val c-gold" id="st-be">0</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-avgwin">Avg win $</div><div class="stat-val c-green" id="st-avgwin">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-avgloss">Avg loss $</div><div class="stat-val c-red" id="st-avgloss">—</div></div>
       </div>
     </div>
   </div>
@@ -156,22 +177,22 @@
   <div class="card">
     <div class="card-inner">
       <div class="log-header">
-        <div class="sec" style="margin:0;flex:1">Trade history</div>
-        <button class="clear-btn" onclick="clearAll()">Clear all</button>
+        <div class="sec" style="margin:0;flex:1" id="t-sec-history">Trade history</div>
+        <button class="clear-btn" id="t-clear-btn" onclick="clearAll()">Clear all</button>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th>Date</th>
-              <th>Pair</th>
-              <th>Dir</th>
-              <th>Result</th>
-              <th>Risk $</th>
-              <th>P&L $</th>
-              <th>R:R</th>
-              <th>Notes</th>
+              <th id="th-date">Date</th>
+              <th id="th-pair">Pair</th>
+              <th id="th-dir">Dir</th>
+              <th id="th-result">Result</th>
+              <th id="th-risk">Risk $</th>
+              <th id="th-pnl">P&amp;L $</th>
+              <th id="th-rr">R:R</th>
+              <th id="th-notes">Notes</th>
               <th></th>
             </tr>
           </thead>
@@ -182,108 +203,185 @@
     </div>
   </div>
 
-  <div class="footer">unda · wave your risk</div>
+  <div class="footer" id="t-footer">unda · wave your risk</div>
 </div>
 
 <script>
-let trades = [];
-try { trades = JSON.parse(localStorage.getItem('unda-logbook') || '[]'); } catch(e) { trades = []; }
+  const LANGS = {
+    en: { dir:'ltr', nav:'← Back to suite', title:'Trade Logbook', secLog:'Log a trade', fDate:'Date', fPair:'Pair / Asset', fDir:'Direction', fResult:'Result', fRisk:'Risk ($)', fPnl:'Profit / Loss ($)', fRr:'R:R ratio', fNotes:'Notes', addBtn:'+ Add trade to log', secStats:'Statistics', stTotal:'Total trades', stWr:'Win rate', stRr:'Avg R:R', stPf:'Profit factor', stPnl:'Net P&L', stWins:'Wins', stLosses:'Losses', stBe:'Break even', stAvgwin:'Avg win $', stAvgloss:'Avg loss $', secHistory:'Trade history', clearBtn:'Clear all', thDate:'Date', thPair:'Pair', thDir:'Dir', thResult:'Result', thRisk:'Risk $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notes', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Loss', optBe:'Break even', emptyMsg:'No trades logged yet. Add your first trade above.', confirmClear:'Clear all trades?', footer:'unda · wave your risk' },
+    nl: { dir:'ltr', nav:'← Terug naar suite', title:'Trade Logboek', secLog:'Trade toevoegen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richting', fResult:'Resultaat', fRisk:'Risico ($)', fPnl:'Winst / Verlies ($)', fRr:'R:R verhouding', fNotes:'Notities', addBtn:'+ Trade toevoegen aan logboek', secStats:'Statistieken', stTotal:'Totaal trades', stWr:'Winstrate', stRr:'Gem. R:R', stPf:'Winstfactor', stPnl:'Netto W/V', stWins:'Winsten', stLosses:'Verliezen', stBe:'Break even', stAvgwin:'Gem. winst $', stAvgloss:'Gem. verlies $', secHistory:'Trade geschiedenis', clearBtn:'Alles wissen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Resultaat', thRisk:'Risico $', thPnl:'W/V $', thRr:'R:R', thNotes:'Notities', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Verlies', optBe:'Break even', emptyMsg:'Nog geen trades. Voeg je eerste trade toe.', confirmClear:'Alle trades wissen?', footer:'unda · beheers je risico' },
+    fr: { dir:'ltr', nav:'← Retour à la suite', title:'Journal de Trading', secLog:'Enregistrer un trade', fDate:'Date', fPair:'Paire / Actif', fDir:'Direction', fResult:'Résultat', fRisk:'Risque ($)', fPnl:'Profit / Perte ($)', fRr:'Ratio R:R', fNotes:'Notes', addBtn:'+ Ajouter au journal', secStats:'Statistiques', stTotal:'Total trades', stWr:'Taux de gain', stRr:'R:R moyen', stPf:'Facteur de profit', stPnl:'P&L net', stWins:'Gains', stLosses:'Pertes', stBe:'Sans résultat', stAvgwin:'Gain moy. $', stAvgloss:'Perte moy. $', secHistory:'Historique des trades', clearBtn:'Tout effacer', thDate:'Date', thPair:'Paire', thDir:'Dir.', thResult:'Résultat', thRisk:'Risque $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notes', optLong:'Long', optShort:'Short', optWin:'Gain', optLoss:'Perte', optBe:'Sans résultat', emptyMsg:'Aucun trade enregistré. Ajoutez votre premier trade ci-dessus.', confirmClear:'Effacer tous les trades ?', footer:'unda · maîtrisez votre risque' },
+    es: { dir:'ltr', nav:'← Volver a la suite', title:'Diario de Trading', secLog:'Registrar un trade', fDate:'Fecha', fPair:'Par / Activo', fDir:'Dirección', fResult:'Resultado', fRisk:'Riesgo ($)', fPnl:'Ganancia / Pérdida ($)', fRr:'Ratio R:R', fNotes:'Notas', addBtn:'+ Añadir al diario', secStats:'Estadísticas', stTotal:'Total trades', stWr:'Tasa de acierto', stRr:'R:R promedio', stPf:'Factor de beneficio', stPnl:'P&L neto', stWins:'Ganancias', stLosses:'Pérdidas', stBe:'Empate', stAvgwin:'Ganancia prom. $', stAvgloss:'Pérdida prom. $', secHistory:'Historial de trades', clearBtn:'Borrar todo', thDate:'Fecha', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Riesgo $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notas', optLong:'Long', optShort:'Short', optWin:'Ganancia', optLoss:'Pérdida', optBe:'Empate', emptyMsg:'Sin trades registrados. Añade tu primer trade arriba.', confirmClear:'¿Borrar todos los trades?', footer:'unda · domina tu riesgo' },
+    de: { dir:'ltr', nav:'← Zurück zur Suite', title:'Trade-Tagebuch', secLog:'Trade erfassen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richtung', fResult:'Ergebnis', fRisk:'Risiko ($)', fPnl:'Gewinn / Verlust ($)', fRr:'R:R-Verhältnis', fNotes:'Notizen', addBtn:'+ Trade hinzufügen', secStats:'Statistiken', stTotal:'Gesamt Trades', stWr:'Gewinnrate', stRr:'Ø R:R', stPf:'Gewinnfaktor', stPnl:'Netto G/V', stWins:'Gewinne', stLosses:'Verluste', stBe:'Break-even', stAvgwin:'Ø Gewinn $', stAvgloss:'Ø Verlust $', secHistory:'Trade-Verlauf', clearBtn:'Alles löschen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Ergebnis', thRisk:'Risiko $', thPnl:'G/V $', thRr:'R:R', thNotes:'Notizen', optLong:'Long', optShort:'Short', optWin:'Gewinn', optLoss:'Verlust', optBe:'Break-even', emptyMsg:'Noch keine Trades. Füge deinen ersten Trade oben hinzu.', confirmClear:'Alle Trades löschen?', footer:'unda · steuere dein Risiko' },
+    it: { dir:'ltr', nav:'← Torna alla suite', title:'Diario di Trading', secLog:'Registra un trade', fDate:'Data', fPair:'Coppia / Asset', fDir:'Direzione', fResult:'Risultato', fRisk:'Rischio ($)', fPnl:'Profitto / Perdita ($)', fRr:'Rapporto R:R', fNotes:'Note', addBtn:'+ Aggiungi al diario', secStats:'Statistiche', stTotal:'Totale trade', stWr:'Tasso vincita', stRr:'R:R medio', stPf:'Fattore profitto', stPnl:'P&L netto', stWins:'Vincite', stLosses:'Perdite', stBe:'Pareggio', stAvgwin:'Vincita media $', stAvgloss:'Perdita media $', secHistory:'Storico trade', clearBtn:'Cancella tutto', thDate:'Data', thPair:'Coppia', thDir:'Dir.', thResult:'Risultato', thRisk:'Rischio $', thPnl:'P&L $', thRr:'R:R', thNotes:'Note', optLong:'Long', optShort:'Short', optWin:'Vincita', optLoss:'Perdita', optBe:'Pareggio', emptyMsg:'Nessun trade registrato. Aggiungi il tuo primo trade sopra.', confirmClear:'Cancellare tutti i trade?', footer:'unda · gestisci il tuo rischio' },
+    pt: { dir:'ltr', nav:'← Voltar à suite', title:'Diário de Trading', secLog:'Registar um trade', fDate:'Data', fPair:'Par / Ativo', fDir:'Direção', fResult:'Resultado', fRisk:'Risco ($)', fPnl:'Lucro / Perda ($)', fRr:'Razão R:R', fNotes:'Notas', addBtn:'+ Adicionar ao diário', secStats:'Estatísticas', stTotal:'Total trades', stWr:'Taxa de acerto', stRr:'R:R médio', stPf:'Fator de lucro', stPnl:'P&L líquido', stWins:'Vitórias', stLosses:'Derrotas', stBe:'Empate', stAvgwin:'Vitória média $', stAvgloss:'Derrota média $', secHistory:'Histórico de trades', clearBtn:'Limpar tudo', thDate:'Data', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Risco $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notas', optLong:'Long', optShort:'Short', optWin:'Vitória', optLoss:'Derrota', optBe:'Empate', emptyMsg:'Sem trades registados. Adicione o seu primeiro trade acima.', confirmClear:'Limpar todos os trades?', footer:'unda · controle seu risco' },
+    tr: { dir:'ltr', nav:'← Suite\'e dön', title:'İşlem Defteri', secLog:'İşlem ekle', fDate:'Tarih', fPair:'Parite / Varlık', fDir:'Yön', fResult:'Sonuç', fRisk:'Risk ($)', fPnl:'Kâr / Zarar ($)', fRr:'R:R oranı', fNotes:'Notlar', addBtn:'+ Deftere ekle', secStats:'İstatistikler', stTotal:'Toplam işlem', stWr:'Kazanma oranı', stRr:'Ort. R:R', stPf:'Kâr faktörü', stPnl:'Net K/Z', stWins:'Kazançlar', stLosses:'Kayıplar', stBe:'Başabaş', stAvgwin:'Ort. kazanç $', stAvgloss:'Ort. kayıp $', secHistory:'İşlem geçmişi', clearBtn:'Tümünü sil', thDate:'Tarih', thPair:'Parite', thDir:'Yön', thResult:'Sonuç', thRisk:'Risk $', thPnl:'K/Z $', thRr:'R:R', thNotes:'Notlar', optLong:'Long', optShort:'Short', optWin:'Kazanç', optLoss:'Kayıp', optBe:'Başabaş', emptyMsg:'Henüz işlem yok. İlk işleminizi yukarıdan ekleyin.', confirmClear:'Tüm işlemler silinsin mi?', footer:'unda · riskinizi yönetin' },
+    ar: { dir:'rtl', nav:'العودة إلى القائمة →', title:'سجل التداول', secLog:'تسجيل صفقة', fDate:'التاريخ', fPair:'الزوج / الأصل', fDir:'الاتجاه', fResult:'النتيجة', fRisk:'المخاطرة ($)', fPnl:'الربح / الخسارة ($)', fRr:'نسبة R:R', fNotes:'ملاحظات', addBtn:'+ إضافة إلى السجل', secStats:'الإحصائيات', stTotal:'إجمالي الصفقات', stWr:'معدل الفوز', stRr:'متوسط R:R', stPf:'عامل الربح', stPnl:'صافي الربح/الخسارة', stWins:'الفوز', stLosses:'الخسارة', stBe:'تعادل', stAvgwin:'متوسط الربح $', stAvgloss:'متوسط الخسارة $', secHistory:'سجل الصفقات', clearBtn:'مسح الكل', thDate:'التاريخ', thPair:'الزوج', thDir:'الاتجاه', thResult:'النتيجة', thRisk:'المخاطرة $', thPnl:'ر/خ $', thRr:'R:R', thNotes:'ملاحظات', optLong:'شراء', optShort:'بيع', optWin:'ربح', optLoss:'خسارة', optBe:'تعادل', emptyMsg:'لا توجد صفقات مسجلة بعد. أضف صفقتك الأولى أعلاه.', confirmClear:'هل تريد مسح جميع الصفقات؟', footer:'unda · تحكم في مخاطرك' },
+    ru: { dir:'ltr', nav:'← Назад к набору', title:'Торговый журнал', secLog:'Добавить сделку', fDate:'Дата', fPair:'Пара / Актив', fDir:'Направление', fResult:'Результат', fRisk:'Риск ($)', fPnl:'Прибыль / Убыток ($)', fRr:'Соотношение R:R', fNotes:'Заметки', addBtn:'+ Добавить в журнал', secStats:'Статистика', stTotal:'Всего сделок', stWr:'% побед', stRr:'Ср. R:R', stPf:'Профит-фактор', stPnl:'Чистая П/У', stWins:'Прибыльные', stLosses:'Убыточные', stBe:'Безубыток', stAvgwin:'Ср. прибыль $', stAvgloss:'Ср. убыток $', secHistory:'История сделок', clearBtn:'Очистить всё', thDate:'Дата', thPair:'Пара', thDir:'Напр.', thResult:'Результат', thRisk:'Риск $', thPnl:'П/У $', thRr:'R:R', thNotes:'Заметки', optLong:'Лонг', optShort:'Шорт', optWin:'Победа', optLoss:'Убыток', optBe:'Безубыток', emptyMsg:'Сделок пока нет. Добавьте первую сделку выше.', confirmClear:'Очистить все сделки?', footer:'unda · управляй своим риском' },
+  };
 
-// Set today as default date
-document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
+  let currentLang = 'en';
 
-function save() { try { localStorage.setItem('unda-logbook', JSON.stringify(trades)); } catch(e) {} }
+  function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    if (!document.getElementById('lang-sw').contains(e.target))
+      document.getElementById('lang-sw').classList.remove('open');
+  });
 
-function addTrade() {
-  const date   = document.getElementById('t-date').value;
-  const pair   = document.getElementById('t-pair').value || '—';
-  const dir    = document.getElementById('t-dir').value;
-  const result = document.getElementById('t-result').value;
-  const risk   = parseFloat(document.getElementById('t-risk').value) || 0;
-  const pnl    = parseFloat(document.getElementById('t-pnl').value) || 0;
-  const rr     = parseFloat(document.getElementById('t-rr').value) || 0;
-  const notes  = document.getElementById('t-notes').value || '';
-
-  trades.unshift({ id: Date.now(), date, pair, dir, result, risk, pnl, rr, notes });
-  save();
-  render();
-
-  // Reset
-  document.getElementById('t-pair').value  = '';
-  document.getElementById('t-pnl').value   = '';
-  document.getElementById('t-rr').value    = '';
-  document.getElementById('t-notes').value = '';
-  document.getElementById('t-date').value  = new Date().toISOString().split('T')[0];
-}
-
-function deleteTrade(id) {
-  trades = trades.filter(t => t.id !== id);
-  save();
-  render();
-}
-
-function clearAll() {
-  if (confirm('Clear all trades?')) { trades = []; save(); render(); }
-}
-
-function render() {
-  const body  = document.getElementById('log-body');
-  const empty = document.getElementById('log-empty');
-
-  if (trades.length === 0) {
-    body.innerHTML = '';
-    empty.style.display = 'block';
-  } else {
-    empty.style.display = 'none';
-    body.innerHTML = trades.map((t, i) => {
-      const badgeClass = t.result === 'Win' ? 'badge-win' : t.result === 'Loss' ? 'badge-loss' : 'badge-be';
-      const pnlCol     = t.pnl > 0 ? 'c-green' : t.pnl < 0 ? 'c-red' : 'c-gold';
-      const dirCol     = t.dir === 'Long' ? '#00ff88' : '#ff6b9d';
-      return `<tr>
-        <td style="color:var(--text-muted)">${trades.length - i}</td>
-        <td style="color:var(--text-muted)">${t.date}</td>
-        <td style="color:var(--text)">${t.pair}</td>
-        <td style="color:${dirCol}">${t.dir}</td>
-        <td><span class="badge ${badgeClass}">${t.result}</span></td>
-        <td>$${t.risk.toFixed(2)}</td>
-        <td class="${pnlCol}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
-        <td>${t.rr > 0 ? t.rr.toFixed(2) : '—'}</td>
-        <td style="color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:11px">${t.notes}</td>
-        <td><button class="del-btn" onclick="deleteTrade(${t.id})">×</button></td>
-      </tr>`;
-    }).join('');
+  function setLang(code, label) {
+    currentLang = code;
+    const T = LANGS[code];
+    document.documentElement.setAttribute('lang', code);
+    document.documentElement.setAttribute('dir', T.dir);
+    if (label) document.getElementById('cur-lang').textContent = label;
+    document.querySelectorAll('.lang-menu div').forEach(d => {
+      d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()));
+    });
+    document.getElementById('t-nav').textContent        = T.nav;
+    document.getElementById('t-title').textContent      = T.title;
+    document.getElementById('t-sec-log').textContent    = T.secLog;
+    document.getElementById('t-f-date').textContent     = T.fDate;
+    document.getElementById('t-f-pair').textContent     = T.fPair;
+    document.getElementById('t-f-dir').textContent      = T.fDir;
+    document.getElementById('t-f-result').textContent   = T.fResult;
+    document.getElementById('t-f-risk').textContent     = T.fRisk;
+    document.getElementById('t-f-pnl').textContent      = T.fPnl;
+    document.getElementById('t-f-rr').textContent       = T.fRr;
+    document.getElementById('t-f-notes').textContent    = T.fNotes;
+    document.getElementById('t-add-btn').textContent    = T.addBtn;
+    document.getElementById('t-sec-stats').textContent  = T.secStats;
+    document.getElementById('t-st-total').textContent   = T.stTotal;
+    document.getElementById('t-st-wr').textContent      = T.stWr;
+    document.getElementById('t-st-rr').textContent      = T.stRr;
+    document.getElementById('t-st-pf').textContent      = T.stPf;
+    document.getElementById('t-st-pnl').textContent     = T.stPnl;
+    document.getElementById('t-st-wins').textContent    = T.stWins;
+    document.getElementById('t-st-losses').textContent  = T.stLosses;
+    document.getElementById('t-st-be').textContent      = T.stBe;
+    document.getElementById('t-st-avgwin').textContent  = T.stAvgwin;
+    document.getElementById('t-st-avgloss').textContent = T.stAvgloss;
+    document.getElementById('t-sec-history').textContent= T.secHistory;
+    document.getElementById('t-clear-btn').textContent  = T.clearBtn;
+    document.getElementById('th-date').textContent      = T.thDate;
+    document.getElementById('th-pair').textContent      = T.thPair;
+    document.getElementById('th-dir').textContent       = T.thDir;
+    document.getElementById('th-result').textContent    = T.thResult;
+    document.getElementById('th-risk').textContent      = T.thRisk;
+    document.getElementById('th-pnl').textContent       = T.thPnl;
+    document.getElementById('th-rr').textContent        = T.thRr;
+    document.getElementById('th-notes').textContent     = T.thNotes;
+    document.getElementById('opt-long').textContent     = T.optLong;
+    document.getElementById('opt-short').textContent    = T.optShort;
+    document.getElementById('opt-win').textContent      = T.optWin;
+    document.getElementById('opt-loss').textContent     = T.optLoss;
+    document.getElementById('opt-be').textContent       = T.optBe;
+    document.getElementById('log-empty').textContent    = T.emptyMsg;
+    document.getElementById('t-footer').textContent     = T.footer;
+    document.getElementById('lang-sw').classList.remove('open');
+    render();
   }
 
-  // Stats
-  const total   = trades.length;
-  const wins    = trades.filter(t => t.result === 'Win');
-  const losses  = trades.filter(t => t.result === 'Loss');
-  const bes     = trades.filter(t => t.result === 'Break even');
-  const wr      = total > 0 ? (wins.length / total * 100).toFixed(1) + '%' : '—';
-  const validRR = trades.filter(t => t.rr > 0);
-  const avgRR   = validRR.length ? (validRR.reduce((a,b) => a+b.rr, 0) / validRR.length).toFixed(2) : '—';
-  const totalWin  = wins.reduce((a,b) => a + b.pnl, 0);
-  const totalLoss = Math.abs(losses.reduce((a,b) => a + b.pnl, 0));
-  const pf        = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : wins.length > 0 ? '∞' : '—';
-  const netPnl    = trades.reduce((a,b) => a + b.pnl, 0);
-  const avgWin    = wins.length ? '$' + (totalWin / wins.length).toFixed(2) : '—';
-  const avgLoss   = losses.length ? '$' + (totalLoss / losses.length).toFixed(2) : '—';
+  /* ── Logbook logic ── */
+  let trades = [];
+  try { trades = JSON.parse(localStorage.getItem('unda-logbook') || '[]'); } catch(e) { trades = []; }
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
 
-  document.getElementById('st-total').textContent  = total;
-  document.getElementById('st-wr').textContent     = wr;
-  document.getElementById('st-rr').textContent     = avgRR !== '—' ? '1:' + avgRR : '—';
-  document.getElementById('st-pf').textContent     = pf;
-  const pnlEl = document.getElementById('st-pnl');
-  pnlEl.textContent  = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
-  pnlEl.className    = 'stat-val ' + (netPnl >= 0 ? 'c-green' : 'c-red');
-  document.getElementById('st-wins').textContent   = wins.length;
-  document.getElementById('st-losses').textContent = losses.length;
-  document.getElementById('st-be').textContent     = bes.length;
-  document.getElementById('st-avgwin').textContent  = avgWin;
-  document.getElementById('st-avgloss').textContent = avgLoss;
-}
+  function save() { try { localStorage.setItem('unda-logbook', JSON.stringify(trades)); } catch(e) {} }
 
-render();
+  function addTrade() {
+    const T      = LANGS[currentLang];
+    const date   = document.getElementById('f-date').value;
+    const pair   = document.getElementById('f-pair').value || '—';
+    const dirVal = document.getElementById('f-dir').value;
+    const resVal = document.getElementById('f-result').value;
+    const risk   = parseFloat(document.getElementById('f-risk').value) || 0;
+    const pnl    = parseFloat(document.getElementById('f-pnl').value) || 0;
+    const rr     = parseFloat(document.getElementById('f-rr').value) || 0;
+    const notes  = document.getElementById('f-notes').value || '';
+    // Store raw English keys for badge logic, display label from current lang
+    trades.unshift({ id: Date.now(), date, pair, dir: dirVal, result: resVal, risk, pnl, rr, notes });
+    save(); render();
+    document.getElementById('f-pair').value  = '';
+    document.getElementById('f-pnl').value   = '';
+    document.getElementById('f-rr').value    = '';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('f-date').value  = new Date().toISOString().split('T')[0];
+  }
+
+  function deleteTrade(id) { trades = trades.filter(t => t.id !== id); save(); render(); }
+
+  function clearAll() {
+    const T = LANGS[currentLang];
+    if (confirm(T.confirmClear)) { trades = []; save(); render(); }
+  }
+
+  function render() {
+    const T    = LANGS[currentLang];
+    const body  = document.getElementById('log-body');
+    const empty = document.getElementById('log-empty');
+
+    if (trades.length === 0) {
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      empty.textContent = T.emptyMsg;
+    } else {
+      empty.style.display = 'none';
+      // Map raw result keys to translated labels
+      const resultLabel = { Win: T.optWin, Loss: T.optLoss, 'Break even': T.optBe };
+      const dirLabel    = { Long: T.optLong, Short: T.optShort };
+      body.innerHTML = trades.map((t, i) => {
+        const badgeClass = t.result === 'Win' ? 'badge-win' : t.result === 'Loss' ? 'badge-loss' : 'badge-be';
+        const pnlCol     = t.pnl > 0 ? 'c-green' : t.pnl < 0 ? 'c-red' : 'c-gold';
+        const dirCol     = t.dir === 'Long' ? '#00ff88' : '#ff6b9d';
+        return `<tr>
+          <td style="color:var(--text-muted)">${trades.length - i}</td>
+          <td style="color:var(--text-muted)">${t.date}</td>
+          <td style="color:var(--text)">${t.pair}</td>
+          <td style="color:${dirCol}">${dirLabel[t.dir] || t.dir}</td>
+          <td><span class="badge ${badgeClass}">${resultLabel[t.result] || t.result}</span></td>
+          <td>$${t.risk.toFixed(2)}</td>
+          <td class="${pnlCol}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
+          <td>${t.rr > 0 ? t.rr.toFixed(2) : '—'}</td>
+          <td style="color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:11px">${t.notes}</td>
+          <td><button class="del-btn" onclick="deleteTrade(${t.id})">×</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Stats
+    const total     = trades.length;
+    const wins      = trades.filter(t => t.result === 'Win');
+    const losses    = trades.filter(t => t.result === 'Loss');
+    const bes       = trades.filter(t => t.result === 'Break even');
+    const wr        = total > 0 ? (wins.length / total * 100).toFixed(1) + '%' : '—';
+    const validRR   = trades.filter(t => t.rr > 0);
+    const avgRR     = validRR.length ? (validRR.reduce((a,b) => a+b.rr, 0) / validRR.length).toFixed(2) : '—';
+    const totalWin  = wins.reduce((a,b) => a + b.pnl, 0);
+    const totalLoss = Math.abs(losses.reduce((a,b) => a + b.pnl, 0));
+    const pf        = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : wins.length > 0 ? '∞' : '—';
+    const netPnl    = trades.reduce((a,b) => a + b.pnl, 0);
+    const avgWin    = wins.length ? '$' + (totalWin / wins.length).toFixed(2) : '—';
+    const avgLoss   = losses.length ? '$' + (totalLoss / losses.length).toFixed(2) : '—';
+
+    document.getElementById('st-total').textContent   = total;
+    document.getElementById('st-wr').textContent      = wr;
+    document.getElementById('st-rr').textContent      = avgRR !== '—' ? '1:' + avgRR : '—';
+    document.getElementById('st-pf').textContent      = pf;
+    const pnlEl = document.getElementById('st-pnl');
+    pnlEl.textContent = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
+    pnlEl.className   = 'stat-val ' + (netPnl >= 0 ? 'c-green' : 'c-red');
+    document.getElementById('st-wins').textContent    = wins.length;
+    document.getElementById('st-losses').textContent  = losses.length;
+    document.getElementById('st-be').textContent      = bes.length;
+    document.getElementById('st-avgwin').textContent  = avgWin;
+    document.getElementById('st-avgloss').textContent = avgLoss;
+  }
+
+  /* ── Init ── */
+  const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+  const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+  const initLang = LANGS[browserLang] ? browserLang : 'en';
+  setLang(initLang, flagMap[initLang]);
 </script>
 </body>
 </html>
