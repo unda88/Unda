@@ -84,7 +84,21 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 
 <!-- Topbar -->
 <div class="topbar">
-  <button class="lang-btn" id="lang-btn" onclick="cycleLang()">NL</button>
+  <div style="position:relative">
+    <button class="lang-btn" id="lang-btn" onclick="toggleLangDD()">🇳🇱 NL ▾</button>
+    <div id="lang-dd" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:rgba(0,12,8,.97);border:1px solid rgba(0,255,178,.2);border-radius:10px;padding:4px;min-width:90px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5)">
+      <div onclick="setLang('nl')" id="ldi-nl" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇳🇱 NL</div>
+      <div onclick="setLang('en')" id="ldi-en" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇬🇧 EN</div>
+      <div onclick="setLang('fr')" id="ldi-fr" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇫🇷 FR</div>
+      <div onclick="setLang('es')" id="ldi-es" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇪🇸 ES</div>
+      <div onclick="setLang('de')" id="ldi-de" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇩🇪 DE</div>
+      <div onclick="setLang('it')" id="ldi-it" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇮🇹 IT</div>
+      <div onclick="setLang('pt')" id="ldi-pt" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇵🇹 PT</div>
+      <div onclick="setLang('tr')" id="ldi-tr" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇹🇷 TR</div>
+      <div onclick="setLang('ar')" id="ldi-ar" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇸🇦 AR</div>
+      <div onclick="setLang('ru')" id="ldi-ru" style="padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif">🇷🇺 RU</div>
+    </div>
+  </div>
 </div>
 
 <!-- Page -->
@@ -95,7 +109,7 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
     <div class="eyebrow" id="h-eyebrow">Elliott Wave</div>
     <div class="hero-title">Unda</div>
     <div class="hero-tag" id="h-tag">Trade Smart.</div>
-    <div class="cert">🎓 <span id="h-cert">CEWA I · Elliott International</span></div>
+    <div class="cert">🎓 <span id="h-cert">CEWA I</span></div>
   </div>
 
   <!-- Navigation -->
@@ -146,22 +160,12 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 
 <script>
 // ── Lang ──
-const LANGS=['en','nl','es','fr'];
-const LANG_LABELS={en:'NL',nl:'ES',es:'FR',fr:'EN'};
-let langIdx=0, lang='en';
+const LANG_BTN={nl:'🇳🇱 NL ▾',en:'🇬🇧 EN ▾',fr:'🇫🇷 FR ▾',es:'🇪🇸 ES ▾',de:'🇩🇪 DE ▾',it:'🇮🇹 IT ▾',pt:'🇵🇹 PT ▾',tr:'🇹🇷 TR ▾',ar:'🇸🇦 AR ▾',ru:'🇷🇺 RU ▾'};
+let lang='nl';
 
 const TX={
-  en:{
-    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
-    'n1-label':'Stock Dashboard','n1-sub':'Positions & live prices',
-    'n2-label':'Trading Suite','n2-sub':'Calculators & simulation',
-    'n3-label':'Educational','n3-sub':'Elliott Wave & more',
-    'dd-calc':'Risk Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook',
-    'dd-ew':'Elliott Wave','dd-ma':'Moving Averages','dd-vid':'Videos','dd-guide':'Guide','dd-soon':'Soon',
-    'footer-txt':'Unda · Elliott Wave · Trade Smart'
-  },
   nl:{
-    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Stock Dashboard','n1-sub':'Posities & live koersen',
     'n2-label':'Trading Suite','n2-sub':'Calculators & simulatie',
     'n3-label':'Educatief','n3-sub':'Elliott Wave & meer',
@@ -169,8 +173,26 @@ const TX={
     'dd-ew':'Elliott Wave','dd-ma':'Voortschrijdende gemiddelden','dd-vid':'Video\'s','dd-guide':'Handleiding','dd-soon':'Binnenkort',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
+  en:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Stock Dashboard','n1-sub':'Positions & live prices',
+    'n2-label':'Trading Suite','n2-sub':'Calculators & simulation',
+    'n3-label':'Educational','n3-sub':'Elliott Wave & more',
+    'dd-calc':'Risk Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook',
+    'dd-ew':'Elliott Wave','dd-ma':'Moving Averages','dd-vid':'Videos','dd-guide':'Guide','dd-soon':'Soon',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  fr:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Tableau de bord','n1-sub':'Positions & prix en direct',
+    'n2-label':'Trading Suite','n2-sub':'Calculatrices & simulation',
+    'n3-label':'Éducation','n3-sub':'Elliott Wave & plus',
+    'dd-calc':'Calculatrice de risque','dd-sim':'Simulateur','dd-kelly':'Critère Kelly','dd-log':'Journal de trades',
+    'dd-ew':'Elliott Wave','dd-ma':'Moyennes mobiles','dd-vid':'Vidéos','dd-guide':'Guide','dd-soon':'Bientôt',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
   es:{
-    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott Internacional',
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Panel de acciones','n1-sub':'Posiciones & precios en vivo',
     'n2-label':'Trading Suite','n2-sub':'Calculadoras & simulación',
     'n3-label':'Educación','n3-sub':'Elliott Wave & más',
@@ -178,31 +200,91 @@ const TX={
     'dd-ew':'Elliott Wave','dd-ma':'Medias móviles','dd-vid':'Videos','dd-guide':'Guía','dd-soon':'Pronto',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
-  fr:{
-    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I · Elliott International',
-    'n1-label':'Tableau de bord','n1-sub':'Positions & prix en direct',
-    'n2-label':'Trading Suite','n2-sub':'Calculatrices & simulation',
-    'n3-label':'Éducation','n3-sub':'Elliott Wave & plus',
-    'dd-calc':'Calculatrice de risque','dd-sim':'Simulateur','dd-kelly':'Critère Kelly','dd-log':'Journal de trades',
-    'dd-ew':'Elliott Wave','dd-ma':'Moyennes mobiles','dd-vid':'Vidéos','dd-guide':'Guide','dd-soon':'Bientôt',
+  de:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Aktien Dashboard','n1-sub':'Positionen & Live-Preise',
+    'n2-label':'Trading Suite','n2-sub':'Rechner & Simulation',
+    'n3-label':'Bildung','n3-sub':'Elliott Wave & mehr',
+    'dd-calc':'Risikorechner','dd-sim':'Trade Simulator','dd-kelly':'Kelly Kriterium','dd-log':'Handelstagebuch',
+    'dd-ew':'Elliott Wave','dd-ma':'Gleitende Durchschnitte','dd-vid':'Videos','dd-guide':'Leitfaden','dd-soon':'Demnächst',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  it:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Dashboard azionario','n1-sub':'Posizioni & prezzi in tempo reale',
+    'n2-label':'Trading Suite','n2-sub':'Calcolatrici & simulazione',
+    'n3-label':'Educazione','n3-sub':'Elliott Wave & altro',
+    'dd-calc':'Calcolatore di rischio','dd-sim':'Simulatore','dd-kelly':'Criterio Kelly','dd-log':'Diario di trading',
+    'dd-ew':'Elliott Wave','dd-ma':'Medie mobili','dd-vid':'Video','dd-guide':'Guida','dd-soon':'Presto',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  pt:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Painel de ações','n1-sub':'Posições & preços ao vivo',
+    'n2-label':'Trading Suite','n2-sub':'Calculadoras & simulação',
+    'n3-label':'Educação','n3-sub':'Elliott Wave & mais',
+    'dd-calc':'Calculadora de risco','dd-sim':'Simulador','dd-kelly':'Critério Kelly','dd-log':'Diário de trades',
+    'dd-ew':'Elliott Wave','dd-ma':'Médias móveis','dd-vid':'Vídeos','dd-guide':'Guia','dd-soon':'Em breve',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  tr:{
+    'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
+    'n1-label':'Hisse Senedi Paneli','n1-sub':'Pozisyonlar & canlı fiyatlar',
+    'n2-label':'Trading Suite','n2-sub':'Hesap makineleri & simülasyon',
+    'n3-label':'Eğitim','n3-sub':'Elliott Wave & daha fazla',
+    'dd-calc':'Risk Hesaplayıcı','dd-sim':'Trade Simülatörü','dd-kelly':'Kelly Kriteri','dd-log':'İşlem Defteri',
+    'dd-ew':'Elliott Wave','dd-ma':'Hareketli Ortalamalar','dd-vid':'Videolar','dd-guide':'Rehber','dd-soon':'Yakında',
+    'footer-txt':'Unda · Elliott Wave · Trade Smart'
+  },
+  ar:{
+    'h-eyebrow':'موجة إليوت','h-tag':'تداول بذكاء.','h-cert':'CEWA I',
+    'n1-label':'لوحة الأسهم','n1-sub':'المراكز والأسعار المباشرة',
+    'n2-label':'مجموعة التداول','n2-sub':'الآلات الحاسبة والمحاكاة',
+    'n3-label':'تعليم','n3-sub':'موجة إليوت والمزيد',
+    'dd-calc':'حاسبة المخاطر','dd-sim':'محاكي التداول','dd-kelly':'معيار كيلي','dd-log':'سجل الصفقات',
+    'dd-ew':'موجة إليوت','dd-ma':'المتوسطات المتحركة','dd-vid':'فيديوهات','dd-guide':'دليل','dd-soon':'قريباً',
+    'footer-txt':'Unda · موجة إليوت · تداول بذكاء'
+  },
+  ru:{
+    'h-eyebrow':'Волна Эллиотта','h-tag':'Торгуй умно.','h-cert':'CEWA I',
+    'n1-label':'Панель акций','n1-sub':'Позиции & живые цены',
+    'n2-label':'Торговый набор','n2-sub':'Калькуляторы & симуляция',
+    'n3-label':'Образование','n3-sub':'Волна Эллиотта & больше',
+    'dd-calc':'Калькулятор риска','dd-sim':'Симулятор','dd-kelly':'Критерий Келли','dd-log':'Журнал сделок',
+    'dd-ew':'Волна Эллиотта','dd-ma':'Скользящие средние','dd-vid':'Видео','dd-guide':'Руководство','dd-soon':'Скоро',
+    'footer-txt':'Unda · Волна Эллиотта · Торгуй умно'
   }
 };
 
 function applyLang(){
-  const t=TX[lang];
+  const t=TX[lang]||TX.nl;
   Object.keys(t).forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.textContent=t[id];
   });
+  document.getElementById('lang-btn').textContent=LANG_BTN[lang];
+  document.querySelectorAll('[id^="ldi-"]').forEach(el=>{
+    el.style.color=el.id==='ldi-'+lang?'#00ffb2':'rgba(200,255,235,.7)';
+    el.style.fontWeight=el.id==='ldi-'+lang?'600':'400';
+  });
 }
 
-function cycleLang(){
-  langIdx=(langIdx+1)%LANGS.length;
-  lang=LANGS[langIdx];
-  document.getElementById('lang-btn').textContent=LANG_LABELS[lang];
+function setLang(l){
+  localStorage.setItem('unda-lang',l);
+  lang=l;
+  document.getElementById('lang-dd').style.display='none';
   applyLang();
 }
+
+function toggleLangDD(){
+  const dd=document.getElementById('lang-dd');
+  dd.style.display=dd.style.display==='none'?'block':'none';
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[onclick="toggleLangDD()"]')&&!e.target.closest('#lang-dd'))
+    document.getElementById('lang-dd').style.display='none';
+});
 
 // ── Dropdowns ──
 function toggleDD(id){
@@ -216,6 +298,7 @@ document.addEventListener('click',e=>{
     document.querySelectorAll('.dropdown').forEach(d=>d.classList.remove('open'));
 });
 
+lang=localStorage.getItem('unda-lang')||'nl';
 applyLang();
 </script>
 </body>
