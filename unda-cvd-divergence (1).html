@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unda · CVD Divergence</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080d12;
+    --bg2:       #0e1620;
+    --bg3:       #131e2a;
+    --card:      #0f1923;
+    --border:    rgba(0,229,160,0.12);
+    --border2:   rgba(255,255,255,0.06);
+    --teal:      #00e5a0;
+    --teal2:     #00c896;
+    --teal-dim:  rgba(0,229,160,0.15);
+    --teal-glow: rgba(0,229,160,0.06);
+    --yellow:    #f5c842;
+    --red:       #ef4444;
+    --green:     #22c55e;
+    --text:      #e2e8f0;
+    --text2:     #7a9ab0;
+    --text3:     #3a5a70;
+    --radius:    12px;
+    --font:      'Inter', -apple-system, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Top green line */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    z-index: 100;
+  }
+
+  /* Green glow top-left */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,100,60,0.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; padding: 28px 24px 40px; max-width: 1400px; margin: 0 auto; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .eyebrow {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--teal); font-weight: 600; margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 26px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .header h1 span { color: var(--yellow); }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap; margin-bottom: 16px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+  }
+
+  select, button {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: 0.3px;
+  }
+  select:hover, button:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  .btn-active {
+    background: var(--teal-dim);
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  .divider { width: 1px; height: 24px; background: var(--border2); }
+  .spacer { flex: 1; }
+
+  .status-wrap { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text2); }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #444; transition: background .3s;
+  }
+  .dot.live    { background: var(--teal); box-shadow: 0 0 6px var(--teal); animation: pulse 2s infinite; }
+  .dot.connecting { background: var(--yellow); animation: pulse 1s infinite; }
+  .dot.error   { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .stat-pill {
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 5px 12px;
+    font-size: 11px; letter-spacing: 0.5px;
+  }
+  .stat-pill .lbl { color: var(--text3); text-transform: uppercase; margin-right: 5px; }
+  .stat-pill .val { font-weight: 600; font-family: monospace; }
+  .val-teal  { color: var(--teal); }
+  .val-green { color: var(--green); }
+  .val-red   { color: var(--red); }
+  .val-yellow{ color: var(--yellow); }
+
+  /* Charts container */
+  .charts-wrap {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
+
+  canvas#mainCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+  }
+
+  /* Div mode toggle */
+  .div-toggle {
+    display: flex; gap: 6px;
+  }
+  .div-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 6px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border2);
+    background: var(--bg3);
+    flex-wrap: wrap;
+  }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+  .leg-line { width: 20px; height: 2px; border-radius: 1px; }
+  .leg-dot  { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Warm-up overlay */
+  .overlay {
+    position: absolute; inset: 0;
+    background: rgba(8,13,18,0.88);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; z-index: 10; border-radius: var(--radius);
+  }
+  .overlay h3 { color: var(--teal); font-size: 15px; letter-spacing: 1px; }
+  .overlay p  { color: var(--text2); font-size: 12px; text-align: center; line-height: 1.7; max-width: 300px; }
+  .progress-wrap { width: 220px; height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .progress-bar  { height: 100%; background: var(--teal); border-radius: 2px; width: 0%; transition: width .4s; }
+  .overlay .liq-count { color: var(--teal); font-size: 13px; font-weight: 600; font-family: monospace; }
+
+  /* Footer */
+  .footer {
+    display: flex; gap: 16px; align-items: center;
+    margin-top: 12px; font-size: 11px; color: var(--text3);
+    flex-wrap: wrap;
+  }
+  .footer .brand { color: var(--text2); letter-spacing: 1.5px; text-transform: uppercase; font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="eyebrow">Unda · Elliott Wave</div>
+    <h1>CVD <span>Divergence</span></h1>
+  </div>
+
+  <div class="toolbar">
+    <select id="pairSel">
+      <option value="BTCUSDT">BTC/USDT</option>
+      <option value="ETHUSDT">ETH/USDT</option>
+      <option value="SOLUSDT">SOL/USDT</option>
+      <option value="BNBUSDT">BNB/USDT</option>
+    </select>
+    <select id="tfSel">
+      <option value="1m">1m</option>
+      <option value="5m" selected>5m</option>
+      <option value="15m">15m</option>
+      <option value="1h">1h</option>
+      <option value="4h">4h</option>
+    </select>
+
+    <div class="divider"></div>
+
+    <div class="div-toggle">
+      <button class="div-btn btn-active" id="btnHidden"  onclick="setDivMode('hidden')">Hidden</button>
+      <button class="div-btn"            id="btnRegular" onclick="setDivMode('regular')">Regular</button>
+      <button class="div-btn"            id="btnBoth"    onclick="setDivMode('both')">Both</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="status-wrap">
+      <div class="dot connecting" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="stat-pill"><span class="lbl">Price</span><span class="val val-teal" id="priceVal">—</span></div>
+    <div class="stat-pill"><span class="lbl">CVD</span><span class="val val-yellow" id="cvdVal">—</span></div>
+    <div class="stat-pill"><span class="lbl">Divs</span><span class="val val-teal" id="divCount">0</span></div>
+
+    <button id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+  </div>
+
+  <div class="charts-wrap">
+    <canvas id="mainCanvas"></canvas>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:#22c55e"></div> Bullish candle</div>
+      <div class="leg-item"><div class="leg-line" style="background:#ef4444"></div> Bearish candle</div>
+      <div class="leg-item"><div class="leg-line" style="background:#f5c842;height:1.5px"></div> CVD (multi-exchange)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#00e5a0;box-shadow:0 0 4px #00e5a0"></div> Hidden divergence</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#60a5fa;box-shadow:0 0 4px #60a5fa"></div> Regular divergence</div>
+      <div class="spacer" style="flex:1"></div>
+      <span style="font-size:10px;color:#3a5a70;letter-spacing:1px">LIVE · BINANCE FUTURES</span>
+    </div>
+
+    <div class="overlay" id="warmOverlay">
+      <h3>⚡ Live Feed Active</h3>
+      <p>Connected to Binance.<br>Waiting for enough candles to detect divergences.</p>
+      <div class="progress-wrap"><div class="progress-bar" id="progBar"></div></div>
+      <div class="liq-count" id="candleCount">0 / 50 candles</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span class="brand">Unda · Trade Smart</span>
+    <span>CVD = Cumulative Volume Delta — aggregated across Binance Futures</span>
+    <div style="flex:1"></div>
+    <span id="lastDivTime">—</span>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const CANDLES   = 120;
+const PRICE_H   = 0.62;  // fraction of canvas for price
+const CVD_H     = 0.32;  // fraction for CVD
+const GAP_H     = 0.06;  // gap between
+const AXIS_W    = 72;
+const MIN_CANDLES_FOR_DIV = 50;
+
+// Divergence settings
+const DIV_WINDOW   = 3;
+const DIV_MIN_PROM = 0;
+const DIV_ENGULF   = 50;
+const DIV_LOOKBACK = 100;
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────────
+// Change this to your server URL when deployed
+// Local:      ws://localhost:8765
+// Production: wss://yourserver.com/cvd
+const BACKEND_URL = null; // set to 'ws://localhost:8765' when running server.js
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+let pair = 'BTCUSDT', tf = '5m', paused = false;
+let divMode = 'hidden'; // 'hidden' | 'regular' | 'both'
+let candles = [], cvdData = [];
+let wsKline = null, wsTrade = null, wsBackend = null;
+let totalCvd = 0;
+let dirty = true;
+let usingBackend = false;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function dec(p) {
+  if (p.startsWith('BTC')) return 0;
+  if (p.startsWith('ETH') || p.startsWith('BNB')) return 1;
+  return 2;
+}
+function fmt(v) {
+  if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(2)+'B';
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(1)+'M';
+  if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(0)+'K';
+  return v.toFixed(0);
+}
+function setStatus(type, text) {
+  document.getElementById('statusDot').className = 'dot ' + type;
+  document.getElementById('statusText').textContent = text;
+}
+function setDivMode(m) {
+  divMode = m;
+  ['btnHidden','btnRegular','btnBoth'].forEach(id => {
+    document.getElementById(id).classList.remove('btn-active');
+  });
+  const map = {hidden:'btnHidden',regular:'btnRegular',both:'btnBoth'};
+  document.getElementById(map[m]).classList.add('btn-active');
+  dirty = true;
+}
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+}
+function updateOverlay() {
+  const n = candles.length;
+  const pct = Math.min(100, (n / MIN_CANDLES_FOR_DIV) * 100);
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('candleCount').textContent = n + ' / ' + MIN_CANDLES_FOR_DIV + ' candles';
+  if (n >= MIN_CANDLES_FOR_DIV) {
+    const ov = document.getElementById('warmOverlay');
+    if (ov) ov.style.display = 'none';
+  }
+}
+
+// ── DIVERGENCE DETECTION ──────────────────────────────────────────────────────
+function arrMin(arr, from, to) {
+  let m = arr[from];
+  for (let i = from+1; i < to; i++) if (arr[i] < m) m = arr[i];
+  return m;
+}
+function arrMax(arr, from, to) {
+  let m = arr[from];
+  for (let i = from+1; i < to; i++) if (arr[i] > m) m = arr[i];
+  return m;
+}
+
+function findTroughs(lows, win, prom) {
+  const t = [];
+  for (let i = win; i < lows.length - win; i++) {
+    const ml = arrMin(lows, i-win, i);
+    const mr = arrMin(lows, i+1, i+1+win);
+    if (lows[i] >= ml || lows[i] >= mr) continue;
+    const p = Math.min(ml-lows[i], mr-lows[i]);
+    if (p < prom) continue;
+    t.push({ idx: i, low: lows[i] });
+  }
+  return t;
+}
+
+function detectDivergences() {
+  if (candles.length < MIN_CANDLES_FOR_DIV) return [];
+  const lows = candles.map(c => c.l);
+  const cvds = cvdData.slice();
+  const divs = [];
+
+  let troughs = findTroughs(lows, DIV_WINDOW, DIV_MIN_PROM);
+  if (troughs.length === 0) return [];
+
+  // Cap lookback
+  if (troughs.length > DIV_LOOKBACK) troughs = troughs.slice(0, DIV_LOOKBACK);
+
+  // Add most recent candle low
+  const lastLow = lows[0];
+  if (troughs.length === 0 || troughs[0].idx > 2) {
+    troughs.unshift({ idx: 0, low: lastLow });
+  }
+
+  for (let i = 0; i < troughs.length - 1; i++) {
+    const cT = troughs[i];  // more recent
+    const cCvd = cvds[cT.idx];
+    if (cCvd === undefined) continue;
+
+    for (let j = i+1; j < troughs.length && j <= i + DIV_ENGULF; j++) {
+      const pT = troughs[j];  // older
+      const pCvd = cvds[pT.idx];
+      if (pCvd === undefined) continue;
+
+      const lowDiff = cT.low - pT.low;
+      const cvdDiff = cCvd - pCvd;
+
+      // Hidden: price HL + CVD LL (harder drop)
+      const isHidden  = lowDiff > 0 && cvdDiff < 0;
+      // Regular: price LL + CVD HL
+      const isRegular = lowDiff < 0 && cvdDiff > 0;
+
+      let show = false;
+      if (divMode === 'hidden'  && isHidden)  show = true;
+      if (divMode === 'regular' && isRegular) show = true;
+      if (divMode === 'both'    && (isHidden || isRegular)) show = true;
+
+      if (!show) continue;
+
+      // Check line doesn't cross lows between pivot points
+      const slope = (pT.low - cT.low) / (pT.idx - cT.idx);
+      let crosses = false;
+      for (let k = cT.idx + 1; k < pT.idx; k++) {
+        if ((cT.low + slope * (k - cT.idx)) > lows[k]) { crosses = true; break; }
+      }
+      if (crosses) continue;
+
+      divs.push({
+        i1: cT.idx, low1: cT.low,
+        i2: pT.idx, low2: pT.low,
+        type: isHidden ? 'hidden' : 'regular'
+      });
+    }
+  }
+
+  return divs;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render() {
+  if (!dirty || candles.length < 2) return;
+  dirty = false;
+
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W_css = canvas.parentElement.clientWidth;
+  const H_css = Math.round(W_css * 0.52);
+  canvas.width  = W_css * dpr;
+  canvas.height = H_css * dpr;
+  canvas.style.width  = W_css + 'px';
+  canvas.style.height = H_css + 'px';
+  ctx.scale(dpr, dpr);
+
+  const W = W_css, H = H_css;
+  const cW = Math.max(4, Math.floor((W - AXIS_W) / candles.length));
+  const chartW = cW * candles.length;
+
+  const priceH = Math.floor(H * PRICE_H);
+  const cvdH   = Math.floor(H * CVD_H);
+  const gapH   = Math.floor(H * GAP_H);
+  const cvdY   = priceH + gapH;
+
+  // Background
+  ctx.fillStyle = '#0f1923';
+  ctx.fillRect(0, 0, W, H);
+
+  // Price bounds
+  const allH = candles.map(c => c.h), allL = candles.map(c => c.l);
+  let pMax = allH[0], pMin = allL[0];
+  for (let i = 1; i < candles.length; i++) {
+    if (allH[i] > pMax) pMax = allH[i];
+    if (allL[i] < pMin) pMin = allL[i];
+  }
+  const pad = (pMax - pMin) * 0.08;
+  pMax += pad; pMin -= pad;
+  const pRng = pMax - pMin;
+
+  // CVD bounds
+  const validCvd = cvdData.filter(v => v !== undefined);
+  let cMax = validCvd[0] || 0, cMin = validCvd[0] || 0;
+  for (let v of validCvd) { if (v > cMax) cMax = v; if (v < cMin) cMin = v; }
+  const cPad = Math.abs(cMax - cMin) * 0.1 || 1;
+  cMax += cPad; cMin -= cPad;
+  const cRng = cMax - cMin || 1;
+
+  const px = i => AXIS_W + i * cW + cW / 2;
+  const py = v => priceH * (1 - (v - pMin) / pRng);
+  const cy = v => cvdY + cvdH * (1 - (v - cMin) / cRng);
+
+  // Grid lines price
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  for (let i = 1; i <= 4; i++) {
+    const y = priceH * i / 5;
+    ctx.beginPath(); ctx.moveTo(AXIS_W, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // Grid lines CVD
+  for (let i = 1; i <= 2; i++) {
+    const y = cvdY + cvdH * i / 3;
+    ctx.beginPath(); ctx.moveTo(AXIS_W, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Separator line
+  ctx.strokeStyle = 'rgba(0,229,160,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(AXIS_W, cvdY - 1); ctx.lineTo(W, cvdY - 1); ctx.stroke();
+
+  // CVD line
+  ctx.beginPath();
+  ctx.strokeStyle = '#f5c842';
+  ctx.lineWidth = 1.5;
+  let first = true;
+  for (let i = candles.length - 1; i >= 0; i--) {
+    if (cvdData[i] === undefined) continue;
+    const x = px(i), y = cy(cvdData[i]);
+    first ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    first = false;
+  }
+  ctx.stroke();
+
+  // CVD zero line
+  if (cMin < 0 && cMax > 0) {
+    const yz = cy(0);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(AXIS_W, yz); ctx.lineTo(W, yz); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Divergences
+  const divs = detectDivergences();
+  document.getElementById('divCount').textContent = divs.length;
+
+  for (const d of divs) {
+    const col = d.type === 'hidden' ? '#00e5a0' : '#60a5fa';
+    const x1 = px(d.i1), y1 = py(d.low1);
+    const x2 = px(d.i2), y2 = py(d.low2);
+
+    // Line on price chart
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dots at pivots
+    ctx.fillStyle = col;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(x1, y1, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x2, y2, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Label in middle
+    const mx = (x1 + x2) / 2;
+    const my = Math.min(y1, y2) - 12;
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = col;
+    ctx.textAlign = 'center';
+    ctx.fillText(d.type === 'hidden' ? 'H' : 'R', mx, my);
+
+    if (divs.length > 0) {
+      const last = divs[0];
+      const t = candles[last.i1];
+      if (t) document.getElementById('lastDivTime').textContent =
+        'Last div: ' + (d.type === 'hidden' ? 'Hidden' : 'Regular') + ' · idx ' + last.i1;
+    }
+  }
+
+  // Candlesticks
+  const bodyW = Math.max(2, cW - 2);
+  for (let i = 0; i < candles.length; i++) {
+    const c = candles[i];
+    const x = px(i);
+    const bull = c.c >= c.o;
+    const colBody = bull ? '#22c55e' : '#ef4444';
+    const colWick = bull ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.5)';
+
+    const yH = py(c.h), yL = py(c.l);
+    const yO = py(c.o), yC = py(c.c);
+
+    ctx.strokeStyle = colWick;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+
+    ctx.fillStyle = colBody;
+    const bTop = Math.min(yO, yC);
+    const bH   = Math.max(1, Math.abs(yC - yO));
+    ctx.fillRect(x - bodyW/2, bTop, bodyW, bH);
+  }
+
+  // Current price line
+  const last = candles[0];
+  if (last) {
+    const yp = py(last.c);
+    ctx.strokeStyle = 'rgba(0,229,160,0.3)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(AXIS_W, yp); ctx.lineTo(W, yp); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Price tag
+    ctx.fillStyle = 'rgba(0,229,160,0.15)';
+    ctx.fillRect(0, yp - 10, AXIS_W - 2, 20);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillStyle = '#00e5a0';
+    ctx.textAlign = 'right';
+    ctx.fillText(last.c.toFixed(dec(pair)), AXIS_W - 5, yp + 4);
+  }
+
+  // Price axis
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = pMin + i / 4 * pRng;
+    const y = py(v);
+    if (y > 12 && y < priceH - 6) {
+      ctx.fillStyle = 'rgba(120,154,176,0.6)';
+      ctx.fillText(v.toFixed(dec(pair)), AXIS_W - 3, y + 4);
+    }
+  }
+
+  // CVD axis label
+  ctx.font = '9px monospace';
+  ctx.fillStyle = '#f5c842';
+  ctx.textAlign = 'left';
+  ctx.fillText('CVD', AXIS_W + 4, cvdY + 14);
+
+  // CVD current value
+  if (cvdData[0] !== undefined) {
+    const yc = cy(cvdData[0]);
+    ctx.fillStyle = 'rgba(245,200,66,0.12)';
+    ctx.fillRect(0, yc - 10, AXIS_W - 2, 20);
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = '#f5c842';
+    ctx.textAlign = 'right';
+    ctx.fillText(fmt(cvdData[0]), AXIS_W - 5, yc + 3);
+  }
+
+  // Stats
+  if (last) {
+    document.getElementById('priceVal').textContent = last.c.toFixed(dec(pair)) + ' USDT';
+  }
+  if (cvdData[0] !== undefined) {
+    document.getElementById('cvdVal').textContent = fmt(cvdData[0]);
+  }
+}
+
+// ── WEBSOCKET: KLINES ──────────────────────────────────────────────────────────
+function connectKline() {
+  if (wsKline) { wsKline.onclose = null; wsKline.close(); }
+  const sym = pair.toLowerCase();
+  wsKline = new WebSocket(`wss://fstream.binance.com/ws/${sym}@kline_${tf}`);
+
+  wsKline.onopen  = () => setStatus('live', 'Live · Binance');
+  wsKline.onerror = () => setStatus('error', 'Error');
+  wsKline.onclose = () => { setStatus('connecting', 'Reconnecting...'); setTimeout(connectKline, 3000); };
+
+  wsKline.onmessage = e => {
+    if (paused) return;
+    const msg = JSON.parse(e.data);
+    const k = msg.k;
+    if (!k) return;
+
+    const candle = { o: +k.o, h: +k.h, l: +k.l, c: +k.c, ts: k.t };
+
+    if (candles.length && candles[0].ts === k.t) {
+      candles[0] = candle;
+    } else {
+      candles.unshift(candle);
+      cvdData.unshift(totalCvd); // snapshot current CVD for new candle
+      if (candles.length > CANDLES) { candles.pop(); cvdData.pop(); }
+    }
+    dirty = true;
+    updateOverlay();
+  };
+}
+
+// ── BACKEND CONNECTION (multi-exchange CVD) ──────────────────────────────────
+function connectBackend() {
+  if (!BACKEND_URL) { connectSingleExchange(); return; }
+  if (wsBackend) { wsBackend.onclose = null; wsBackend.close(); }
+
+  wsBackend = new WebSocket(BACKEND_URL);
+
+  wsBackend.onopen = () => {
+    usingBackend = true;
+    setStatus('live', 'Live · Multi-Exchange');
+    wsBackend.send(JSON.stringify({ type: 'subscribe', symbol: pair }));
+  };
+
+  wsBackend.onerror = () => {
+    console.warn('[Backend] Cannot connect — falling back to Binance only');
+    usingBackend = false;
+    connectSingleExchange();
+  };
+
+  wsBackend.onclose = () => {
+    if (usingBackend) {
+      usingBackend = false;
+      setTimeout(connectBackend, 5000);
+    }
+  };
+
+  wsBackend.onmessage = e => {
+    if (paused) return;
+    const msg = JSON.parse(e.data);
+
+    if ((msg.type === 'history' || msg.type === 'cvd_update') && msg[tf]) {
+      totalCvd = msg[tf].totalCvd;
+      const history = msg[tf].candles;
+      // Fill cvdData with history values aligned to candles
+      for (let i = 0; i < candles.length; i++) {
+        const match = history.find(h => h.ts === candles[i].ts);
+        cvdData[i] = match ? match.cvd : (i === 0 ? totalCvd : cvdData[i] || 0);
+      }
+      if (cvdData.length > 0) cvdData[0] = totalCvd;
+      dirty = true;
+    }
+  };
+}
+
+// ── FALLBACK: SINGLE EXCHANGE CVD (Binance only) ──────────────────────────────
+function connectSingleExchange() {
+  if (wsTrade) { wsTrade.onclose = null; wsTrade.close(); }
+  const sym = pair.toLowerCase();
+  setStatus('live', 'Live · Binance only');
+  wsTrade = new WebSocket(`wss://fstream.binance.com/ws/${sym}@aggTrade`);
+
+  wsTrade.onmessage = e => {
+    if (paused) return;
+    const msg = JSON.parse(e.data);
+    const qty = parseFloat(msg.q) * parseFloat(msg.p);
+    if (msg.m) totalCvd -= qty;
+    else       totalCvd += qty;
+    if (cvdData.length > 0) cvdData[0] = totalCvd;
+    dirty = true;
+  };
+
+  wsTrade.onclose = () => {
+    if (!usingBackend) setTimeout(connectSingleExchange, 3000);
+  };
+}
+
+// ── FETCH HISTORICAL CANDLES ────────────────────────────────────────────────────
+async function fetchCandles() {
+  const urls = [
+    `https://fapi.binance.com/fapi/v1/klines?symbol=${pair}&interval=${tf}&limit=${CANDLES}`,
+    `https://api.binance.com/api/v3/klines?symbol=${pair}&interval=${tf}&limit=${CANDLES}`
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) continue;
+      candles = data.reverse().map(d => ({ o: +d[1], h: +d[2], l: +d[3], c: +d[4], ts: d[0], vol: +d[5], takerBuy: +d[9] }));
+      // Build historical CVD: cumulate delta (takerBuy - takerSell) per candle
+      // Binance kline: d[5]=volume, d[9]=taker buy base volume
+      let cumCvd = 0;
+      const deltas = candles.map(c => (c.takerBuy - (c.vol - c.takerBuy)));
+      // Reverse to go oldest→newest, cumulate, then reverse back
+      const deltasOldFirst = [...deltas].reverse();
+      let running = 0;
+      const cvdOldFirst = deltasOldFirst.map(d => { running += d; return running; });
+      cvdData = cvdOldFirst.reverse();
+      totalCvd = cvdData[0] || 0;
+      dirty = true;
+      updateOverlay();
+      return;
+    } catch(e) { /* try next */ }
+  }
+  // Fallback: simulate so chart always renders
+  const BASE = { BTCUSDT: 84000, ETHUSDT: 3200, SOLUSDT: 145, BNBUSDT: 580 };
+  const base = BASE[pair] || 84000;
+  const vol = base * 0.002;
+  let p = base;
+  candles = [];
+  for (let i = 0; i < CANDLES; i++) {
+    const o = p;
+    const move = (Math.random() - 0.49) * vol * 2;
+    const c = Math.max(p * 0.8, p + move);
+    const h = Math.max(o, c) * (1 + Math.random() * 0.001);
+    const l = Math.min(o, c) * (1 - Math.random() * 0.001);
+    candles.unshift({ o, h, l, c, ts: Date.now() - i * 60000 });
+    p = c;
+  }
+  let cvd = 0;
+  cvdData = candles.map((c, i) => {
+    const trend = i > 80 ? -0.3 : 0;
+    cvd += (Math.random() - 0.5 + trend) * base * 0.01;
+    return cvd;
+  });
+  setStatus('connecting', 'Simulated · Waiting for live data');
+  dirty = true;
+  updateOverlay();
+}
+
+// ── INIT ────────────────────────────────────────────────────────────────────────
+async function init() {
+  candles = []; cvdData = []; totalCvd = 0;
+  setStatus('connecting', 'Connecting...');
+  const ov = document.getElementById('warmOverlay');
+  if (ov) ov.style.display = 'flex';
+  document.getElementById('progBar').style.width = '0%';
+  document.getElementById('candleCount').textContent = '0 / ' + MIN_CANDLES_FOR_DIV + ' candles';
+  await fetchCandles();
+  connectKline();
+  connectBackend();
+  dirty = true;
+}
+
+document.getElementById('pairSel').onchange = e => { pair = e.target.value; init(); };
+document.getElementById('tfSel').onchange   = e => { tf   = e.target.value; init(); };
+
+// ── RENDER LOOP ─────────────────────────────────────────────────────────────────
+function loop() { requestAnimationFrame(loop); render(); }
+
+window.addEventListener('resize', () => { dirty = true; });
+init();
+loop();
+</script>
+</body>
+</html>
