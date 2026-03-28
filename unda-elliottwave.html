@@ -692,16 +692,26 @@ const TX={
 };
 function toggleLang(){
   lang=lang==='nl'?'en':'nl';
+  localStorage.setItem('unda-lang',lang);
   document.getElementById('lang-btn').textContent=lang==='nl'?'EN':'NL';
   const t=TX[lang];
   Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
 }
 
 // Init
+lang=localStorage.getItem('unda-lang')||'nl';
 loadAll();
 ALL_IDS.forEach(updateEmpty);
-document.getElementById('wi-w1').classList.add('open');
-document.getElementById('edit-banner').style.display='none';
+const wi1=document.getElementById('wi-w1');
+if(wi1)wi1.classList.add('open');
+const eb=document.getElementById('edit-banner');
+if(eb)eb.style.display='none';
+// Apply saved language
+if(lang!=='nl'){
+  document.getElementById('lang-btn').textContent='NL';
+  const t=TX[lang]||TX.nl;
+  Object.keys(t).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t[id];});
+}
 </script>
 </body>
 </html>
