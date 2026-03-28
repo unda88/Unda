@@ -2294,6 +2294,8 @@ if(typeof renderLog!=='undefined')renderLog();
 if(typeof calc!=='undefined')calc();
 lang=localStorage.getItem('unda-lang')||lang;
 if(typeof applyLang!=='undefined')applyLang();
+// Also apply after Holdings tab renders
+setTimeout(()=>{if(typeof applyLang!=='undefined')applyLang();},200);
 if(typeof loadTabOrder!=='undefined')loadTabOrder();
 if(typeof initTabDrag!=='undefined')initTabDrag();
 // Start op Posities tab
