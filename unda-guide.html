@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,10 +13,20 @@
     .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
     .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
     @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    /* ── Language Switcher ── */
+    .lang-sw { position: fixed; top: 14px; right: 18px; z-index: 100; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: var(--g2); cursor: pointer; user-select: none; background: rgba(0,255,178,0.06); border: 1px solid rgba(0,255,178,0.15); border-radius: 8px; padding: 5px 10px; transition: background .2s; }
+    .lang-sw:hover { background: rgba(0,255,178,0.12); }
+    .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #000d07; border: 1px solid rgba(0,255,178,0.18); border-radius: 12px; padding: 6px; min-width: 110px; box-shadow: 0 16px 40px rgba(0,0,0,0.7); flex-direction: column; gap: 2px; }
+    .lang-sw.open .lang-menu { display: flex; }
+    .lang-menu div { padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: 11px; }
+    .lang-menu div:hover { background: rgba(0,255,178,0.1); color: var(--g); }
+    .lang-menu div.active { color: var(--g); background: rgba(0,255,178,0.07); }
+
     .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 700px; margin: 0 auto; }
     .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
     .nav:hover { color: var(--g); }
-    .header { margin-bottom: 2rem; }
+    .header { margin-bottom: 2rem; text-align: center; }
     .header-wave { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 6px; }
     .header-title { font-size: 30px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .card { background: var(--card); backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: hidden; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7); margin-bottom: 16px; }
@@ -32,7 +42,6 @@
     .step-body { font-size: 13px; color: rgba(180,240,220,0.65); line-height: 1.7; }
     .step-body strong { color: var(--text); font-weight: 500; }
     .step-body code { font-family: 'DM Mono', monospace; background: rgba(0,255,178,0.08); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--g); }
-    .divider { height: 1px; margin: 1.25rem 0; background: linear-gradient(90deg, transparent, rgba(0,255,178,0.15), transparent); }
     .workflow-card { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.15); border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 16px; }
     .workflow-title { font-size: 12px; font-weight: 500; color: var(--g); letter-spacing: 0.05em; margin-bottom: 1rem; text-transform: uppercase; }
     .workflow-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
@@ -46,28 +55,47 @@
 <body>
 <div class="bg"><div class="bg-grid"></div></div>
 <div class="tl"></div>
+
+<!-- Language switcher -->
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
 <div class="page">
-  <a class="nav" href="unda-index.html">← Terug naar suite</a>
+  <a class="nav" id="t-nav" href="unda-index.html">← Back to suite</a>
+
   <div class="header">
-    <div class="header-wave">Unda · Elliott Wave</div>
-    <div class="header-title">How to use the suite</div>
+    <div class="header-wave">Unda</div>
+    <div class="header-title" id="t-title">How to use the suite</div>
   </div>
 
-  <!-- Workflow overview -->
+  <!-- Workflow -->
   <div class="workflow-card">
-    <div class="workflow-title">Complete trading workflow</div>
+    <div class="workflow-title" id="t-wf-title">Complete trading workflow</div>
     <div class="workflow-flow">
-      <span class="wf-step">⚖️ Risk Calc</span>
+      <span class="wf-step" id="wf-1">⚖️ Position Calc</span>
       <span class="wf-arrow">→</span>
-      <span class="wf-step">📐 Kelly</span>
+      <span class="wf-step" id="wf-2">📐 Kelly</span>
       <span class="wf-arrow">→</span>
-      <span class="wf-step">Trade</span>
+      <span class="wf-step" id="wf-3" data-key="wf3">Trade</span>
       <span class="wf-arrow">→</span>
-      <span class="wf-step">📒 Log it</span>
+      <span class="wf-step" id="wf-4">📒 Log it</span>
       <span class="wf-arrow">→</span>
-      <span class="wf-step">🎲 Simulate</span>
+      <span class="wf-step" id="wf-5">🎲 Simulate</span>
       <span class="wf-arrow">→</span>
-      <span class="wf-step">Optimise</span>
+      <span class="wf-step" id="wf-6" data-key="wf6">Optimise</span>
     </div>
   </div>
 
@@ -76,14 +104,17 @@
     <div class="card-inner">
       <div class="tool-header">
         <div class="tool-icon">⚖️</div>
-        <div><div class="tool-name">Risk Calculator</div><div class="tool-desc">Use before every single trade</div></div>
+        <div>
+          <div class="tool-name" id="t-rc-name">Position Calculator</div>
+          <div class="tool-desc" id="t-rc-desc">Use before every single trade</div>
+        </div>
       </div>
-      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Portfolio size</strong> — Enter the total value of your trading account in USD.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Margin size</strong> — How much of your portfolio you allocate as margin. Start with <code>10-20%</code> if you are new to leverage.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Risk %</strong> — The maximum % of your margin you are willing to lose on this trade. Most professional traders use <code>1-2%</code>.</div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Stop loss %</strong> — Measure this with TradingView's measurement tool. Click on your entry candle and drag to your stop loss level.</div></div>
-      <div class="step"><div class="step-num">5</div><div class="step-body"><strong>Check the warning</strong> — Always verify on your exchange that your stop loss % is above the liquidation distance. The calculator warns you if leverage is too high.</div></div>
-      <div class="tip"><strong>Tip:</strong> The leverage number tells you exactly what to set on Bybit, Binance or OKX. The contracts number tells you the position size in USD.</div>
+      <div class="step"><div class="step-num">1</div><div class="step-body" id="t-rc-1"></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body" id="t-rc-2"></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body" id="t-rc-3"></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body" id="t-rc-4"></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-body" id="t-rc-5"></div></div>
+      <div class="tip" id="t-rc-tip"></div>
     </div>
   </div>
 
@@ -92,12 +123,15 @@
     <div class="card-inner">
       <div class="tool-header">
         <div class="tool-icon">📐</div>
-        <div><div class="tool-name">Kelly Criterion</div><div class="tool-desc">Use weekly to optimise your risk per trade</div></div>
+        <div>
+          <div class="tool-name">Kelly Criterion</div>
+          <div class="tool-desc" id="t-kl-desc">Use weekly to optimise your risk per trade</div>
+        </div>
       </div>
-      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Win probability</strong> — Use your real win rate from the Trade Logbook. Never estimate — only use real tracked data.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>R:R ratio</strong> — Use your average R:R from the logbook statistics.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Always use Half-Kelly</strong> — The full Kelly is mathematically optimal but too aggressive for real trading. Divide by 2 for a more conservative and sustainable approach.</div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Negative Kelly</strong> — If Kelly returns a negative number, you have no mathematical edge with your current stats. Work on improving your win rate or R:R first.</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-body" id="t-kl-1"></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body" id="t-kl-2"></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body" id="t-kl-3"></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body" id="t-kl-4"></div></div>
     </div>
   </div>
 
@@ -106,12 +140,15 @@
     <div class="card-inner">
       <div class="tool-header">
         <div class="tool-icon">📒</div>
-        <div><div class="tool-name">Trade Logbook</div><div class="tool-desc">Log every trade immediately after closing</div></div>
+        <div>
+          <div class="tool-name" id="t-lb-name">Trade Logbook</div>
+          <div class="tool-desc" id="t-lb-desc">Log every trade immediately after closing</div>
+        </div>
       </div>
-      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Log every trade</strong> — Win, loss or break even. Consistency is everything. One missing trade makes your statistics unreliable.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Profit factor</strong> — A profit factor above <code>1.5</code> is good. Above <code>2.0</code> is excellent. Below <code>1.0</code> means you are losing money overall.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Win rate vs R:R</strong> — A lower win rate is fine if your R:R is high. With a <code>1:2</code> R:R you only need to win <code>33%</code> of trades to break even.</div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Use your real stats</strong> — After 30+ trades, use your real win rate and avg R:R as input for the Kelly Criterion and Trade Simulator.</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-body" id="t-lb-1"></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body" id="t-lb-2"></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body" id="t-lb-3"></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body" id="t-lb-4"></div></div>
     </div>
   </div>
 
@@ -120,17 +157,355 @@
     <div class="card-inner">
       <div class="tool-header">
         <div class="tool-icon">🎲</div>
-        <div><div class="tool-name">Trade Simulator</div><div class="tool-desc">Use to test scenarios before risking real money</div></div>
+        <div>
+          <div class="tool-name" id="t-sim-name">Trade Simulator</div>
+          <div class="tool-desc" id="t-sim-desc">Use to test scenarios before risking real money</div>
+        </div>
       </div>
-      <div class="step"><div class="step-num">1</div><div class="step-body"><strong>Use real data</strong> — Input your real win rate and R:R from the logbook for realistic results.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-body"><strong>Run multiple simulations</strong> — Set 10-20 simulations to see the range of possible outcomes. The spread between best and worst shows your variance.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-body"><strong>Test your risk %</strong> — Try different <code>Bet %</code> values. Higher risk = higher potential gains but also higher ruin risk. The Kelly Criterion tells you the optimal value.</div></div>
-      <div class="step"><div class="step-num">4</div><div class="step-body"><strong>Ruin risk</strong> — If any simulation line hits $0, your bet size is too high for your win rate. Reduce your risk per trade.</div></div>
-      <div class="tip"><strong>Tip:</strong> Run a 1000 trade simulation with your real stats. If the worst case scenario still shows profit, your system is robust.</div>
+      <div class="step"><div class="step-num">1</div><div class="step-body" id="t-sim-1"></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body" id="t-sim-2"></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body" id="t-sim-3"></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body" id="t-sim-4"></div></div>
+      <div class="tip" id="t-sim-tip"></div>
     </div>
   </div>
 
-  <div class="footer">unda · wave your risk · elliott wave suite</div>
+  <div class="footer" id="t-footer">unda · wave your risk</div>
 </div>
+
+<script>
+  /* Helper to set innerHTML with bold/code tags intact */
+  function html(id, content) {
+    document.getElementById(id).innerHTML = content;
+  }
+
+  const LANGS = {
+    en: {
+      dir: 'ltr', nav: '← Back to suite', title: 'How to use the suite',
+      wfTitle: 'Complete trading workflow', wf3: 'Trade', wf6: 'Optimise',
+      rcName: 'Position Calculator', rcDesc: 'Use before every single trade',
+      rc1: '<strong>Portfolio size</strong> — Enter the total value of your trading account in USD.',
+      rc2: '<strong>Margin size</strong> — How much of your portfolio you allocate as margin. Start with <code>10–20%</code> if you are new to leverage.',
+      rc3: '<strong>Risk %</strong> — The maximum % of your margin you are willing to lose on this trade. Most professional traders use <code>1–2%</code>.',
+      rc4: '<strong>Stop loss %</strong> — Measure this with TradingView\'s measurement tool. Click on your entry candle and drag to your stop loss level.',
+      rc5: '<strong>Check the warning</strong> — Always verify on your exchange that your stop loss % is above the liquidation distance. The calculator warns you if leverage is too high.',
+      rcTip: '<strong>Tip:</strong> The leverage number tells you exactly what to set on Bybit, Binance or OKX. The contracts number tells you the position size in USD.',
+      klDesc: 'Use weekly to optimise your risk per trade',
+      kl1: '<strong>Win probability</strong> — Use your real win rate from the Trade Logbook. Never estimate — only use real tracked data.',
+      kl2: '<strong>R:R ratio</strong> — Use your average R:R from the logbook statistics.',
+      kl3: '<strong>Always use Half-Kelly</strong> — The full Kelly is mathematically optimal but too aggressive for real trading. Divide by 2 for a more sustainable approach.',
+      kl4: '<strong>Negative Kelly</strong> — If Kelly returns a negative number, you have no mathematical edge with your current stats. Work on improving your win rate or R:R first.',
+      lbName: 'Trade Logbook', lbDesc: 'Log every trade immediately after closing',
+      lb1: '<strong>Log every trade</strong> — Win, loss or break even. Consistency is everything. One missing trade makes your statistics unreliable.',
+      lb2: '<strong>Profit factor</strong> — A profit factor above <code>1.5</code> is good. Above <code>2.0</code> is excellent. Below <code>1.0</code> means you are losing money overall.',
+      lb3: '<strong>Win rate vs R:R</strong> — A lower win rate is fine if your R:R is high. With a <code>1:2</code> R:R you only need to win <code>33%</code> of trades to break even.',
+      lb4: '<strong>Use your real stats</strong> — After 30+ trades, use your real win rate and avg R:R as input for the Kelly Criterion and Trade Simulator.',
+      simName: 'Trade Simulator', simDesc: 'Use to test scenarios before risking real money',
+      sim1: '<strong>Use real data</strong> — Input your real win rate and R:R from the logbook for realistic results.',
+      sim2: '<strong>Run multiple simulations</strong> — Set 10–20 simulations to see the range of possible outcomes. The spread between best and worst shows your variance.',
+      sim3: '<strong>Test your risk %</strong> — Try different <code>Bet %</code> values. Higher risk = higher potential gains but also higher ruin risk. The Kelly Criterion tells you the optimal value.',
+      sim4: '<strong>Ruin risk</strong> — If any simulation line hits $0, your bet size is too high for your win rate. Reduce your risk per trade.',
+      simTip: '<strong>Tip:</strong> Run a 1000 trade simulation with your real stats. If the worst case scenario still shows profit, your system is robust.',
+      footer: 'unda · wave your risk',
+    },
+    nl: {
+      dir: 'ltr', nav: '← Terug naar suite', title: 'Hoe gebruik je de suite',
+      wfTitle: 'Volledige handelsstrategie', wf3: 'Trade', wf6: 'Optimaliseer',
+      rcName: 'Positie Calculator', rcDesc: 'Gebruik vóór elke trade',
+      rc1: '<strong>Portfoliogrootte</strong> — Voer de totale waarde van je handelsaccount in USD in.',
+      rc2: '<strong>Marginbedrag</strong> — Hoeveel van je portfolio je als marge inzet. Begin met <code>10–20%</code> als je nieuw bent met leverage.',
+      rc3: '<strong>Risico %</strong> — Het maximum % van je marge dat je bereid bent te verliezen. De meeste professionele traders gebruiken <code>1–2%</code>.',
+      rc4: '<strong>Stop-loss %</strong> — Meet dit met het meetgereedschap van TradingView. Klik op je instapkaars en sleep naar je stop-loss niveau.',
+      rc5: '<strong>Controleer de waarschuwing</strong> — Verifieer altijd op je beurs dat je stop-loss % boven de liquidatieafstand ligt. De calculator waarschuwt je als de hefboom te hoog is.',
+      rcTip: '<strong>Tip:</strong> Het hefboomgetal vertelt je precies wat je moet instellen op Bybit, Binance of OKX. Het contractgetal geeft je de positiegrootte in USD.',
+      klDesc: 'Gebruik wekelijks om je risico per trade te optimaliseren',
+      kl1: '<strong>Winstkans</strong> — Gebruik je echte winstrate uit het Trade Logboek. Nooit schatten — gebruik alleen echte bijgehouden data.',
+      kl2: '<strong>R:R verhouding</strong> — Gebruik je gemiddelde R:R uit de logboekstatistieken.',
+      kl3: '<strong>Gebruik altijd Half-Kelly</strong> — Het volledige Kelly is wiskundig optimaal maar te agressief voor echt handelen. Deel door 2 voor een duurzamere aanpak.',
+      kl4: '<strong>Negatieve Kelly</strong> — Als Kelly een negatief getal geeft, heb je geen wiskundige voorsprong met je huidige statistieken. Verbeter eerst je winstrate of R:R.',
+      lbName: 'Trade Logboek', lbDesc: 'Log elke trade direct na het sluiten',
+      lb1: '<strong>Log elke trade</strong> — Win, verlies of break-even. Consistentie is alles. Één ontbrekende trade maakt je statistieken onbetrouwbaar.',
+      lb2: '<strong>Winstfactor</strong> — Een winstfactor boven <code>1,5</code> is goed. Boven <code>2,0</code> is uitstekend. Onder <code>1,0</code> betekent dat je geld verliest.',
+      lb3: '<strong>Winstrate vs R:R</strong> — Een lagere winstrate is prima als je R:R hoog is. Met een <code>1:2</code> R:R hoef je maar <code>33%</code> van de trades te winnen om break-even te zijn.',
+      lb4: '<strong>Gebruik je echte statistieken</strong> — Na 30+ trades gebruik je echte winstrate en gem. R:R als input voor het Kelly Criterium en de Trade Simulator.',
+      simName: 'Trade Simulator', simDesc: 'Gebruik om scenario\'s te testen voordat je echt geld riskeer',
+      sim1: '<strong>Gebruik echte data</strong> — Voer je echte winstrate en R:R uit het logboek in voor realistische resultaten.',
+      sim2: '<strong>Voer meerdere simulaties uit</strong> — Stel 10–20 simulaties in om het bereik van mogelijke uitkomsten te zien. Het verschil tussen beste en slechtste toont je variantie.',
+      sim3: '<strong>Test je risico %</strong> — Probeer verschillende <code>Inzet %</code> waarden. Hoger risico = hogere potentiële winst maar ook hoger ruïnerisico. Kelly Criterium geeft de optimale waarde.',
+      sim4: '<strong>Ruïnerisico</strong> — Als een simulatielijn $0 bereikt, is je inzetgrootte te hoog voor je winstrate. Verlaag je risico per trade.',
+      simTip: '<strong>Tip:</strong> Voer een simulatie van 1000 trades uit met je echte statistieken. Als het slechtste geval nog steeds winst toont, is je systeem robuust.',
+      footer: 'unda · beheers je risico',
+    },
+    fr: {
+      dir: 'ltr', nav: '← Retour à la suite', title: 'Comment utiliser la suite',
+      wfTitle: 'Flux de trading complet', wf3: 'Trade', wf6: 'Optimiser',
+      rcName: 'Calculateur de Position', rcDesc: 'Utiliser avant chaque trade',
+      rc1: '<strong>Taille du portefeuille</strong> — Entrez la valeur totale de votre compte de trading en USD.',
+      rc2: '<strong>Taille de la marge</strong> — La part de votre portefeuille allouée en marge. Commencez par <code>10–20%</code> si vous êtes novice avec le levier.',
+      rc3: '<strong>Risque %</strong> — Le pourcentage maximum de votre marge que vous êtes prêt à perdre. La plupart des traders professionnels utilisent <code>1–2%</code>.',
+      rc4: '<strong>Stop-loss %</strong> — Mesurez-le avec l\'outil de mesure TradingView. Cliquez sur votre bougie d\'entrée et faites glisser vers votre stop-loss.',
+      rc5: '<strong>Vérifiez l\'avertissement</strong> — Vérifiez toujours sur votre plateforme que votre stop-loss % est au-dessus de la distance de liquidation.',
+      rcTip: '<strong>Conseil :</strong> Le chiffre de levier vous indique exactement ce qu\'il faut régler sur Bybit, Binance ou OKX. Le nombre de contrats indique la taille de position en USD.',
+      klDesc: 'Utiliser chaque semaine pour optimiser votre risque par trade',
+      kl1: '<strong>Probabilité de gain</strong> — Utilisez votre taux de gain réel du journal de trading. Ne jamais estimer — utilisez uniquement des données réelles.',
+      kl2: '<strong>Ratio R:R</strong> — Utilisez votre R:R moyen des statistiques du journal.',
+      kl3: '<strong>Utilisez toujours le demi-Kelly</strong> — Le Kelly complet est mathématiquement optimal mais trop agressif. Divisez par 2 pour une approche plus durable.',
+      kl4: '<strong>Kelly négatif</strong> — Si Kelly retourne un nombre négatif, vous n\'avez pas d\'avantage mathématique. Améliorez d\'abord votre taux de gain ou R:R.',
+      lbName: 'Journal de Trading', lbDesc: 'Enregistrez chaque trade immédiatement après la clôture',
+      lb1: '<strong>Enregistrez chaque trade</strong> — Gain, perte ou sans résultat. La régularité est primordiale. Un trade manquant rend vos statistiques peu fiables.',
+      lb2: '<strong>Facteur de profit</strong> — Un facteur de profit au-dessus de <code>1,5</code> est bon. Au-dessus de <code>2,0</code> est excellent. En dessous de <code>1,0</code>, vous perdez de l\'argent.',
+      lb3: '<strong>Taux de gain vs R:R</strong> — Un taux de gain faible est correct si votre R:R est élevé. Avec un R:R <code>1:2</code>, vous n\'avez besoin de gagner que <code>33%</code> des trades pour être à l\'équilibre.',
+      lb4: '<strong>Utilisez vos vraies statistiques</strong> — Après 30+ trades, utilisez votre taux de gain réel et R:R moyen comme entrée pour le Kelly et le Simulateur.',
+      simName: 'Simulateur de Trade', simDesc: 'Utilisez pour tester des scénarios avant de risquer de l\'argent réel',
+      sim1: '<strong>Utilisez des données réelles</strong> — Entrez votre vrai taux de gain et R:R du journal pour des résultats réalistes.',
+      sim2: '<strong>Lancez plusieurs simulations</strong> — Réglez 10–20 simulations pour voir la gamme des résultats possibles. L\'écart entre le meilleur et le pire montre votre variance.',
+      sim3: '<strong>Testez votre risque %</strong> — Essayez différentes valeurs de <code>Mise %</code>. Risque élevé = gains potentiels plus élevés mais aussi risque de ruine plus élevé.',
+      sim4: '<strong>Risque de ruine</strong> — Si une ligne de simulation atteint $0, votre mise est trop élevée pour votre taux de gain. Réduisez votre risque par trade.',
+      simTip: '<strong>Conseil :</strong> Lancez une simulation de 1000 trades avec vos vraies statistiques. Si le pire cas montre encore un profit, votre système est robuste.',
+      footer: 'unda · maîtrisez votre risque',
+    },
+    es: {
+      dir: 'ltr', nav: '← Volver a la suite', title: 'Cómo usar la suite',
+      wfTitle: 'Flujo de trading completo', wf3: 'Trade', wf6: 'Optimizar',
+      rcName: 'Calculadora de Posición', rcDesc: 'Usar antes de cada trade',
+      rc1: '<strong>Tamaño del portafolio</strong> — Introduce el valor total de tu cuenta de trading en USD.',
+      rc2: '<strong>Tamaño del margen</strong> — Cuánto de tu portafolio asignas como margen. Empieza con <code>10–20%</code> si eres nuevo en el apalancamiento.',
+      rc3: '<strong>Riesgo %</strong> — El máximo % de tu margen que estás dispuesto a perder. La mayoría de traders profesionales usan <code>1–2%</code>.',
+      rc4: '<strong>Stop-loss %</strong> — Mídelo con la herramienta de medición de TradingView. Haz clic en tu vela de entrada y arrastra hasta tu nivel de stop-loss.',
+      rc5: '<strong>Verifica la advertencia</strong> — Comprueba siempre en tu exchange que tu stop-loss % esté por encima de la distancia de liquidación.',
+      rcTip: '<strong>Consejo:</strong> El número de apalancamiento te dice exactamente qué configurar en Bybit, Binance u OKX. El número de contratos indica el tamaño de posición en USD.',
+      klDesc: 'Usar semanalmente para optimizar tu riesgo por trade',
+      kl1: '<strong>Probabilidad de acierto</strong> — Usa tu tasa de acierto real del Diario de Trading. Nunca estimes — usa solo datos reales rastreados.',
+      kl2: '<strong>Ratio R:R</strong> — Usa tu R:R promedio de las estadísticas del diario.',
+      kl3: '<strong>Usa siempre el medio Kelly</strong> — El Kelly completo es matemáticamente óptimo pero demasiado agresivo. Divide por 2 para un enfoque más sostenible.',
+      kl4: '<strong>Kelly negativo</strong> — Si Kelly devuelve un número negativo, no tienes ventaja matemática. Mejora primero tu tasa de acierto o R:R.',
+      lbName: 'Diario de Trading', lbDesc: 'Registra cada trade inmediatamente después de cerrarlo',
+      lb1: '<strong>Registra cada trade</strong> — Ganancia, pérdida o empate. La consistencia lo es todo. Un trade faltante hace tus estadísticas poco fiables.',
+      lb2: '<strong>Factor de beneficio</strong> — Un factor por encima de <code>1,5</code> es bueno. Por encima de <code>2,0</code> es excelente. Por debajo de <code>1,0</code> estás perdiendo dinero.',
+      lb3: '<strong>Tasa de acierto vs R:R</strong> — Una tasa de acierto baja está bien si tu R:R es alto. Con un R:R <code>1:2</code> solo necesitas ganar el <code>33%</code> para cubrir gastos.',
+      lb4: '<strong>Usa tus estadísticas reales</strong> — Tras 30+ trades, usa tu tasa de acierto real y R:R promedio como entrada para el Kelly y el Simulador.',
+      simName: 'Simulador de Trading', simDesc: 'Úsalo para probar escenarios antes de arriesgar dinero real',
+      sim1: '<strong>Usa datos reales</strong> — Introduce tu tasa de acierto y R:R reales del diario para resultados realistas.',
+      sim2: '<strong>Ejecuta múltiples simulaciones</strong> — Configura 10–20 simulaciones para ver el rango de resultados posibles. La diferencia entre el mejor y el peor muestra tu varianza.',
+      sim3: '<strong>Prueba tu riesgo %</strong> — Prueba diferentes valores de <code>Apuesta %</code>. Mayor riesgo = mayores ganancias potenciales pero también mayor riesgo de ruina.',
+      sim4: '<strong>Riesgo de ruina</strong> — Si alguna línea de simulación llega a $0, tu tamaño de apuesta es demasiado alto. Reduce tu riesgo por trade.',
+      simTip: '<strong>Consejo:</strong> Ejecuta una simulación de 1000 trades con tus estadísticas reales. Si el peor caso aún muestra beneficio, tu sistema es robusto.',
+      footer: 'unda · domina tu riesgo',
+    },
+    de: {
+      dir: 'ltr', nav: '← Zurück zur Suite', title: 'Wie man die Suite nutzt',
+      wfTitle: 'Vollständiger Trading-Workflow', wf3: 'Trade', wf6: 'Optimieren',
+      rcName: 'Positions Rechner', rcDesc: 'Vor jedem Trade verwenden',
+      rc1: '<strong>Portfoliogröße</strong> — Gib den Gesamtwert deines Handelskontos in USD ein.',
+      rc2: '<strong>Margin-Größe</strong> — Wie viel deines Portfolios du als Margin einsetzt. Beginne mit <code>10–20%</code>, wenn du neu beim Hebel bist.',
+      rc3: '<strong>Risiko %</strong> — Das maximale % deiner Margin, das du bereit bist zu verlieren. Die meisten professionellen Trader verwenden <code>1–2%</code>.',
+      rc4: '<strong>Stop-Loss %</strong> — Messe dies mit dem TradingView-Messwerkzeug. Klicke auf deine Einstiegskerze und ziehe zum Stop-Loss-Niveau.',
+      rc5: '<strong>Überprüfe die Warnung</strong> — Stelle immer auf deiner Börse sicher, dass dein Stop-Loss % über der Liquidationsdistanz liegt.',
+      rcTip: '<strong>Tipp:</strong> Die Hebelzahl zeigt dir genau, was du auf Bybit, Binance oder OKX einstellen musst. Die Kontraktzahl gibt die Positionsgröße in USD an.',
+      klDesc: 'Wöchentlich verwenden, um dein Risiko pro Trade zu optimieren',
+      kl1: '<strong>Gewinnwahrscheinlichkeit</strong> — Verwende deine echte Gewinnrate aus dem Trade-Tagebuch. Niemals schätzen — nur echte erfasste Daten verwenden.',
+      kl2: '<strong>R:R-Verhältnis</strong> — Verwende dein durchschnittliches R:R aus den Tagebuchstatistiken.',
+      kl3: '<strong>Immer halbes Kelly verwenden</strong> — Das volle Kelly ist mathematisch optimal, aber zu aggressiv für echtes Trading. Teile durch 2 für einen nachhaltigeren Ansatz.',
+      kl4: '<strong>Negatives Kelly</strong> — Gibt Kelly eine negative Zahl zurück, hast du keinen mathematischen Vorteil. Verbessere zuerst deine Gewinnrate oder R:R.',
+      lbName: 'Trade-Tagebuch', lbDesc: 'Jeden Trade sofort nach dem Schließen erfassen',
+      lb1: '<strong>Jeden Trade erfassen</strong> — Gewinn, Verlust oder Break-even. Konsequenz ist alles. Ein fehlender Trade macht deine Statistiken unzuverlässig.',
+      lb2: '<strong>Gewinnfaktor</strong> — Ein Gewinnfaktor über <code>1,5</code> ist gut. Über <code>2,0</code> ist ausgezeichnet. Unter <code>1,0</code> verlierst du Geld.',
+      lb3: '<strong>Gewinnrate vs. R:R</strong> — Eine niedrigere Gewinnrate ist in Ordnung, wenn dein R:R hoch ist. Mit einem R:R <code>1:2</code> musst du nur <code>33%</code> der Trades gewinnen, um die Kosten zu decken.',
+      lb4: '<strong>Echte Statistiken verwenden</strong> — Nach 30+ Trades verwende deine echte Gewinnrate und Ø R:R als Eingabe für das Kelly-Kriterium und den Simulator.',
+      simName: 'Trade-Simulator', simDesc: 'Szenarien testen, bevor echtes Geld riskiert wird',
+      sim1: '<strong>Echte Daten verwenden</strong> — Gib deine echte Gewinnrate und R:R aus dem Tagebuch für realistische Ergebnisse ein.',
+      sim2: '<strong>Mehrere Simulationen durchführen</strong> — Stelle 10–20 Simulationen ein, um die Bandbreite möglicher Ergebnisse zu sehen.',
+      sim3: '<strong>Risiko % testen</strong> — Probiere verschiedene <code>Einsatz %</code>-Werte aus. Höheres Risiko = höhere potenzielle Gewinne, aber auch höheres Ruinrisiko.',
+      sim4: '<strong>Ruinrisiko</strong> — Wenn eine Simulationslinie $0 erreicht, ist deine Einsatzgröße zu hoch. Reduziere dein Risiko pro Trade.',
+      simTip: '<strong>Tipp:</strong> Führe eine 1000-Trade-Simulation mit deinen echten Statistiken durch. Zeigt das schlechteste Szenario noch Gewinn, ist dein System robust.',
+      footer: 'unda · steuere dein Risiko',
+    },
+    it: {
+      dir: 'ltr', nav: '← Torna alla suite', title: 'Come usare la suite',
+      wfTitle: 'Flusso di trading completo', wf3: 'Trade', wf6: 'Ottimizza',
+      rcName: 'Calcolatore di Posizione', rcDesc: 'Usalo prima di ogni trade',
+      rc1: '<strong>Dimensione portafoglio</strong> — Inserisci il valore totale del tuo conto di trading in USD.',
+      rc2: '<strong>Dimensione margine</strong> — Quanta parte del portafoglio usi come margine. Inizia con <code>10–20%</code> se sei alle prime armi con la leva.',
+      rc3: '<strong>Rischio %</strong> — Il massimo % del margine che sei disposto a perdere. La maggior parte dei trader professionisti usa <code>1–2%</code>.',
+      rc4: '<strong>Stop-loss %</strong> — Misuralo con lo strumento di TradingView. Clicca sulla candela di ingresso e trascina fino al livello di stop-loss.',
+      rc5: '<strong>Controlla l\'avviso</strong> — Verifica sempre sul tuo exchange che lo stop-loss % sia sopra la distanza di liquidazione.',
+      rcTip: '<strong>Suggerimento:</strong> Il numero di leva ti dice esattamente cosa impostare su Bybit, Binance o OKX. I contratti indicano la dimensione della posizione in USD.',
+      klDesc: 'Usa ogni settimana per ottimizzare il rischio per trade',
+      kl1: '<strong>Probabilità di vincita</strong> — Usa il tuo tasso di vincita reale dal diario. Non stimare mai — usa solo dati reali tracciati.',
+      kl2: '<strong>Rapporto R:R</strong> — Usa il tuo R:R medio dalle statistiche del diario.',
+      kl3: '<strong>Usa sempre il mezzo Kelly</strong> — Il Kelly completo è matematicamente ottimale ma troppo aggressivo. Dividi per 2 per un approccio più sostenibile.',
+      kl4: '<strong>Kelly negativo</strong> — Se Kelly restituisce un numero negativo, non hai un vantaggio matematico. Migliora prima il tasso di vincita o R:R.',
+      lbName: 'Diario di Trading', lbDesc: 'Registra ogni trade subito dopo la chiusura',
+      lb1: '<strong>Registra ogni trade</strong> — Vincita, perdita o pareggio. La costanza è tutto. Un trade mancante rende le statistiche inaffidabili.',
+      lb2: '<strong>Fattore di profitto</strong> — Sopra <code>1,5</code> è buono. Sopra <code>2,0</code> è eccellente. Sotto <code>1,0</code> stai perdendo soldi.',
+      lb3: '<strong>Tasso vincita vs R:R</strong> — Un tasso più basso va bene se il R:R è alto. Con R:R <code>1:2</code> basta vincere il <code>33%</code> dei trade per andare in pareggio.',
+      lb4: '<strong>Usa le tue statistiche reali</strong> — Dopo 30+ trade usa il tasso reale e R:R medio come input per Kelly e il Simulatore.',
+      simName: 'Simulatore di Trading', simDesc: 'Testa scenari prima di rischiare denaro reale',
+      sim1: '<strong>Usa dati reali</strong> — Inserisci il tuo vero tasso di vincita e R:R dal diario per risultati realistici.',
+      sim2: '<strong>Esegui più simulazioni</strong> — Imposta 10–20 simulazioni per vedere la gamma dei risultati possibili.',
+      sim3: '<strong>Testa il tuo rischio %</strong> — Prova diversi valori di <code>Puntata %</code>. Rischio maggiore = guadagni potenziali più alti ma anche rischio di rovina più alto.',
+      sim4: '<strong>Rischio di rovina</strong> — Se una linea di simulazione raggiunge $0, la puntata è troppo alta. Riduci il rischio per trade.',
+      simTip: '<strong>Suggerimento:</strong> Esegui una simulazione di 1000 trade con le tue statistiche reali. Se il peggior caso mostra ancora profitto, il tuo sistema è robusto.',
+      footer: 'unda · gestisci il tuo rischio',
+    },
+    pt: {
+      dir: 'ltr', nav: '← Voltar à suite', title: 'Como usar a suite',
+      wfTitle: 'Fluxo de trading completo', wf3: 'Trade', wf6: 'Optimizar',
+      rcName: 'Calculadora de Posição', rcDesc: 'Usar antes de cada trade',
+      rc1: '<strong>Tamanho do portfólio</strong> — Insira o valor total da sua conta de trading em USD.',
+      rc2: '<strong>Tamanho da margem</strong> — Quanto do seu portfólio você aloca como margem. Comece com <code>10–20%</code> se é novo com alavancagem.',
+      rc3: '<strong>Risco %</strong> — O máximo % da sua margem que está disposto a perder. A maioria dos traders profissionais usa <code>1–2%</code>.',
+      rc4: '<strong>Stop-loss %</strong> — Meça com a ferramenta de medição do TradingView. Clique na sua vela de entrada e arraste até o nível de stop-loss.',
+      rc5: '<strong>Verifique o aviso</strong> — Verifique sempre na sua exchange que o stop-loss % está acima da distância de liquidação.',
+      rcTip: '<strong>Dica:</strong> O número de alavancagem diz exatamente o que configurar no Bybit, Binance ou OKX. O número de contratos indica o tamanho da posição em USD.',
+      klDesc: 'Usar semanalmente para otimizar o risco por trade',
+      kl1: '<strong>Probabilidade de ganho</strong> — Use sua taxa de acerto real do diário. Nunca estime — use apenas dados reais rastreados.',
+      kl2: '<strong>Razão R:R</strong> — Use seu R:R médio das estatísticas do diário.',
+      kl3: '<strong>Use sempre o meio Kelly</strong> — O Kelly completo é matematicamente ótimo, mas agressivo demais. Divida por 2 para uma abordagem mais sustentável.',
+      kl4: '<strong>Kelly negativo</strong> — Se Kelly retornar um número negativo, você não tem vantagem matemática. Melhore primeiro a taxa de acerto ou R:R.',
+      lbName: 'Diário de Trading', lbDesc: 'Registar cada trade imediatamente após o fechamento',
+      lb1: '<strong>Registar cada trade</strong> — Vitória, derrota ou empate. A consistência é tudo. Um trade em falta torna as estatísticas pouco fiáveis.',
+      lb2: '<strong>Fator de lucro</strong> — Acima de <code>1,5</code> é bom. Acima de <code>2,0</code> é excelente. Abaixo de <code>1,0</code> está a perder dinheiro.',
+      lb3: '<strong>Taxa de acerto vs R:R</strong> — Uma taxa de acerto baixa está bem se o R:R é alto. Com R:R <code>1:2</code> só precisa de ganhar <code>33%</code> para cobrir custos.',
+      lb4: '<strong>Use as suas estatísticas reais</strong> — Após 30+ trades, use a taxa real e R:R médio como entrada para o Kelly e o Simulador.',
+      simName: 'Simulador de Trading', simDesc: 'Testar cenários antes de arriscar dinheiro real',
+      sim1: '<strong>Use dados reais</strong> — Insira a sua taxa de acerto e R:R reais do diário para resultados realistas.',
+      sim2: '<strong>Execute múltiplas simulações</strong> — Configure 10–20 simulações para ver o intervalo de resultados possíveis.',
+      sim3: '<strong>Teste o seu risco %</strong> — Experimente diferentes valores de <code>Aposta %</code>. Maior risco = maiores ganhos potenciais mas também maior risco de ruína.',
+      sim4: '<strong>Risco de ruína</strong> — Se alguma linha chegar a $0, o tamanho da aposta é demasiado alto. Reduza o risco por trade.',
+      simTip: '<strong>Dica:</strong> Execute uma simulação de 1000 trades com as suas estatísticas reais. Se o pior caso ainda mostrar lucro, o seu sistema é robusto.',
+      footer: 'unda · controle seu risco',
+    },
+    tr: {
+      dir: 'ltr', nav: '← Suite\'e dön', title: 'Suite nasıl kullanılır',
+      wfTitle: 'Tam işlem akışı', wf3: 'Trade', wf6: 'Optimize et',
+      rcName: 'Pozisyon Hesaplayıcısı', rcDesc: 'Her işlemden önce kullan',
+      rc1: '<strong>Portföy büyüklüğü</strong> — İşlem hesabınızın USD cinsinden toplam değerini girin.',
+      rc2: '<strong>Marj büyüklüğü</strong> — Portföyünüzün marj olarak ne kadarını ayırıyorsunuz. Kaldıraca yeniyseniz <code>%10–20</code> ile başlayın.',
+      rc3: '<strong>Risk %</strong> — Bu işlemde marjınızdan kaybetmeye razı olduğunuz maksimum %. Profesyonel traderlerin çoğu <code>%1–2</code> kullanır.',
+      rc4: '<strong>Stop-loss %</strong> — TradingView ölçüm aracıyla ölçün. Giriş mumunuza tıklayıp stop-loss seviyenize sürükleyin.',
+      rc5: '<strong>Uyarıyı kontrol edin</strong> — Borsanızda her zaman stop-loss %\'nin tasfiye mesafesinin üzerinde olduğunu doğrulayın.',
+      rcTip: '<strong>İpucu:</strong> Kaldıraç sayısı Bybit, Binance veya OKX\'te tam olarak neyi ayarlayacağınızı söyler. Kontrat sayısı USD cinsinden pozisyon büyüklüğünü gösterir.',
+      klDesc: 'İşlem başına riskinizi optimize etmek için haftalık kullanın',
+      kl1: '<strong>Kazanma olasılığı</strong> — İşlem defterinizdeki gerçek kazanma oranınızı kullanın. Asla tahmin etmeyin — yalnızca gerçek takip edilen verileri kullanın.',
+      kl2: '<strong>R:R oranı</strong> — Defterinizdeki ortalama R:R\'yi kullanın.',
+      kl3: '<strong>Her zaman yarım Kelly kullanın</strong> — Tam Kelly matematiksel olarak optimaldır ancak gerçek işlemler için çok agresiftir. Daha sürdürülebilir bir yaklaşım için 2\'ye bölün.',
+      kl4: '<strong>Negatif Kelly</strong> — Kelly negatif bir sayı döndürürse mevcut istatistiklerinizle matematiksel avantajınız yoktur. Önce kazanma oranınızı veya R:R\'yi geliştirin.',
+      lbName: 'İşlem Defteri', lbDesc: 'Her işlemi kapatıldıktan hemen sonra kaydedin',
+      lb1: '<strong>Her işlemi kaydedin</strong> — Kazanç, kayıp veya başabaş. Tutarlılık her şeydir. Eksik bir işlem istatistiklerinizi güvenilmez kılar.',
+      lb2: '<strong>Kâr faktörü</strong> — <code>1,5</code>\'in üzeri iyi. <code>2,0</code>\'ın üzeri mükemmel. <code>1,0</code>\'ın altı para kaybediyorsunuz demektir.',
+      lb3: '<strong>Kazanma oranı vs R:R</strong> — R:R\'niz yüksekse düşük kazanma oranı sorun değil. <code>1:2</code> R:R ile başa baş olmak için sadece <code>%33</code> kazanmanız yeterli.',
+      lb4: '<strong>Gerçek istatistiklerinizi kullanın</strong> — 30+ işlemden sonra gerçek kazanma oranınızı ve ort. R:R\'yi Kelly ve Simülatör için girdi olarak kullanın.',
+      simName: 'İşlem Simülatörü', simDesc: 'Gerçek para riske atmadan önce senaryoları test edin',
+      sim1: '<strong>Gerçek veriler kullanın</strong> — Gerçekçi sonuçlar için defterinizdeki gerçek kazanma oranını ve R:R\'yi girin.',
+      sim2: '<strong>Birden fazla simülasyon çalıştırın</strong> — Olası sonuçların aralığını görmek için 10–20 simülasyon ayarlayın.',
+      sim3: '<strong>Risk %\'nizi test edin</strong> — Farklı <code>Bahis %</code> değerleri deneyin. Yüksek risk = yüksek potansiyel kazanç ama aynı zamanda yüksek mahvolma riski.',
+      sim4: '<strong>Mahvolma riski</strong> — Herhangi bir simülasyon çizgisi $0\'a ulaşıyorsa bahis boyutunuz çok yüksek. İşlem başına riskinizi azaltın.',
+      simTip: '<strong>İpucu:</strong> Gerçek istatistiklerinizle 1000 işlem simülasyonu çalıştırın. En kötü senaryo hâlâ kâr gösteriyorsa sisteminiz sağlamdır.',
+      footer: 'unda · riskinizi yönetin',
+    },
+    ar: {
+      dir: 'rtl', nav: 'العودة إلى القائمة →', title: 'كيفية استخدام المنصة',
+      wfTitle: 'سير عمل التداول الكامل', wf3: 'تداول', wf6: 'تحسين',
+      rcName: 'حاسبة الصفقة', rcDesc: 'استخدمها قبل كل صفقة',
+      rc1: '<strong>حجم المحفظة</strong> — أدخل القيمة الإجمالية لحساب التداول الخاص بك بالدولار الأمريكي.',
+      rc2: '<strong>حجم الهامش</strong> — مقدار محفظتك المخصص كهامش. ابدأ بـ <code>10–20%</code> إذا كنت جديداً على الرافعة.',
+      rc3: '<strong>المخاطرة %</strong> — الحد الأقصى للنسبة المئوية من هامشك التي تقبل خسارتها. معظم المحترفين يستخدمون <code>1–2%</code>.',
+      rc4: '<strong>وقف الخسارة %</strong> — قسه باستخدام أداة القياس في TradingView. انقر على شمعة الدخول واسحب إلى مستوى وقف الخسارة.',
+      rc5: '<strong>تحقق من التحذير</strong> — تأكد دائماً في منصتك أن وقف الخسارة % أعلى من مسافة التصفية.',
+      rcTip: '<strong>نصيحة:</strong> رقم الرافعة يخبرك بالضبط ما تضبطه على Bybit أو Binance أو OKX. رقم العقود يخبرك بحجم المركز بالدولار.',
+      klDesc: 'استخدمه أسبوعياً لتحسين مخاطرتك لكل صفقة',
+      kl1: '<strong>احتمال الفوز</strong> — استخدم معدل الفوز الحقيقي من سجل التداول. لا تقدّر أبداً — استخدم فقط البيانات الحقيقية المتتبعة.',
+      kl2: '<strong>نسبة R:R</strong> — استخدم متوسط R:R من إحصاءات السجل.',
+      kl3: '<strong>استخدم دائماً نصف كيلي</strong> — كيلي الكامل مثالي رياضياً لكنه عدواني للغاية. اقسم على 2 للحصول على نهج أكثر استدامة.',
+      kl4: '<strong>كيلي سلبي</strong> — إذا أعاد كيلي رقماً سالباً، فلا توجد لديك ميزة رياضية. اعمل أولاً على تحسين معدل الفوز أو R:R.',
+      lbName: 'سجل التداول', lbDesc: 'سجّل كل صفقة فور إغلاقها',
+      lb1: '<strong>سجّل كل صفقة</strong> — فوز أو خسارة أو تعادل. الاتساق هو كل شيء. صفقة مفقودة واحدة تجعل إحصاءاتك غير موثوقة.',
+      lb2: '<strong>عامل الربح</strong> — فوق <code>1.5</code> جيد. فوق <code>2.0</code> ممتاز. أقل من <code>1.0</code> يعني أنك تخسر المال.',
+      lb3: '<strong>معدل الفوز مقابل R:R</strong> — معدل فوز منخفض مقبول إذا كان R:R مرتفعاً. مع R:R <code>1:2</code> تحتاج فقط إلى الفوز بـ <code>33%</code> للوصول للتعادل.',
+      lb4: '<strong>استخدم إحصاءاتك الحقيقية</strong> — بعد 30+ صفقة، استخدم معدل الفوز الحقيقي ومتوسط R:R كمدخلات لكيلي والمحاكي.',
+      simName: 'محاكي التداول', simDesc: 'اختبر السيناريوهات قبل المخاطرة بالمال الحقيقي',
+      sim1: '<strong>استخدم بيانات حقيقية</strong> — أدخل معدل الفوز الحقيقي وR:R من السجل للحصول على نتائج واقعية.',
+      sim2: '<strong>شغّل محاكاة متعددة</strong> — اضبط 10–20 محاكاة لرؤية نطاق النتائج الممكنة.',
+      sim3: '<strong>اختبر المخاطرة %</strong> — جرّب قيم <code>رهان %</code> مختلفة. مخاطرة أعلى = مكاسب محتملة أعلى لكن أيضاً خطر أعلى للإفلاس.',
+      sim4: '<strong>خطر الإفلاس</strong> — إذا وصل أي خط محاكاة إلى $0، حجم رهانك مرتفع جداً. قلل مخاطرتك لكل صفقة.',
+      simTip: '<strong>نصيحة:</strong> شغّل محاكاة 1000 صفقة بإحصاءاتك الحقيقية. إذا أظهر السيناريو الأسوأ ربحاً، فنظامك متين.',
+      footer: 'unda · تحكم في مخاطرك',
+    },
+    ru: {
+      dir: 'ltr', nav: '← Назад к набору', title: 'Как пользоваться набором',
+      wfTitle: 'Полный рабочий процесс', wf3: 'Сделка', wf6: 'Оптимизация',
+      rcName: 'Калькулятор позиции', rcDesc: 'Используй перед каждой сделкой',
+      rc1: '<strong>Размер портфеля</strong> — Введите общую стоимость вашего торгового счёта в USD.',
+      rc2: '<strong>Размер маржи</strong> — Сколько портфеля вы выделяете как маржу. Начните с <code>10–20%</code>, если вы новичок в кредитном плече.',
+      rc3: '<strong>Риск %</strong> — Максимальный % маржи, который вы готовы потерять. Большинство профессиональных трейдеров используют <code>1–2%</code>.',
+      rc4: '<strong>Стоп-лосс %</strong> — Измерьте с помощью инструмента TradingView. Кликните на входную свечу и потяните до уровня стоп-лосса.',
+      rc5: '<strong>Проверьте предупреждение</strong> — Всегда убеждайтесь на бирже, что стоп-лосс % выше дистанции ликвидации.',
+      rcTip: '<strong>Совет:</strong> Число плеча показывает точно, что нужно установить на Bybit, Binance или OKX. Число контрактов — размер позиции в USD.',
+      klDesc: 'Использовать еженедельно для оптимизации риска на сделку',
+      kl1: '<strong>Вероятность выигрыша</strong> — Используйте реальный процент побед из торгового журнала. Никогда не оценивайте — только реальные отслеживаемые данные.',
+      kl2: '<strong>Соотношение R:R</strong> — Используйте средний R:R из статистики журнала.',
+      kl3: '<strong>Всегда используйте половину Келли</strong> — Полный Келли математически оптимален, но слишком агрессивен. Разделите на 2 для более устойчивого подхода.',
+      kl4: '<strong>Отрицательный Келли</strong> — Если Келли возвращает отрицательное число, у вас нет математического преимущества. Сначала улучшите процент побед или R:R.',
+      lbName: 'Торговый журнал', lbDesc: 'Записывайте каждую сделку сразу после закрытия',
+      lb1: '<strong>Записывайте каждую сделку</strong> — Прибыль, убыток или безубыток. Последовательность — это всё. Одна пропущенная сделка делает статистику ненадёжной.',
+      lb2: '<strong>Профит-фактор</strong> — Выше <code>1,5</code> — хорошо. Выше <code>2,0</code> — отлично. Ниже <code>1,0</code> — вы теряете деньги.',
+      lb3: '<strong>Процент побед vs R:R</strong> — Низкий процент побед нормален при высоком R:R. При R:R <code>1:2</code> достаточно выигрывать <code>33%</code> сделок для безубытка.',
+      lb4: '<strong>Используйте реальную статистику</strong> — После 30+ сделок используйте реальный процент побед и средний R:R как входные данные для Келли и Симулятора.',
+      simName: 'Торговый симулятор', simDesc: 'Тестируйте сценарии перед риском реальных денег',
+      sim1: '<strong>Используйте реальные данные</strong> — Введите реальный процент побед и R:R из журнала для реалистичных результатов.',
+      sim2: '<strong>Запустите несколько симуляций</strong> — Установите 10–20 симуляций для просмотра диапазона возможных результатов.',
+      sim3: '<strong>Тестируйте риск %</strong> — Пробуйте разные значения <code>Ставка %</code>. Выше риск = выше потенциальная прибыль, но и выше риск разорения.',
+      sim4: '<strong>Риск разорения</strong> — Если линия симуляции достигает $0, размер ставки слишком высок. Уменьшите риск на сделку.',
+      simTip: '<strong>Совет:</strong> Запустите симуляцию на 1000 сделок с реальной статистикой. Если худший сценарий всё ещё показывает прибыль, ваша система надёжна.',
+      footer: 'unda · управляй своим риском',
+    },
+  };
+
+  let currentLang = 'en';
+
+  function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    if (!document.getElementById('lang-sw').contains(e.target))
+      document.getElementById('lang-sw').classList.remove('open');
+  });
+
+  function setLang(code, label) {
+    currentLang = code;
+    const T = LANGS[code];
+    document.documentElement.setAttribute('lang', code);
+    document.documentElement.setAttribute('dir', T.dir);
+    if (label) document.getElementById('cur-lang').textContent = label;
+    document.querySelectorAll('.lang-menu div').forEach(d => {
+      d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()));
+    });
+    document.getElementById('t-nav').textContent      = T.nav;
+    document.getElementById('t-title').textContent    = T.title;
+    document.getElementById('t-wf-title').textContent = T.wfTitle;
+    document.getElementById('wf-3').textContent       = T.wf3;
+    document.getElementById('wf-6').textContent       = T.wf6;
+    document.getElementById('t-rc-name').textContent  = T.rcName;
+    document.getElementById('t-rc-desc').textContent  = T.rcDesc;
+    html('t-rc-1', T.rc1); html('t-rc-2', T.rc2); html('t-rc-3', T.rc3);
+    html('t-rc-4', T.rc4); html('t-rc-5', T.rc5); html('t-rc-tip', T.rcTip);
+    document.getElementById('t-kl-desc').textContent  = T.klDesc;
+    html('t-kl-1', T.kl1); html('t-kl-2', T.kl2); html('t-kl-3', T.kl3); html('t-kl-4', T.kl4);
+    document.getElementById('t-lb-name').textContent  = T.lbName;
+    document.getElementById('t-lb-desc').textContent  = T.lbDesc;
+    html('t-lb-1', T.lb1); html('t-lb-2', T.lb2); html('t-lb-3', T.lb3); html('t-lb-4', T.lb4);
+    document.getElementById('t-sim-name').textContent = T.simName;
+    document.getElementById('t-sim-desc').textContent = T.simDesc;
+    html('t-sim-1', T.sim1); html('t-sim-2', T.sim2); html('t-sim-3', T.sim3); html('t-sim-4', T.sim4);
+    html('t-sim-tip', T.simTip);
+    document.getElementById('t-footer').textContent   = T.footer;
+    document.getElementById('lang-sw').classList.remove('open');
+  }
+
+  /* ── Init ── */
+  const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+  const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+  const initLang = LANGS[browserLang] ? browserLang : 'en';
+  setLang(initLang, flagMap[initLang]);
+</script>
 </body>
 </html>
