@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · DCA Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a;
+      --text: #e0fff5; --text-muted: rgba(0,255,178,0.45);
+      --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05);
+    }
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 65%); animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%); animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(30px,20px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    /* Language Switcher */
+    .lang-sw { position: fixed; top: 14px; right: 18px; z-index: 100; font-size: 11px; font-weight: 500; color: var(--g2); cursor: pointer; user-select: none; background: rgba(0,255,178,0.06); border: 1px solid rgba(0,255,178,0.15); border-radius: 8px; padding: 5px 10px; transition: background .2s; }
+    .lang-sw:hover { background: rgba(0,255,178,0.12); }
+    .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #000d07; border: 1px solid rgba(0,255,178,0.18); border-radius: 12px; padding: 6px; min-width: 110px; box-shadow: 0 16px 40px rgba(0,0,0,0.7); flex-direction: column; gap: 2px; }
+    .lang-sw.open .lang-menu { display: flex; }
+    .lang-menu div { padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: 11px; }
+    .lang-menu div:hover { background: rgba(0,255,178,0.1); color: var(--g); }
+    .lang-menu div.active { color: var(--g); background: rgba(0,255,178,0.07); }
+
+    .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 860px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 2rem; animation: fadeUp 0.6s both; }
+    .header-brand { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--g2); margin-bottom: 4px; }
+    .header-title { font-size: 30px; font-weight: 500; background: linear-gradient(130deg, #9effd9 0%, #fff 45%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .card { background: var(--card); backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: visible; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7); margin-bottom: 16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); border-radius:22px 22px 0 0; }
+    .card-inner { padding: 1.75rem 2rem; }
+    .sec { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .sec::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent); }
+
+    /* Tooltips */
+    .flr { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+    .ti { display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; border-radius:50%; background:rgba(0,255,178,0.07); color:rgba(0,255,178,0.5); font-size:9px; cursor:pointer; position:relative; flex-shrink:0; font-style:normal; border:1px solid rgba(0,255,178,0.18); transition:all .15s; }
+    .ti:hover { background:rgba(0,255,178,0.14); }
+    .ti:hover .tb { display:block; }
+    .tb { display:none; position:absolute; left:20px; top:-4px; z-index:300; background:rgba(0,10,6,0.97); border:1px solid rgba(0,255,178,0.2); border-radius:10px; padding:10px 13px; font-family:'Outfit',sans-serif; font-size:12px; color:#a8ffdf; min-width:220px; max-width:280px; white-space:normal; line-height:1.55; font-style:normal; box-shadow:0 10px 30px rgba(0,0,0,0.65); }
+    .stat .ti .tb { left: 50%; transform: translateX(-50%); top: auto; bottom: calc(100% + 8px); min-width: 200px; max-width: 260px; }
+    .stat .ti:hover .tb { display: block; }
+    [dir="rtl"] .tb { left:auto; right:20px; }
+
+    .inputs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1.25rem; }
+    @media(max-width:600px) { .inputs-grid { grid-template-columns: 1fr 1fr; } }
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fl { font-size: 10px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .iw { display: flex; align-items: center; background: var(--inp); border-radius: 10px; border: 1px solid rgba(0,255,178,0.12); padding: 0 13px; height: 46px; transition: border-color .2s; }
+    .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); }
+    .px { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--g2); margin-right: 9px; white-space: nowrap; }
+    .iw input { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 15px; width: 100%; }
+    .iw input::-webkit-inner-spin-button { opacity: 0.3; }
+
+    /* Scenario shortcuts */
+    .sc-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1.25rem; }
+    .sc-btn { border-radius: 10px; padding: 10px 8px; text-align: center; cursor: pointer; border: 1px solid; transition: all .2s; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500; }
+    .sc-btn.bull { background: rgba(0,255,136,0.05); border-color: rgba(0,255,136,0.2); color: #00ff88; }
+    .sc-btn.bull:hover, .sc-btn.bull.active { background: rgba(0,255,136,0.12); border-color: rgba(0,255,136,0.5); }
+    .sc-btn.side { background: rgba(255,217,122,0.05); border-color: rgba(255,217,122,0.2); color: var(--gold); }
+    .sc-btn.side:hover, .sc-btn.side.active { background: rgba(255,217,122,0.12); border-color: rgba(255,217,122,0.5); }
+    .sc-btn.bear { background: rgba(255,80,80,0.05); border-color: rgba(255,80,80,0.2); color: #ff6b6b; }
+    .sc-btn.bear:hover, .sc-btn.bear.active { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.5); }
+    .sc-val { font-family: 'DM Mono', monospace; font-size: 13px; margin-top: 3px; }
+
+    /* Freq */
+    .freq-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1.25rem; }
+    .freq-btn { background: var(--inp); border: 1px solid rgba(0,255,178,0.12); border-radius: 10px; padding: 9px; text-align: center; font-size: 12px; color: var(--text-muted); cursor: pointer; transition: all .2s; font-family: 'Outfit', sans-serif; }
+    .freq-btn.active { background: rgba(0,255,178,0.1); border-color: rgba(0,255,178,0.4); color: var(--g); font-weight: 500; }
+
+    /* Price indicator */
+    .price-indicator { display: flex; align-items: center; gap: 12px; background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.1); border-radius: 10px; padding: 10px 14px; margin-bottom: 1.25rem; font-size: 12px; }
+    .pi-label { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    .pi-val { font-family: 'DM Mono', monospace; font-size: 14px; }
+    .pi-val.up { color: #00ff88; } .pi-val.flat { color: var(--gold); } .pi-val.down { color: #ff6b6b; }
+    .pi-item { display: flex; flex-direction: column; gap: 3px; }
+    .pi-sep { width: 1px; height: 30px; background: rgba(0,255,178,0.12); }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 300px; margin-bottom: 1.5rem; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 1rem; }
+    @media(min-width:500px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
+    .stat { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.1); border-radius: 12px; padding: 14px 10px; text-align: center; position: relative; overflow: visible; }
+    .stat::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .stat-label { font-size: 9px; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; line-height: 1.3; }
+    .stat-val { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+    .c-green { color: #00ff88; } .c-gold { color: var(--gold); } .c-red { color: #ff6b6b; } .c-white { color: var(--text); }
+
+    /* DCA vs Lump sum comparison */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .cmp-box { border-radius: 12px; padding: 14px; text-align: center; border: 1px solid; position: relative; overflow: hidden; }
+    .cmp-box::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .cmp-box.dca  { background: rgba(0,255,178,0.05); border-color: rgba(0,255,178,0.2); }
+    .cmp-box.lump { background: rgba(255,217,122,0.05); border-color: rgba(255,217,122,0.2); }
+    .cmp-title { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+    .cmp-box.dca  .cmp-title { color: var(--g2); }
+    .cmp-box.lump .cmp-title { color: rgba(255,217,122,0.6); }
+    .cmp-val { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+    .cmp-sub { font-size: 10px; color: var(--text-muted); }
+    .winner-badge { display: inline-block; font-size: 9px; padding: 2px 8px; border-radius: 10px; margin-top: 5px; font-weight: 600; letter-spacing: .05em; }
+    .badge-green { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.3); }
+    .badge-gold  { background: rgba(255,217,122,0.15); color: var(--gold); border: 1px solid rgba(255,217,122,0.3); }
+
+    .info-box { background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.15); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(180,240,220,0.65); line-height: 1.65; }
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="header">
+    <div class="header-brand">Unda</div>
+    <div class="header-title" id="t-title">DCA Simulator</div>
+  </div>
+
+  <div class="card">
+    <div class="card-inner">
+
+      <!-- Inputs -->
+      <div class="sec" id="t-sec-params">Parameters</div>
+      <div class="inputs-grid">
+        <div class="fg">
+          <div class="flr"><span class="fl" id="t-lbl-amount">Monthly budget</span><i class="ti">?<span class="tb" id="tip-amount">Your total monthly budget. Split per purchase: daily ÷30, weekly ÷4, monthly = full amount.</span></i></div>
+          <div class="iw"><span class="px">€</span><input type="number" id="inp-amount" value="500" min="1" oninput="run()"></div>
+        </div>
+        <div class="fg">
+          <div class="flr"><span class="fl" id="t-lbl-months">Duration (months)</span><i class="ti">?<span class="tb" id="tip-months">How many months you DCA. 24 months = 96 weekly purchases = 720 daily purchases.</span></i></div>
+          <div class="iw"><span class="px">#</span><input type="number" id="inp-months" value="24" min="1" max="120" oninput="run()"></div>
+        </div>
+        <div class="fg">
+          <div class="flr"><span class="fl" id="t-lbl-startprice">Current asset price</span><i class="ti">?<span class="tb" style="left:auto;right:0">The market price of the asset today — e.g. €300 for a stock or €80,000 for Bitcoin. This is the price you pay on day 1.</span></i></div>
+          <div class="iw"><span class="px">€</span><input type="number" id="inp-startprice" value="100" min="0.000001" step="any" oninput="run()"></div>
+        </div>
+      </div>
+
+      <!-- Weekly change -->
+      <div class="sec" id="t-sec-market">Weekly price change</div>
+      <div class="sc-row">
+        <div class="sc-btn bull" onclick="setScenario(0.8)" id="sc-bull">
+          <div id="t-sc-bull">📈 Bullish</div>
+          <div class="sc-val">+0.8% / week</div>
+        </div>
+        <div class="sc-btn side active" onclick="setScenario(0)" id="sc-side">
+          <div id="t-sc-side">➡️ Sideways</div>
+          <div class="sc-val">0% / week</div>
+        </div>
+        <div class="sc-btn bear" onclick="setScenario(-0.8)" id="sc-bear">
+          <div id="t-sc-bear">📉 Bearish</div>
+          <div class="sc-val">−0.8% / week</div>
+        </div>
+      </div>
+
+      <!-- Custom % -->
+      <div class="fg" style="margin-bottom:1.25rem">
+        <div class="flr"><span class="fl" id="t-lbl-weekpct">Custom weekly change (%)</span><i class="ti">?<span class="tb" id="tip-weekpct">The weekly price change of the asset. +0.8% = strong bull market. 0% = flat. -0.8% = bear market. This determines the final asset price after your DCA period.</span></i></div>
+        <div class="iw">
+          <span class="px">%</span>
+          <input type="number" id="inp-weekpct" value="0" step="any" min="-20" max="20" oninput="onWeekPctInput()" onkeydown="guardMinus(event)">
+        </div>
+      </div>
+
+      <!-- Price indicator -->
+      <div class="price-indicator" id="price-indicator">
+        <div class="pi-item"><div class="pi-label" id="t-pi-start">Start price</div><div class="pi-val" id="pi-start">—</div></div>
+        <div class="pi-sep"></div>
+        <div class="pi-item">
+          <div class="flr" style="margin-bottom:2px;justify-content:center">
+            <div class="pi-label" id="t-pi-end">End price</div>
+            <i class="ti" style="margin-left:4px">?<span class="tb" id="tip-pi-end">Price of the asset at end of period. Start price × (1 + weekly%)^weeks. Not your profit — just what 1 unit costs at the end.</span></i>
+          </div>
+          <div class="pi-val" id="pi-end">—</div>
+        </div>
+        <div class="pi-sep"></div>
+        <div class="pi-item">
+          <div class="flr" style="margin-bottom:2px;justify-content:center">
+            <div class="pi-label" id="t-pi-change">Total change</div>
+            <i class="ti" style="margin-left:4px">?<span class="tb" id="tip-pi-change">How much the asset price changed from start to end. This is the asset price movement — not your DCA return, which depends on when you bought.</span></i>
+          </div>
+          <div class="pi-val" id="pi-change">—</div>
+        </div>
+        <div class="pi-sep"></div>
+        <div class="pi-item"><div class="pi-label" id="t-pi-weeks">Weeks</div><div class="pi-val c-white" id="pi-weeks">—</div></div>
+      </div>
+
+      <!-- Frequency -->
+      <div class="sec" id="t-sec-freq">DCA frequency</div>
+      <div class="freq-row">
+        <button class="freq-btn" id="freq-daily" onclick="setFreq('daily')">📅 <span id="t-daily">Daily</span></button>
+        <button class="freq-btn active" id="freq-weekly" onclick="setFreq('weekly')">📆 <span id="t-weekly">Weekly</span></button>
+        <button class="freq-btn" id="freq-monthly" onclick="setFreq('monthly')">🗓️ <span id="t-monthly">Monthly</span></button>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-wrap"><canvas id="dcaChart"></canvas></div>
+
+      <!-- DCA vs Lump sum -->
+      <div class="sec" id="t-sec-compare">DCA vs Lump sum</div>
+      <div class="compare">
+        <div class="cmp-box dca">
+          <div class="cmp-title" id="t-cmp-dca">DCA — spread over time</div>
+          <div class="cmp-val c-green" id="cmp-dca-val">—</div>
+          <div class="cmp-sub" id="cmp-dca-sub">—</div>
+          <div style="font-size:10px;color:rgba(0,255,178,0.4);margin-top:6px" id="tip-dca-explain">Portfolio value at end of period. You bought at different prices — averaging your cost.</div>
+          <div class="winner-badge" id="cmp-dca-badge" style="display:none"></div>
+        </div>
+        <div class="cmp-box lump">
+          <div class="cmp-title" id="t-cmp-lump">Lump sum — all in day 1</div>
+          <div class="cmp-val c-gold" id="cmp-lump-val">—</div>
+          <div class="cmp-sub" id="cmp-lump-sub">—</div>
+          <div style="font-size:10px;color:rgba(255,217,122,0.4);margin-top:6px" id="tip-lump-explain">If you had invested the same total amount all at once on day 1, at the starting price.</div>
+          <div class="winner-badge" id="cmp-lump-badge" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="sec" id="t-sec-results">Results</div>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="flr" style="justify-content:center;margin-bottom:6px"><div class="stat-label" id="t-st-invested">Total invested</div><i class="ti" style="margin-left:4px">?<span class="tb">Total euros spent buying the asset over the full DCA period. Monthly budget × number of months.</span></i></div>
+          <div class="stat-val c-white" id="st-invested">—</div>
+        </div>
+        <div class="stat">
+          <div class="flr" style="justify-content:center;margin-bottom:6px"><div class="stat-label" id="t-st-units">Units bought</div><i class="ti" style="margin-left:4px">?<span class="tb">Total number of shares or coins bought. You buy more when prices are low, fewer when prices are high — that is the DCA advantage.</span></i></div>
+          <div class="stat-val c-gold" id="st-units">—</div>
+        </div>
+        <div class="stat">
+          <div class="flr" style="justify-content:center;margin-bottom:6px"><div class="stat-label" id="t-st-avgprice">Avg buy price</div><i class="ti" style="margin-left:4px">?<span class="tb">Your average purchase price per unit. In a rising market this is lower than the final price — meaning profit. In a falling market this is higher.</span></i></div>
+          <div class="stat-val c-white" id="st-avgprice">—</div>
+        </div>
+        <div class="stat">
+          <div class="flr" style="justify-content:center;margin-bottom:6px"><div class="stat-label" id="t-st-endprice">Final price</div><i class="ti" style="margin-left:4px">?<span class="tb">The asset price at the end of the DCA period, calculated from your weekly % change. This determines your portfolio's final value.</span></i></div>
+          <div class="stat-val c-white" id="st-endprice">—</div>
+        </div>
+      </div>
+
+      <div class="info-box" id="info-box" style="margin-top:1rem"></div>
+    </div>
+  </div>
+
+  <div class="footer" id="t-footer">unda · wave your risk</div>
+</div>
+
+<script>
+const LANGS = {
+  en: { dir:'ltr',
+    title:'DCA Simulator', secParams:'Parameters', lblAmount:'Monthly budget', lblAmountDaily:'Monthly budget', lblAmountWeekly:'Monthly budget', lblAmountMonthly:'Monthly budget', lblMonths:'Duration (months)', lblStartprice:'Current asset price',
+    secMarket:'Weekly price change', scBull:'📈 Bullish', scSide:'➡️ Sideways', scBear:'📉 Bearish',
+    lblWeekpct:'Custom weekly change (%)',
+    piStart:'Start price', piEnd:'End price', piChange:'Total change', piWeeks:'Weeks',
+    secFreq:'DCA frequency', daily:'Daily', weekly:'Weekly', monthly:'Monthly',
+    secCompare:'DCA vs Lump sum', cmpDca:'DCA — spread over time', cmpLump:'Lump sum — all in day 1',
+    secResults:'Results', stInvested:'Total invested', stUnits:'Units bought', stAvgprice:'Avg buy price', stEndprice:'Final price',
+    tipAmount:'Your total monthly budget. Split per purchase: daily ÷30, weekly ÷4, monthly = full amount.',
+    tipMonths:'How many months you DCA. 24 months = 96 weekly or 720 daily purchases.',
+    tipStartprice:'The market price of the asset today. This is the price you pay on day 1.',
+    tipWeekpct:'+0.8% = bull market. 0% = flat. -0.8% = bear market. Determines the final asset price.',
+    tipDca:'Portfolio value at end of period. You bought at different prices — averaging your cost.',
+    tipLump:'If you had invested the same total amount all at once on day 1, at the starting price.',
+    tipInvested:'Total euros spent. Monthly budget × number of months.',
+    tipUnits:'Total units bought. You buy more when cheap, fewer when expensive — the DCA advantage.',
+    tipAvgprice:'Your average purchase price. In a rising market this is lower than the final price = profit.',
+    tipEndprice:'The asset price at the end of your DCA period. Calculated as: start price × (1 + weekly%)^total weeks. This is NOT your profit — it is the price of 1 unit of the asset.',
+    tipTotalChange:'How much the asset price changed from start to end. Example: start €100, end €75 = -25%. This is the price movement, not your return — because you bought at different prices through DCA.',
+    winner:'🏆 Winner', loser:'',
+    footer:'unda · wave your risk',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `With ${freq} DCA over ${inv}: portfolio worth €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Lump sum: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA wins — spreading your buys paid off.' : winner === 'lump' ? '📊 Lump sum wins — investing all at once was better here.' : '🤝 Both strategies performed equally.'}`,
+  },
+  nl: { dir:'ltr',
+    title:'DCA Simulator', secParams:'Parameters', lblAmount:'Maandelijks budget', lblAmountDaily:'Maandelijks budget', lblAmountWeekly:'Maandelijks budget', lblAmountMonthly:'Maandelijks budget', lblMonths:'Looptijd (maanden)', lblStartprice:'Huidige prijs van het asset',
+    secMarket:'Wekelijkse prijsverandering', scBull:'📈 Bullish', scSide:'➡️ Zijwaarts', scBear:'📉 Bearish',
+    lblWeekpct:'Eigen wekelijkse verandering (%)',
+    piStart:'Startprijs', piEnd:'Eindprijs', piChange:'Totale verandering', piWeeks:'Weken',
+    secFreq:'DCA frequentie', daily:'Dagelijks', weekly:'Wekelijks', monthly:'Maandelijks',
+    secCompare:'DCA vs In één keer', cmpDca:'DCA — gespreid over tijd', cmpLump:'In één keer — alles op dag 1',
+    secResults:'Resultaten', stInvested:'Totaal geïnvesteerd', stUnits:'Eenheden gekocht', stAvgprice:'Gem. aankoopprijs', stEndprice:'Eindprijs',
+    tipAmount:'Je totale maandbudget. Per aankoop: dagelijks ÷30, wekelijks ÷4, maandelijks = volledig bedrag.',
+    tipMonths:'Hoeveel maanden je DCA\'t. 24 maanden = 96 wekelijkse of 720 dagelijkse aankopen.',
+    tipStartprice:'De huidige marktprijs van het asset. Dit is de prijs die je betaalt op dag 1.',
+    tipWeekpct:'+0.8% = bullmarkt. 0% = zijwaarts. -0.8% = bearmarkt. Bepaalt de eindprijs van het asset.',
+    tipDca:'Portfoliowaarde op het einde van de periode. Je kocht aan verschillende prijzen — gemiddelde kostprijs.',
+    tipLump:'Als je hetzelfde totaalbedrag in één keer had geïnvesteerd op dag 1, aan de startprijs.',
+    tipInvested:'Totaal uitgegeven euros. Maandbudget × aantal maanden.',
+    tipUnits:'Totaal gekochte eenheden. Je koopt meer wanneer goedkoop, minder wanneer duur — het DCA voordeel.',
+    tipAvgprice:'Je gemiddelde aankoopprijs. In een stijgende markt is dit lager dan de eindprijs = winst.',
+    tipEndprice:'De prijs van het asset op het einde van je DCA periode. Berekend als: startprijs × (1 + wekelijkse%)^aantal weken. Dit is NIET je winst — het is gewoon wat 1 eenheid waard is op het einde.',
+    tipTotalChange:'Hoeveel de prijs van het asset veranderd is van begin tot einde. Bv: start €100, einde €75 = -25%. Dit is de prijsbeweging van het asset zelf, niet je rendement — want jij kocht aan verschillende prijzen via DCA.',
+    winner:'🏆 Winnaar', loser:'',
+    footer:'unda · beheers je risico',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Met ${freq} DCA over ${inv}: portfolio €${dcaVal} waard (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `In één keer: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA wint — gespreid kopen loonde.' : winner === 'lump' ? '📊 In één keer wint — alles tegelijk investeren was hier beter.' : '🤝 Beide strategieën presteerden gelijk.'}`,
+  },
+  fr: { dir:'ltr',
+    title:'Simulateur DCA', secParams:'Paramètres', lblAmount:'Budget mensuel', lblAmountDaily:'Budget mensuel', lblAmountWeekly:'Budget mensuel', lblAmountMonthly:'Budget mensuel', lblMonths:'Durée (mois)', lblStartprice:'Prix actuel du marché',
+    secMarket:'Variation hebdomadaire du prix', scBull:'📈 Haussier', scSide:'➡️ Latéral', scBear:'📉 Baissier',
+    lblWeekpct:'Variation hebdo. personnalisée (%)',
+    piStart:'Prix de départ', piEnd:'Prix final', piChange:'Variation totale', piWeeks:'Semaines',
+    secFreq:'Fréquence DCA', daily:'Quotidien', weekly:'Hebdomadaire', monthly:'Mensuel',
+    secCompare:'DCA vs Investissement unique', cmpDca:'DCA — réparti dans le temps', cmpLump:'Investissement unique — tout le jour 1',
+    secResults:'Résultats', stInvested:'Total investi', stUnits:'Unités achetées', stAvgprice:"Prix moy. d'achat", stEndprice:'Prix final',
+    tipAmount:'Votre budget mensuel total. Divisé par achat: quotidien ÷30, hebdomadaire ÷4, mensuel = montant complet.',
+    tipMonths:'Durée de votre DCA. 24 mois = 96 achats hebdomadaires ou 720 quotidiens.',
+    tipStartprice:'Le prix de marché actuel de votre actif. C\'est le prix payé le jour 1.',
+    tipWeekpct:'+0.8% = marché haussier. 0% = plat. -0.8% = marché baissier. Détermine le prix final de votre actif.',
+    tipDca:'Valeur du portefeuille en fin de période. Vous avez acheté à différents prix — lissant votre coût moyen.',
+    tipLump:'Si vous aviez investi le même montant total en une fois le jour 1, au prix de départ.',
+    tipInvested:'Total en euros dépensé. Budget mensuel × nombre de mois.',
+    tipUnits:'Total d\'unités achetées. Vous achetez plus quand c\'est bon marché — l\'avantage du DCA.',
+    tipAvgprice:'Votre prix d\'achat moyen. Dans un marché haussier, il est inférieur au prix final = profit.',
+    tipEndprice:'Le prix de votre actif en fin de période. Ce n\'est PAS votre profit — c\'est juste ce que vaut 1 unité à la fin.',
+    tipTotalChange:'La variation du prix de l\'actif du début à la fin. Ce n\'est pas votre rendement DCA — car vous avez acheté à des moments différents.',
+    winner:'🏆 Gagnant', loser:'',
+    footer:'unda · maîtrisez votre risque',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Avec DCA ${freq} sur ${inv} : portefeuille €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Investissement unique : €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA gagne — répartir les achats a payé.' : winner === 'lump' ? "📊 Investissement unique gagne — tout investir d'un coup était meilleur ici." : '🤝 Les deux stratégies ont performé de manière égale.'}`,
+  },
+  es: { dir:'ltr',
+    title:'Simulador DCA', secParams:'Parámetros', lblAmount:'Presupuesto mensual', lblAmountDaily:'Presupuesto mensual', lblAmountWeekly:'Presupuesto mensual', lblAmountMonthly:'Presupuesto mensual', lblMonths:'Duración (meses)', lblStartprice:'Precio actual del activo',
+    secMarket:'Cambio semanal del precio', scBull:'📈 Alcista', scSide:'➡️ Lateral', scBear:'📉 Bajista',
+    lblWeekpct:'Cambio semanal personalizado (%)',
+    piStart:'Precio inicial', piEnd:'Precio final', piChange:'Cambio total', piWeeks:'Semanas',
+    secFreq:'Frecuencia DCA', daily:'Diario', weekly:'Semanal', monthly:'Mensual',
+    secCompare:'DCA vs Suma global', cmpDca:'DCA — distribuido en el tiempo', cmpLump:'Suma global — todo el día 1',
+    secResults:'Resultados', stInvested:'Total invertido', stUnits:'Unidades compradas', stAvgprice:'Precio prom. compra', stEndprice:'Precio final',
+    tipAmount:'Tu presupuesto mensual total. Dividido por compra: diario ÷30, semanal ÷4, mensual = monto completo.',
+    tipMonths:'Duración de tu DCA. 24 meses = 96 compras semanales o 720 diarias.',
+    tipStartprice:'El precio actual del activo en el mercado. Es el precio que pagas el día 1.',
+    tipWeekpct:'+0.8% = mercado alcista. 0% = plano. -0.8% = mercado bajista. Determina el precio final del activo.',
+    tipDca:'Valor del portafolio al final del período. Compraste a distintos precios — promediando tu costo.',
+    tipLump:'Si hubieras invertido el mismo monto total de una sola vez el día 1, al precio inicial.',
+    tipInvested:'Total en euros gastado. Presupuesto mensual × número de meses.',
+    tipUnits:'Total de unidades compradas. Compras más cuando está barato — la ventaja del DCA.',
+    tipAvgprice:'Tu precio promedio de compra. En un mercado alcista es menor que el precio final = ganancia.',
+    tipEndprice:'El precio del activo al final del período. NO es tu ganancia — es lo que vale 1 unidad al final.',
+    tipTotalChange:'Cuánto cambió el precio del activo de inicio a fin. No es tu rendimiento DCA — porque compraste en momentos distintos.',
+    winner:'🏆 Ganador', loser:'',
+    footer:'unda · domina tu riesgo',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Con DCA ${freq} durante ${inv}: portafolio €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Suma global: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA gana — distribuir las compras valió la pena.' : winner === 'lump' ? '📊 Suma global gana — invertir todo de una vez fue mejor aquí.' : '🤝 Ambas estrategias tuvieron el mismo rendimiento.'}`,
+  },
+  de: { dir:'ltr',
+    title:'DCA-Simulator', secParams:'Parameter', lblAmount:'Monatliches Budget', lblAmountDaily:'Monatliches Budget', lblAmountWeekly:'Monatliches Budget', lblAmountMonthly:'Monatliches Budget', lblMonths:'Laufzeit (Monate)', lblStartprice:'Aktueller Asset-Preis',
+    secMarket:'Wöchentliche Preisänderung', scBull:'📈 Bullisch', scSide:'➡️ Seitwärts', scBear:'📉 Bärisch',
+    lblWeekpct:'Eigene wöchentliche Änderung (%)',
+    piStart:'Startpreis', piEnd:'Endpreis', piChange:'Gesamtveränderung', piWeeks:'Wochen',
+    secFreq:'DCA-Frequenz', daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich',
+    secCompare:'DCA vs Einmalinvestition', cmpDca:'DCA — über Zeit verteilt', cmpLump:'Einmalinvestition — alles an Tag 1',
+    secResults:'Ergebnisse', stInvested:'Gesamt investiert', stUnits:'Gekaufte Einheiten', stAvgprice:'Ø Kaufpreis', stEndprice:'Endpreis',
+    tipAmount:'Dein monatliches Gesamtbudget. Pro Kauf aufgeteilt: täglich ÷30, wöchentlich ÷4, monatlich = voller Betrag.',
+    tipMonths:'Dauer deines DCA. 24 Monate = 96 wöchentliche oder 720 tägliche Käufe.',
+    tipStartprice:'Der aktuelle Marktpreis deines Assets. Das ist der Preis, den du am Tag 1 zahlst.',
+    tipWeekpct:'+0,8% = Bullenmarkt. 0% = seitwärts. -0,8% = Bärenmarkt. Bestimmt den Endpreis deines Assets.',
+    tipDca:'Portfoliowert am Ende des Zeitraums. Du kauftest zu verschiedenen Preisen — dein Durchschnittspreis wurde geglättet.',
+    tipLump:'Wenn du den gleichen Gesamtbetrag auf einmal an Tag 1 zum Startpreis investiert hättest.',
+    tipInvested:'Gesamte ausgegebene Euros. Monatliches Budget × Anzahl Monate.',
+    tipUnits:'Gesamte gekaufte Einheiten. Du kaufst mehr wenn es billig ist — der DCA-Vorteil.',
+    tipAvgprice:'Dein durchschnittlicher Kaufpreis. In einem Bullenmarkt liegt er unter dem Endpreis = Gewinn.',
+    tipEndprice:'Der Asset-Preis am Ende des Zeitraums. Das ist NICHT dein Gewinn — es ist nur was 1 Einheit am Ende kostet.',
+    tipTotalChange:'Wie sehr sich der Asset-Preis von Anfang bis Ende verändert hat. Nicht deine DCA-Rendite — du kauftest zu verschiedenen Zeitpunkten.',
+    winner:'🏆 Gewinner', loser:'',
+    footer:'unda · steuere dein Risiko',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Mit ${freq} DCA über ${inv}: Portfolio €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Einmalinvestition: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA gewinnt — die Verteilung der Käufe hat sich gelohnt.' : winner === 'lump' ? '📊 Einmalinvestition gewinnt — alles auf einmal war hier besser.' : '🤝 Beide Strategien haben gleich abgeschnitten.'}`,
+  },
+  it: { dir:'ltr',
+    title:'Simulatore DCA', secParams:'Parametri', lblAmount:'Budget mensile', lblAmountDaily:'Budget mensile', lblAmountWeekly:'Budget mensile', lblAmountMonthly:'Budget mensile', lblMonths:'Durata (mesi)', lblStartprice:'Prezzo attuale di mercato',
+    secMarket:'Variazione settimanale del prezzo', scBull:'📈 Rialzista', scSide:'➡️ Laterale', scBear:'📉 Ribassista',
+    lblWeekpct:'Variazione settim. personalizzata (%)',
+    piStart:'Prezzo iniziale', piEnd:'Prezzo finale', piChange:'Variazione totale', piWeeks:'Settimane',
+    secFreq:'Frequenza DCA', daily:'Giornaliero', weekly:'Settimanale', monthly:'Mensile',
+    secCompare:'DCA vs Investimento unico', cmpDca:'DCA — distribuito nel tempo', cmpLump:'Investimento unico — tutto il giorno 1',
+    secResults:'Risultati', stInvested:'Totale investito', stUnits:'Unità acquistate', stAvgprice:'Prezzo medio acquisto', stEndprice:'Prezzo finale',
+    tipAmount:'Il tuo budget mensile totale. Diviso per acquisto: giornaliero ÷30, settimanale ÷4, mensile = importo intero.',
+    tipMonths:'Durata del tuo DCA. 24 mesi = 96 acquisti settimanali o 720 giornalieri.',
+    tipStartprice:'Il prezzo attuale di mercato del tuo asset. È il prezzo che paghi il giorno 1.',
+    tipWeekpct:'+0,8% = mercato rialzista. 0% = piatto. -0,8% = mercato ribassista. Determina il prezzo finale.',
+    tipDca:'Valore del portafoglio a fine periodo. Hai acquistato a prezzi diversi — mediando il tuo costo.',
+    tipLump:'Se avessi investito lo stesso importo totale in una volta sola il giorno 1, al prezzo iniziale.',
+    tipInvested:'Totale euro spesi. Budget mensile × numero di mesi.',
+    tipUnits:'Totale unità acquistate. Compri di più quando è economico — il vantaggio del DCA.',
+    tipAvgprice:'Il tuo prezzo medio di acquisto. In un mercato rialzista è inferiore al prezzo finale = profitto.',
+    tipEndprice:'Il prezzo del tuo asset a fine periodo. NON è il tuo profitto — è solo quanto vale 1 unità alla fine.',
+    tipTotalChange:'Quanto è cambiato il prezzo dal inizio alla fine. Non è il tuo rendimento DCA — hai acquistato in momenti diversi.',
+    winner:'🏆 Vincitore', loser:'',
+    footer:'unda · gestisci il tuo rischio',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Con DCA ${freq} per ${inv}: portafoglio €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Investimento unico: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA vince — distribuire gli acquisti ha pagato.' : winner === 'lump' ? '📊 Investimento unico vince — investire tutto in una volta era meglio qui.' : '🤝 Entrambe le strategie hanno avuto le stesse performance.'}`,
+  },
+  pt: { dir:'ltr',
+    title:'Simulador DCA', secParams:'Parâmetros', lblAmount:'Orçamento mensal', lblAmountDaily:'Orçamento mensal', lblAmountWeekly:'Orçamento mensal', lblAmountMonthly:'Orçamento mensal', lblMonths:'Duração (meses)', lblStartprice:'Preço atual do ativo',
+    secMarket:'Variação semanal do preço', scBull:'📈 Alta', scSide:'➡️ Lateral', scBear:'📉 Baixa',
+    lblWeekpct:'Variação semanal personalizada (%)',
+    piStart:'Preço inicial', piEnd:'Preço final', piChange:'Variação total', piWeeks:'Semanas',
+    secFreq:'Frequência DCA', daily:'Diário', weekly:'Semanal', monthly:'Mensal',
+    secCompare:'DCA vs Investimento único', cmpDca:'DCA — distribuído no tempo', cmpLump:'Investimento único — tudo no dia 1',
+    secResults:'Resultados', stInvested:'Total investido', stUnits:'Unidades compradas', stAvgprice:'Preço médio de compra', stEndprice:'Preço final',
+    tipAmount:'O seu orçamento mensal total. Dividido por compra: diário ÷30, semanal ÷4, mensal = valor completo.',
+    tipMonths:'Duração do seu DCA. 24 meses = 96 compras semanais ou 720 diárias.',
+    tipStartprice:'O preço atual de mercado do ativo. É o preço que paga no dia 1.',
+    tipWeekpct:'+0,8% = mercado em alta. 0% = plano. -0,8% = mercado em baixa. Determina o preço final do ativo.',
+    tipDca:'Valor do portfólio no final do período. Comprou a preços diferentes — calculando o custo médio.',
+    tipLump:'Se tivesse investido o mesmo valor total de uma só vez no dia 1, ao preço inicial.',
+    tipInvested:'Total em euros gastos. Orçamento mensal × número de meses.',
+    tipUnits:'Total de unidades compradas. Compra mais quando está barato — a vantagem do DCA.',
+    tipAvgprice:'O seu preço médio de compra. Num mercado em alta é inferior ao preço final = lucro.',
+    tipEndprice:'O preço do ativo no final do período. NÃO é o seu lucro — é apenas o que vale 1 unidade no final.',
+    tipTotalChange:'Quanto o preço do ativo mudou do início ao fim. Não é o seu retorno DCA — comprou em momentos diferentes.',
+    winner:'🏆 Vencedor', loser:'',
+    footer:'unda · controle seu risco',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `Com DCA ${freq} durante ${inv}: portfólio €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Investimento único: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA vence — distribuir as compras valeu a pena.' : winner === 'lump' ? '📊 Investimento único vence — investir tudo de uma vez foi melhor aqui.' : '🤝 Ambas as estratégias tiveram o mesmo desempenho.'}`,
+  },
+  tr: { dir:'ltr',
+    title:'DCA Simülatörü', secParams:'Parametreler', lblAmount:'Aylık bütçe', lblAmountDaily:'Aylık bütçe', lblAmountWeekly:'Aylık bütçe', lblAmountMonthly:'Aylık bütçe', lblMonths:'Süre (ay)', lblStartprice:'Varlığın mevcut fiyatı',
+    secMarket:'Haftalık fiyat değişimi', scBull:'📈 Yükseliş', scSide:'➡️ Yatay', scBear:'📉 Düşüş',
+    lblWeekpct:'Özel haftalık değişim (%)',
+    piStart:'Başlangıç fiyatı', piEnd:'Bitiş fiyatı', piChange:'Toplam değişim', piWeeks:'Hafta',
+    secFreq:'DCA sıklığı', daily:'Günlük', weekly:'Haftalık', monthly:'Aylık',
+    secCompare:'DCA vs Tek seferlik', cmpDca:'DCA — zamana yayılmış', cmpLump:'Tek seferlik — hepsi 1. gün',
+    secResults:'Sonuçlar', stInvested:'Toplam yatırım', stUnits:'Satın alınan birim', stAvgprice:'Ort. alım fiyatı', stEndprice:'Bitiş fiyatı',
+    tipAmount:'Toplam aylık bütçeniz. Alım başına: günlük ÷30, haftalık ÷4, aylık = tam tutar.',
+    tipMonths:'DCA süreniz. 24 ay = 96 haftalık veya 720 günlük alım.',
+    tipStartprice:'Varlığınızın bugünkü piyasa fiyatı. 1. günde ödediğiniz fiyat budur.',
+    tipWeekpct:'+0,8% = boğa piyasası. 0% = yatay. -0,8% = ayı piyasası. Varlığın bitiş fiyatını belirler.',
+    tipDca:'Dönem sonundaki portföy değeri. Farklı fiyatlardan aldınız — ortalama maliyetinizi düşürdünüz.',
+    tipLump:'Aynı toplam tutarı 1. günde başlangıç fiyatından tek seferde yatırmış olsaydınız.',
+    tipInvested:'Harcanan toplam euro. Aylık bütçe × ay sayısı.',
+    tipUnits:'Satın alınan toplam birim. Ucuzken daha fazla alırsınız — DCA avantajı budur.',
+    tipAvgprice:'Ortalama alım fiyatınız. Yükselen piyasada bitiş fiyatının altındaysa = kâr.',
+    tipEndprice:'Dönem sonundaki varlık fiyatı. Bu kârınız DEĞİL — sadece 1 birimin son değeri.',
+    tipTotalChange:'Varlık fiyatının baştan sona ne kadar değiştiği. DCA getiriniz değil — farklı zamanlarda aldınız.',
+    winner:'🏆 Kazanan', loser:'',
+    footer:'unda · riskinizi yönetin',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `${freq} DCA ile ${inv} sürede: portföy €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, %${dcaGainPct}). ` +
+      `Tek seferlik: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, %${lumpGainPct}). ` +
+      `${winner === 'dca' ? '✅ DCA kazanıyor — alımları yaymak işe yaradı.' : winner === 'lump' ? '📊 Tek seferlik kazanıyor — hepsini bir anda yatırmak burada daha iyiydi.' : '🤝 Her iki strateji de aynı performansı gösterdi.'}`,
+  },
+  ar: { dir:'rtl',
+    title:'محاكي DCA', secParams:'المعاملات', lblAmount:'الميزانية الشهرية', lblAmountDaily:'الميزانية الشهرية', lblAmountWeekly:'الميزانية الشهرية', lblAmountMonthly:'الميزانية الشهرية', lblMonths:'المدة (أشهر)', lblStartprice:'السعر الحالي للأصل',
+    secMarket:'التغير الأسبوعي في السعر', scBull:'📈 صاعد', scSide:'➡️ جانبي', scBear:'📉 هابط',
+    lblWeekpct:'تغير أسبوعي مخصص (%)',
+    piStart:'السعر الابتدائي', piEnd:'السعر النهائي', piChange:'التغير الإجمالي', piWeeks:'أسابيع',
+    secFreq:'تكرار DCA', daily:'يومي', weekly:'أسبوعي', monthly:'شهري',
+    secCompare:'DCA مقابل مبلغ واحد', cmpDca:'DCA — موزع على الزمن', cmpLump:'مبلغ واحد — كل شيء في اليوم 1',
+    secResults:'النتائج', stInvested:'إجمالي الاستثمار', stUnits:'الوحدات المشتراة', stAvgprice:'متوسط سعر الشراء', stEndprice:'السعر النهائي',
+    tipAmount:'ميزانيتك الشهرية الإجمالية. مقسمة لكل شراء: يومي ÷30، أسبوعي ÷4، شهري = المبلغ الكامل.',
+    tipMonths:'مدة DCA الخاصة بك. 24 شهراً = 96 عملية شراء أسبوعية أو 720 يومية.',
+    tipStartprice:'السعر الحالي للأصل في السوق. هذا هو السعر الذي تدفعه في اليوم الأول.',
+    tipWeekpct:'+0.8% = سوق صاعد. 0% = مستقر. -0.8% = سوق هابط. يحدد السعر النهائي للأصل.',
+    tipDca:'قيمة المحفظة في نهاية الفترة. اشتريت بأسعار مختلفة — مما أدى إلى تحسين متوسط التكلفة.',
+    tipLump:'لو كنت استثمرت نفس المبلغ الإجمالي دفعة واحدة في اليوم الأول بالسعر الابتدائي.',
+    tipInvested:'إجمالي اليوروهات المنفقة. الميزانية الشهرية × عدد الأشهر.',
+    tipUnits:'إجمالي الوحدات المشتراة. تشتري أكثر عندما يكون السعر رخيصاً — ميزة DCA.',
+    tipAvgprice:'متوسط سعر الشراء. في سوق صاعد يكون أقل من السعر النهائي = ربح.',
+    tipEndprice:'سعر الأصل في نهاية الفترة. هذا ليس ربحك — هو فقط ما تساويه وحدة واحدة في النهاية.',
+    tipTotalChange:'مقدار تغير سعر الأصل من البداية إلى النهاية. هذا ليس عائد DCA الخاص بك — لأنك اشتريت في أوقات مختلفة.',
+    winner:'🏆 الفائز', loser:'',
+    footer:'unda · تحكم في مخاطرك',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `مع DCA ${freq} خلال ${inv}: المحفظة €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `مبلغ واحد: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA يفوز — توزيع المشتريات أتى بنتيجة.' : winner === 'lump' ? '📊 المبلغ الواحد يفوز — الاستثمار دفعة واحدة كان أفضل هنا.' : '🤝 كلتا الاستراتيجيتين أدّتا نفس الأداء.'}`,
+  },
+  ru: { dir:'ltr',
+    title:'Симулятор DCA', secParams:'Параметры', lblAmount:'Ежемесячный бюджет', lblAmountDaily:'Ежемесячный бюджет', lblAmountWeekly:'Ежемесячный бюджет', lblAmountMonthly:'Ежемесячный бюджет', lblMonths:'Срок (месяцев)', lblStartprice:'Текущая цена актива',
+    secMarket:'Еженедельное изменение цены', scBull:'📈 Бычий', scSide:'➡️ Боковой', scBear:'📉 Медвежий',
+    lblWeekpct:'Своё еженедельное изменение (%)',
+    piStart:'Начальная цена', piEnd:'Конечная цена', piChange:'Общее изменение', piWeeks:'Недель',
+    secFreq:'Частота DCA', daily:'Ежедневно', weekly:'Еженедельно', monthly:'Ежемесячно',
+    secCompare:'DCA vs Единовременная инвестиция', cmpDca:'DCA — распределено во времени', cmpLump:'Единовременно — всё в день 1',
+    secResults:'Результаты', stInvested:'Всего инвестировано', stUnits:'Куплено единиц', stAvgprice:'Ср. цена покупки', stEndprice:'Конечная цена',
+    tipAmount:'Ваш общий ежемесячный бюджет. На покупку: ежедневно ÷30, еженедельно ÷4, ежемесячно = полная сумма.',
+    tipMonths:'Срок вашего DCA. 24 месяца = 96 еженедельных или 720 ежедневных покупок.',
+    tipStartprice:'Текущая рыночная цена актива. Это цена, которую вы платите в день 1.',
+    tipWeekpct:'+0,8% = бычий рынок. 0% = боковик. -0,8% = медвежий рынок. Определяет конечную цену актива.',
+    tipDca:'Стоимость портфеля в конце периода. Вы покупали по разным ценам — усредняя стоимость.',
+    tipLump:'Если бы вы вложили ту же общую сумму единовременно в день 1 по начальной цене.',
+    tipInvested:'Всего потрачено евро. Ежемесячный бюджет × количество месяцев.',
+    tipUnits:'Всего куплено единиц. Покупаете больше когда дёшево — преимущество DCA.',
+    tipAvgprice:'Ваша средняя цена покупки. На растущем рынке она ниже конечной цены = прибыль.',
+    tipEndprice:'Цена актива в конце периода. Это НЕ ваша прибыль — просто сколько стоит 1 единица в конце.',
+    tipTotalChange:'Насколько изменилась цена актива с начала до конца. Это не ваша доходность DCA — вы покупали в разное время.',
+    winner:'🏆 Победитель', loser:'',
+    footer:'unda · управляй своим риском',
+    info: (freq, inv, dcaVal, dcaGain, dcaGainPct, lumpVal, lumpGain, lumpGainPct, winner) =>
+      `С ${freq} DCA за ${inv}: портфель €${dcaVal} (${dcaGain >= 0 ? '+' : ''}€${Math.abs(dcaGain)}, ${dcaGainPct}%). ` +
+      `Единовременно: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
+      `${winner === 'dca' ? '✅ DCA выигрывает — распределение покупок себя оправдало.' : winner === 'lump' ? '📊 Единовременная инвестиция выигрывает — вложить всё сразу здесь было лучше.' : '🤝 Обе стратегии показали одинаковый результат.'}`,
+  },
+};
+
+let currentLang = 'en';
+let currentFreq  = 'weekly';
+let chartInstance = null;
+
+/* ── Lang ── */
+function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  if (!document.getElementById('lang-sw').contains(e.target))
+    document.getElementById('lang-sw').classList.remove('open');
+});
+
+function setLang(code, label) {
+  currentLang = code;
+  const T = LANGS[code];
+  document.documentElement.setAttribute('lang', code);
+  document.documentElement.setAttribute('dir', T.dir);
+  if (label) document.getElementById('cur-lang').textContent = label;
+  document.querySelectorAll('.lang-menu div').forEach(d =>
+    d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()))
+  );
+  const ids = {
+    't-title':T.title,'t-sec-params':T.secParams,'t-lbl-amount':T.lblAmount,'t-lbl-months':T.lblMonths,
+    't-lbl-startprice':T.lblStartprice,'t-sec-market':T.secMarket,'t-sc-bull':T.scBull,'t-sc-side':T.scSide,
+    't-sc-bear':T.scBear,'t-lbl-weekpct':T.lblWeekpct,'t-pi-start':T.piStart,'t-pi-end':T.piEnd,
+    't-pi-change':T.piChange,'t-pi-weeks':T.piWeeks,'t-sec-freq':T.secFreq,'t-daily':T.daily,
+    't-weekly':T.weekly,'t-monthly':T.monthly,'t-sec-compare':T.secCompare,'t-cmp-dca':T.cmpDca,
+    't-cmp-lump':T.cmpLump,'t-sec-results':T.secResults,'t-st-invested':T.stInvested,
+    't-st-units':T.stUnits,'t-st-avgprice':T.stAvgprice,'t-st-endprice':T.stEndprice,'t-footer':T.footer,
+  };
+  Object.entries(ids).forEach(([id, txt]) => { const el = document.getElementById(id); if (el) el.textContent = txt; });
+  // Update amount label based on current frequency
+  const lbl = currentFreq === 'daily' ? T.lblAmountDaily : currentFreq === 'weekly' ? T.lblAmountWeekly : T.lblAmountMonthly;
+  document.getElementById('t-lbl-amount').textContent = lbl;
+  // Update tooltips
+  const tips = { 'tip-amount':T.tipAmount,'tip-months':T.tipMonths,'tip-startprice':T.tipStartprice,'tip-weekpct':T.tipWeekpct,'tip-dca-explain':T.tipDca,'tip-lump-explain':T.tipLump,'tip-pi-end':T.tipEndprice,'tip-pi-change':T.tipTotalChange };
+  Object.entries(tips).forEach(([id, txt]) => { const el = document.getElementById(id); if (el && txt) el.textContent = txt; });
+  // Update stat tooltips via .ti .tb inside stats
+  const statTips = document.querySelectorAll('.stat .ti .tb');
+  const statTexts = [T.tipInvested, T.tipUnits, T.tipAvgprice, T.tipEndprice];
+  statTips.forEach((el, i) => { if (statTexts[i]) el.textContent = statTexts[i]; });
+  document.getElementById('lang-sw').classList.remove('open');
+  run();
+}
+
+/* ── Controls ── */
+function setFreq(f) {
+  currentFreq = f;
+  ['daily','weekly','monthly'].forEach(x =>
+    document.getElementById('freq-'+x).classList.toggle('active', x === f)
+  );
+  // Update amount label to match frequency
+  const T = LANGS[currentLang];
+  const lbl = f === 'daily' ? T.lblAmountDaily : f === 'weekly' ? T.lblAmountWeekly : T.lblAmountMonthly;
+  document.getElementById('t-lbl-amount').textContent = lbl;
+  run();
+}
+
+function setScenario(pct) {
+  document.getElementById('inp-weekpct').value = pct;
+  ['bull','side','bear'].forEach(s => document.getElementById('sc-'+s).classList.remove('active'));
+  if (pct > 0)        document.getElementById('sc-bull').classList.add('active');
+  else if (pct === 0) document.getElementById('sc-side').classList.add('active');
+  else                document.getElementById('sc-bear').classList.add('active');
+  // Set min/max based on scenario to lock sign
+  const inp = document.getElementById('inp-weekpct');
+  if (pct > 0)        { inp.min = '0';   inp.max = '20'; }
+  else if (pct === 0) { inp.min = '-20'; inp.max = '20'; }
+  else                { inp.min = '-20'; inp.max = '0';  }
+  run();
+}
+
+function guardMinus(e) {
+  const bullActive = document.getElementById('sc-bull').classList.contains('active');
+  // Bullish: block minus key
+  if (bullActive && e.key === '-') { e.preventDefault(); }
+}
+
+
+function onWeekPctInput() {
+  const raw = document.getElementById('inp-weekpct').value;
+  const bearActive = document.getElementById('sc-bear').classList.contains('active');
+  const bullActive = document.getElementById('sc-bull').classList.contains('active');
+  const inp = document.getElementById('inp-weekpct');
+
+  // Allow free typing — only enforce sign when a complete number is entered
+  if (raw === '' || raw === '-' || raw === '.' || raw === '-.' || raw === '-0' || raw === '-0.') return;
+
+  const pct = parseFloat(raw);
+  if (isNaN(pct)) return;
+
+  // Bearish: if positive number entered, make it negative
+  if (bearActive && pct > 0) {
+    inp.value = -pct;
+    run();
+    return;
+  }
+  // Bullish: if negative number entered, make it positive
+  if (bullActive && pct < 0) {
+    inp.value = Math.abs(pct);
+    run();
+    return;
+  }
+
+  clearScenario();
+  run();
+}
+
+
+function clearScenario() {
+  const raw = document.getElementById('inp-weekpct').value;
+  // Don't do anything if input is empty, just "-" or incomplete
+  if (raw === '' || raw === '-' || raw === '.') return;
+  const pct = parseFloat(raw);
+  if (isNaN(pct)) return;
+  ['bull','side','bear'].forEach(s => document.getElementById('sc-'+s).classList.remove('active'));
+  if (pct > 0)        document.getElementById('sc-bull').classList.add('active');
+  else if (pct === 0) document.getElementById('sc-side').classList.add('active');
+  else                document.getElementById('sc-bear').classList.add('active');
+}
+
+/* ── Simulation ── */
+function run() {
+  const T          = LANGS[currentLang];
+  const amount     = parseFloat(document.getElementById('inp-amount').value);
+  const months     = parseInt(document.getElementById('inp-months').value);
+  const startPrice = parseFloat(document.getElementById('inp-startprice').value);
+  const weekPct    = parseFloat(document.getElementById('inp-weekpct').value) / 100;
+  if (!amount || !months || !startPrice || isNaN(weekPct)) return;
+
+  const totalWeeks         = months * 4;
+  const periodsPerMonth    = currentFreq === 'daily' ? 30 : currentFreq === 'weekly' ? 4 : 1;
+  const totalPeriods       = months * periodsPerMonth;
+  const weeksPerPeriod     = currentFreq === 'daily' ? 1/7 : currentFreq === 'weekly' ? 1 : 4;
+  const pctPerPeriod       = Math.pow(1 + weekPct, weeksPerPeriod) - 1;
+  const investPerPeriod    = amount / periodsPerMonth;
+
+  // Generate prices — pure math, no random
+  const prices = [startPrice];
+  for (let i = 1; i < totalPeriods; i++) {
+    prices.push(prices[i-1] * (1 + pctPerPeriod));
+  }
+
+  const endPrice = prices[prices.length - 1];
+  const totalChange = ((endPrice - startPrice) / startPrice * 100).toFixed(1);
+
+  // Price indicator
+  const changeClass = parseFloat(totalChange) > 0 ? 'up' : parseFloat(totalChange) < 0 ? 'down' : 'flat';
+  document.getElementById('pi-start').textContent = '€' + startPrice.toFixed(2);
+  document.getElementById('pi-start').className   = 'pi-val c-white';
+  document.getElementById('pi-end').textContent   = '€' + endPrice.toFixed(2);
+  document.getElementById('pi-end').className     = 'pi-val ' + changeClass;
+  document.getElementById('pi-change').textContent= (parseFloat(totalChange) >= 0 ? '+' : '') + totalChange + '%';
+  document.getElementById('pi-change').className  = 'pi-val ' + changeClass;
+  document.getElementById('pi-weeks').textContent = totalWeeks;
+
+  // DCA simulation
+  let totalInvested = 0, totalUnits = 0;
+  const dcaValueLine = [], investedLine = [], labels = [];
+
+  for (let i = 0; i < totalPeriods; i++) {
+    const price = prices[i];
+    totalUnits   += investPerPeriod / price;
+    totalInvested += investPerPeriod;
+    dcaValueLine.push(parseFloat((totalUnits * price).toFixed(2)));
+    investedLine.push(parseFloat(totalInvested.toFixed(2)));
+    if (currentFreq === 'monthly') labels.push('M' + (i + 1));
+    else if (currentFreq === 'weekly') labels.push(i % 4 === 0 ? 'M' + (Math.floor(i/4)+1) : '');
+    else labels.push(i % 30 === 0 ? 'M' + (Math.floor(i/30)+1) : '');
+  }
+
+  const dcaFinalValue = totalUnits * endPrice;
+  const dcaGain       = dcaFinalValue - totalInvested;
+  const dcaGainPct    = ((dcaGain / totalInvested) * 100).toFixed(1);
+  const avgPrice      = totalInvested / totalUnits;
+
+  // Lump sum — invest all on day 1, same total amount
+  const lumpUnits     = totalInvested / startPrice;
+  const lumpValue     = lumpUnits * endPrice;
+  const lumpGain      = lumpValue - totalInvested;
+  const lumpGainPct   = ((lumpGain / totalInvested) * 100).toFixed(1);
+
+  // Lump sum value line
+  const lumpValueLine = prices.map((p, i) => parseFloat((lumpUnits * p).toFixed(2)));
+
+  // Winner
+  const winner = dcaFinalValue > lumpValue + 0.01 ? 'dca' : lumpValue > dcaFinalValue + 0.01 ? 'lump' : 'tie';
+
+  // Stats
+  document.getElementById('st-invested').textContent = '€' + Math.round(totalInvested).toLocaleString();
+  document.getElementById('st-units').textContent    = totalUnits < 1 ? totalUnits.toFixed(6) : totalUnits.toFixed(3);
+  document.getElementById('st-avgprice').textContent = '€' + avgPrice.toFixed(2);
+  document.getElementById('st-endprice').textContent = '€' + endPrice.toFixed(2);
+
+  // DCA box
+  const dcaValEl  = document.getElementById('cmp-dca-val');
+  dcaValEl.textContent = '€' + Math.round(dcaFinalValue).toLocaleString();
+  dcaValEl.className   = 'cmp-val ' + (dcaGain >= 0 ? 'c-green' : 'c-red');
+  document.getElementById('cmp-dca-sub').textContent = (dcaGain >= 0 ? '+' : '') + '€' + Math.round(Math.abs(dcaGain)).toLocaleString() + ' (' + (dcaGain >= 0 ? '+' : '') + dcaGainPct + '%)';
+  const dcaBadge = document.getElementById('cmp-dca-badge');
+  dcaBadge.style.display = winner === 'dca' ? 'inline-block' : 'none';
+  if (winner === 'dca') { dcaBadge.textContent = T.winner; dcaBadge.className = 'winner-badge badge-green'; }
+
+  // Lump sum box
+  const lumpValEl = document.getElementById('cmp-lump-val');
+  lumpValEl.textContent = '€' + Math.round(lumpValue).toLocaleString();
+  lumpValEl.className   = 'cmp-val ' + (lumpGain >= 0 ? 'c-green' : 'c-red');
+  document.getElementById('cmp-lump-sub').textContent = (lumpGain >= 0 ? '+' : '') + '€' + Math.round(Math.abs(lumpGain)).toLocaleString() + ' (' + (lumpGain >= 0 ? '+' : '') + lumpGainPct + '%)';
+  const lumpBadge = document.getElementById('cmp-lump-badge');
+  lumpBadge.style.display = winner === 'lump' ? 'inline-block' : 'none';
+  if (winner === 'lump') { lumpBadge.textContent = T.winner; lumpBadge.className = 'winner-badge badge-gold'; }
+
+  // Info
+  const freqLabel = { daily: T.daily, weekly: T.weekly, monthly: T.monthly }[currentFreq].toLowerCase();
+  const invLabel  = months + (months === 1 ? ' month' : ' months');
+  document.getElementById('info-box').textContent = T.info(
+    freqLabel, invLabel,
+    Math.round(dcaFinalValue).toLocaleString(), Math.round(dcaGain), dcaGainPct,
+    Math.round(lumpValue).toLocaleString(), Math.round(lumpGain), lumpGainPct,
+    winner
+  );
+
+  // Chart
+  const lineColor = weekPct > 0 ? 'rgba(0,255,136,0.9)' : weekPct < 0 ? 'rgba(255,100,100,0.9)' : 'rgba(255,217,122,0.9)';
+  const fillColor = weekPct > 0 ? 'rgba(0,255,136,0.07)' : weekPct < 0 ? 'rgba(255,100,100,0.07)' : 'rgba(255,217,122,0.06)';
+
+  if (chartInstance) chartInstance.destroy();
+  const ctx = document.getElementById('dcaChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: T.cmpDca,      data: dcaValueLine,  borderColor: lineColor,                    backgroundColor: fillColor, borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true },
+        { label: T.cmpLump,     data: lumpValueLine, borderColor: 'rgba(255,217,122,0.7)',       backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0, tension: 0.3 },
+        { label: T.stInvested,  data: investedLine,  borderColor: 'rgba(255,255,255,0.25)',      backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3,4], pointRadius: 0, tension: 0.3 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: 'rgba(180,240,220,0.5)', font: { family: 'DM Mono', size: 10 }, boxWidth: 18, padding: 14 } },
+        tooltip: { backgroundColor: 'rgba(0,10,6,0.95)', borderColor: 'rgba(0,255,178,0.3)', borderWidth: 1, titleColor: '#00ffb2', bodyColor: '#e0fff5',
+          callbacks: { label: c => ' ' + c.dataset.label + ': €' + Math.round(c.raw).toLocaleString() } }
+      },
+      scales: {
+        x: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 13 }, grid: { color: 'rgba(0,255,178,0.05)' } },
+        y: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '€' + v.toLocaleString() }, grid: { color: 'rgba(0,255,178,0.05)' } }
+      }
+    }
+  });
+}
+
+/* ── Init ── */
+const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+const initLang = LANGS[browserLang] ? browserLang : 'en';
+setLang(initLang, flagMap[initLang]);
+setScenario(0);
+</script>
+</body>
+</html>
