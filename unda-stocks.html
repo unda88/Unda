@@ -312,15 +312,15 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
 <!-- 3 Ticker banners -->
 <div class="ticker-wrap">
   <div class="ticker-bar ticker-bar-1">
-    <div class="ticker-label">📊 MARKTEN</div>
+    <div class="ticker-label" id="ban-lbl-1">📊 MARKTEN</div>
     <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-1"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
   </div>
   <div class="ticker-bar ticker-bar-2">
-    <div class="ticker-label">💹 GRONDSTOFFEN & FOREX</div>
+    <div class="ticker-label" id="ban-lbl-2">💹 GRONDSTOFFEN & FOREX</div>
     <div class="ticker-track"><div class="ticker-inner ticker-inner-rev" id="ticker-inner-2"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
   </div>
   <div class="ticker-bar ticker-bar-3">
-    <div class="ticker-label">🪙 CRYPTO</div>
+    <div class="ticker-label" id="ban-lbl-3">🪙 CRYPTO</div>
     <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-3"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
   </div>
 </div>
@@ -836,7 +836,7 @@ const TX = {
     'sec-stocks-evo':'📊 Aandelen evolutie','sec-crypto-evo':'🪙 Crypto evolutie','sec-metal-evo':'🥇 Edelmetaal evolutie',
     'api-stocks-lbl':'Aandelen','api-metal-lbl':'Goud & Zilver',
     'api-fx-lbl':'USD/GBP automatisch omgezet naar EUR',
-    'api-vpn-lbl':'VPN aan?','api-vpn-txt':'Zet VPN tijdelijk uit voor live prijzen','disc-text':'Deze tool is uitsluitend informatief en vormt geen fiscaal of financieel advies. Berekeningen zijn schattingen. Raadpleeg altijd een erkend adviseur. De ontwikkelaar is niet aansprakelijk voor beslissingen op basis van deze tool.',
+    'api-vpn-lbl':'VPN aan?','api-vpn-txt':'Zet VPN tijdelijk uit voor live prijzen','ban-lbl-1':'📊 MARKTEN','ban-lbl-2':'💹 GRONDSTOFFEN & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Portfolio waarde','disc-text':'Deze tool is uitsluitend informatief en vormt geen fiscaal of financieel advies. Berekeningen zijn schattingen. Raadpleeg altijd een erkend adviseur. De ontwikkelaar is niet aansprakelijk voor beslissingen op basis van deze tool.',
     't-metal-add-btn':'+ Edelmetaal toevoegen',
     'mf-metal-lbl':'Metaal','mf-qty-lbl':'Hoeveelheid','mf-unit-lbl2':'Eenheid',
     'mf-opt-gold':'🥇 Goud','mf-opt-silver':'🥈 Zilver',
@@ -892,7 +892,7 @@ const TX = {
     'api-stocks-lbl':'Stocks','api-metal-lbl':'Gold & Silver',
     'api-fx-lbl':'USD/GBP automatically converted to EUR',
     'api-vpn-lbl':'VPN on?','api-vpn-txt':'Temporarily disable VPN for live prices',
-    'disc-text':'This tool is for informational purposes only and does not constitute financial or tax advice. Calculations are estimates. Always consult a qualified advisor. The developer is not liable for any decisions made based on this tool.',
+    'ban-lbl-1':'📊 MARKETS','ban-lbl-2':'💹 COMMODITIES & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Portfolio value','disc-text':'This tool is for informational purposes only and does not constitute financial or tax advice. Calculations are estimates. Always consult a qualified advisor. The developer is not liable for any decisions made based on this tool.',
     'mf-metal-lbl':'Metal','mf-qty-lbl':'Quantity','mf-unit-lbl2':'Unit',
     'mf-opt-gold':'🥇 Gold','mf-opt-silver':'🥈 Silver',
     'mf-buy-pre':'Buy price per','mf-opt-g':'gram','mf-opt-kg':'kilogram','mf-opt-oz':'troy oz','t-empty-stock':'No stocks.','t-empty-crypto':'No crypto.','t-empty-metal':'No precious metals.','t-total-val':'Total:','t-total-pl':'P&L:'
@@ -947,7 +947,7 @@ const TX = {
     'api-stocks-lbl':'Actions','api-metal-lbl':'Or & Argent',
     'api-fx-lbl':'USD/GBP converti automatiquement en EUR',
     'api-vpn-lbl':'VPN activé ?','api-vpn-txt':'Désactivez temporairement le VPN pour les prix en direct',
-    'disc-text':'Cet outil est uniquement informatif et ne constitue pas un conseil fiscal ou financier. Les calculs sont des estimations. Consultez toujours un conseiller qualifié. Le développeur décline toute responsabilité pour les décisions prises.',
+    'ban-lbl-1':'📊 MARCHÉS','ban-lbl-2':'💹 MATIÈRES & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Valeur portefeuille','disc-text':'Cet outil est uniquement informatif et ne constitue pas un conseil fiscal ou financier. Les calculs sont des estimations. Consultez toujours un conseiller qualifié. Le développeur décline toute responsabilité pour les décisions prises.',
     'mf-metal-lbl':'Métal','mf-qty-lbl':'Quantité','mf-unit-lbl2':'Unité',
     'mf-opt-gold':'🥇 Or','mf-opt-silver':'🥈 Argent',
     'mf-buy-pre':'Prix achat par','mf-opt-g':'gramme','mf-opt-kg':'kilogramme','mf-opt-oz':'once troy',
@@ -1003,7 +1003,7 @@ const TX = {
     'api-stocks-lbl':'Acciones','api-metal-lbl':'Oro & Plata',
     'api-fx-lbl':'USD/GBP convertido automáticamente a EUR',
     'api-vpn-lbl':'¿VPN activado?','api-vpn-txt':'Desactiva temporalmente el VPN para precios en vivo',
-    'disc-text':'Esta herramienta es solo informativa y no constituye asesoramiento fiscal o financiero. Los cálculos son estimaciones. Consulte siempre a un asesor cualificado. El desarrollador no es responsable de las decisiones tomadas.',
+    'ban-lbl-1':'📊 MERCADOS','ban-lbl-2':'💹 MATERIAS & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Valor portafolio','disc-text':'Esta herramienta es solo informativa y no constituye asesoramiento fiscal o financiero. Los cálculos son estimaciones. Consulte siempre a un asesor cualificado. El desarrollador no es responsable de las decisiones tomadas.',
     'mf-metal-lbl':'Metal','mf-qty-lbl':'Cantidad','mf-unit-lbl2':'Unidad',
     'mf-opt-gold':'🥇 Oro','mf-opt-silver':'🥈 Plata',
     'mf-buy-pre':'Precio de compra por','mf-opt-g':'gramo','mf-opt-kg':'kilogramo','mf-opt-oz':'onza troy',
@@ -1059,7 +1059,7 @@ const TX = {
     'api-stocks-lbl':'Aktien','api-metal-lbl':'Gold & Silber',
     'api-fx-lbl':'USD/GBP automatisch in EUR umgerechnet',
     'api-vpn-lbl':'VPN aktiv?','api-vpn-txt':'VPN vorübergehend deaktivieren für Live-Preise',
-    'disc-text':'Dieses Tool dient nur zu Informationszwecken und stellt keine Steuer- oder Finanzberatung dar. Berechnungen sind Schätzungen. Konsultieren Sie immer einen qualifizierten Berater. Der Entwickler haftet nicht für getroffene Entscheidungen.',
+    'ban-lbl-1':'📊 MÄRKTE','ban-lbl-2':'💹 ROHSTOFFE & FOREX','ban-lbl-3':'🪙 KRYPTO','port-val':'Portfolio-Wert','disc-text':'Dieses Tool dient nur zu Informationszwecken und stellt keine Steuer- oder Finanzberatung dar. Berechnungen sind Schätzungen. Konsultieren Sie immer einen qualifizierten Berater. Der Entwickler haftet nicht für getroffene Entscheidungen.',
     'mf-metal-lbl':'Metall','mf-qty-lbl':'Menge','mf-unit-lbl2':'Einheit',
     'mf-opt-gold':'🥇 Gold','mf-opt-silver':'🥈 Silber',
     'mf-buy-pre':'Kaufpreis pro','mf-opt-g':'Gramm','mf-opt-kg':'Kilogramm','mf-opt-oz':'Feinunze',
@@ -1115,7 +1115,7 @@ const TX = {
     'api-stocks-lbl':'Azioni','api-metal-lbl':'Oro & Argento',
     'api-fx-lbl':'USD/GBP convertito automaticamente in EUR',
     'api-vpn-lbl':'VPN attivo?','api-vpn-txt':'Disattiva temporaneamente il VPN per i prezzi in tempo reale',
-    'disc-text':'Questo strumento è solo informativo e non costituisce consulenza fiscale o finanziaria. I calcoli sono stime. Consultate sempre un consulente qualificato. Lo sviluppatore non è responsabile per le decisioni prese.',
+    'ban-lbl-1':'📊 MERCATI','ban-lbl-2':'💹 MATERIE & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Valore portafoglio','disc-text':'Questo strumento è solo informativo e non costituisce consulenza fiscale o finanziaria. I calcoli sono stime. Consultate sempre un consulente qualificato. Lo sviluppatore non è responsabile per le decisioni prese.',
     'mf-metal-lbl':'Metallo','mf-qty-lbl':'Quantità','mf-unit-lbl2':'Unità',
     'mf-opt-gold':'🥇 Oro','mf-opt-silver':'🥈 Argento',
     'mf-buy-pre':'Prezzo acquisto per','mf-opt-g':'grammo','mf-opt-kg':'chilogrammo','mf-opt-oz':'oncia troy',
@@ -1171,7 +1171,7 @@ const TX = {
     'api-stocks-lbl':'Ações','api-metal-lbl':'Ouro & Prata',
     'api-fx-lbl':'USD/GBP convertido automaticamente em EUR',
     'api-vpn-lbl':'VPN ativo?','api-vpn-txt':'Desative temporariamente o VPN para preços ao vivo',
-    'disc-text':'Esta ferramenta é apenas informativa e não constitui aconselhamento fiscal ou financeiro. Os cálculos são estimativas. Consulte sempre um consultor qualificado. O desenvolvedor não é responsável pelas decisões tomadas.',
+    'ban-lbl-1':'📊 MERCADOS','ban-lbl-2':'💹 MATÉRIAS & FOREX','ban-lbl-3':'🪙 CRYPTO','port-val':'Valor portfólio','disc-text':'Esta ferramenta é apenas informativa e não constitui aconselhamento fiscal ou financeiro. Os cálculos são estimativas. Consulte sempre um consultor qualificado. O desenvolvedor não é responsável pelas decisões tomadas.',
     'mf-metal-lbl':'Metal','mf-qty-lbl':'Quantidade','mf-unit-lbl2':'Unidade',
     'mf-opt-gold':'🥇 Ouro','mf-opt-silver':'🥈 Prata',
     'mf-buy-pre':'Preço de compra por','mf-opt-g':'grama','mf-opt-kg':'quilograma','mf-opt-oz':'onça troy',
@@ -1227,7 +1227,7 @@ const TX = {
     'api-stocks-lbl':'Hisseler','api-metal-lbl':'Altın & Gümüş',
     'api-fx-lbl':'USD/GBP otomatik olarak EUR\'ya çevrildi',
     'api-vpn-lbl':'VPN açık mı?','api-vpn-txt':'Canlı fiyatlar için VPN\'i geçici olarak devre dışı bırakın',
-    'disc-text':'Bu araç yalnızca bilgilendirme amaçlıdır ve mali veya vergi danışmanlığı teşkil etmez. Hesaplamalar tahminidir. Her zaman nitelikli bir danışmana başvurun. Geliştirici, bu araç temelinde alınan kararlardan sorumlu değildir.',
+    'ban-lbl-1':'📊 PİYASALAR','ban-lbl-2':'💹 EMTİA & FOREX','ban-lbl-3':'🪙 KRİPTO','port-val':'Portföy değeri','disc-text':'Bu araç yalnızca bilgilendirme amaçlıdır ve mali veya vergi danışmanlığı teşkil etmez. Hesaplamalar tahminidir. Her zaman nitelikli bir danışmana başvurun. Geliştirici, bu araç temelinde alınan kararlardan sorumlu değildir.',
     't-metal-add-btn':'+ Değerli metal ekle',
     'mf-metal-lbl':'Metal','mf-qty-lbl':'Miktar','mf-unit-lbl2':'Birim',
     'mf-opt-gold':'🥇 Altın','mf-opt-silver':'🥈 Gümüş',
@@ -1284,7 +1284,7 @@ const TX = {
     'api-stocks-lbl':'أسهم','api-metal-lbl':'ذهب وفضة',
     'api-fx-lbl':'USD/GBP محوّل تلقائياً إلى EUR',
     'api-vpn-lbl':'VPN مفعّل؟','api-vpn-txt':'عطّل VPN مؤقتاً للأسعار المباشرة',
-    'disc-text':'هذه الأداة للأغراض المعلوماتية فقط ولا تشكل نصيحة مالية أو ضريبية. الحسابات تقديرية. استشر دائماً مستشاراً مؤهلاً. المطور غير مسؤول عن أي قرارات اتُخذت بناءً على هذه الأداة.',
+    'ban-lbl-1':'📊 الأسواق','ban-lbl-2':'💹 السلع والفوركس','ban-lbl-3':'🪙 كريبتو','port-val':'قيمة المحفظة','disc-text':'هذه الأداة للأغراض المعلوماتية فقط ولا تشكل نصيحة مالية أو ضريبية. الحسابات تقديرية. استشر دائماً مستشاراً مؤهلاً. المطور غير مسؤول عن أي قرارات اتُخذت بناءً على هذه الأداة.',
     't-metal-add-btn':'+ إضافة معادن ثمينة',
     'mf-metal-lbl':'المعدن','mf-qty-lbl':'الكمية','mf-unit-lbl2':'الوحدة',
     'mf-opt-gold':'🥇 ذهب','mf-opt-silver':'🥈 فضة',
@@ -1341,7 +1341,7 @@ const TX = {
     'api-stocks-lbl':'Акции','api-metal-lbl':'Золото и серебро',
     'api-fx-lbl':'USD/GBP автоматически конвертируется в EUR',
     'api-vpn-lbl':'VPN включён?','api-vpn-txt':'Временно отключите VPN для живых цен',
-    'disc-text':'Этот инструмент предназначен только для информационных целей и не является финансовым или налоговым советом. Расчёты являются приблизительными. Всегда консультируйтесь с квалифицированным советником. Разработчик не несёт ответственности за принятые решения.',
+    'ban-lbl-1':'📊 РЫНКИ','ban-lbl-2':'💹 СЫРЬЁ & ФОРЕКС','ban-lbl-3':'🪙 КРИПТО','port-val':'Стоимость портфеля','disc-text':'Этот инструмент предназначен только для информационных целей и не является финансовым или налоговым советом. Расчёты являются приблизительными. Всегда консультируйтесь с квалифицированным советником. Разработчик не несёт ответственности за принятые решения.',
     't-metal-add-btn':'+ Добавить драгоценные металлы',
     'mf-metal-lbl':'Металл','mf-qty-lbl':'Количество','mf-unit-lbl2':'Единица',
     'mf-opt-gold':'🥇 Золото','mf-opt-silver':'🥈 Серебро',
@@ -1376,7 +1376,8 @@ function applyLang() {
   // Apply by ID
   const idKeys=['sec-stocks','sec-crypto','sec-metal','sec-stocks-evo','sec-crypto-evo','sec-metal-evo',
     'api-stocks-lbl','api-metal-lbl','api-fx-lbl','api-vpn-lbl','api-vpn-txt',
-    'mf-metal-lbl','mf-qty-lbl','mf-unit-lbl2','mf-opt-gold','mf-opt-silver','mf-opt-g','mf-opt-kg','mf-opt-oz','disc-text'];
+    'mf-metal-lbl','mf-qty-lbl','mf-unit-lbl2','mf-opt-gold','mf-opt-silver','mf-opt-g','mf-opt-kg','mf-opt-oz','disc-text',
+    'ban-lbl-1','ban-lbl-2','ban-lbl-3'];
   idKeys.forEach(id=>{const el=document.getElementById(id);if(el&&t[id])el.textContent=t[id];});
   // Update evo toggle tooltips
   ['stock','crypto','metal'].forEach(type=>{
@@ -2066,7 +2067,7 @@ function renderPortHistory(){
   const labels=portHistory.map(s=>{const d=new Date(s.ts);return d.getDate()+'/'+(d.getMonth()+1);});
   const data=portHistory.map(s=>s.val);
   const gc='rgba(0,255,178,.06)',tc='rgba(180,240,220,.45)';
-  phci=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:lang==='nl'?'Portfolio waarde':'Portfolio value',data,
+  phci=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:(TX[lang]||TX.en)['port-val']||'Portfolio value',data,
     borderColor:'#00ffb2',backgroundColor:'rgba(0,255,178,.07)',borderWidth:2,
     pointRadius:data.length>30?1:3,pointBackgroundColor:data.map((v,i)=>i===0?'#00ffb2':v>=data[i-1]?'#00ffb2':'#ff4444'),fill:true,tension:.3}]},
   options:{responsive:true,maintainAspectRatio:false,
