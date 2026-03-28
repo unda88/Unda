@@ -1404,6 +1404,7 @@ function toggleLangDD(){
   dd.classList.toggle('open');
 }
 function setLang(l){
+  localStorage.setItem('unda-lang',l);
   lang=l;
   const dd=document.getElementById('lang-dd');
   if(dd)dd.classList.remove('open');
@@ -2291,6 +2292,7 @@ if(typeof allocs!=='undefined'&&allocs.length)allocs.forEach(a=>addAllocRow(a));
 if(typeof renderPie!=='undefined')renderPie();
 if(typeof renderLog!=='undefined')renderLog();
 if(typeof calc!=='undefined')calc();
+lang=localStorage.getItem('unda-lang')||lang;
 if(typeof applyLang!=='undefined')applyLang();
 if(typeof loadTabOrder!=='undefined')loadTabOrder();
 if(typeof initTabDrag!=='undefined')initTabDrag();
