@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.035)}
+:root{--g:#00ffb2;--g2:rgba(0,255,178,.6);--gold:#ffd97a;--blue:#00d4ff;--green:#00ff88;--text:#e0fff5;--muted:rgba(0,255,178,.4);--border:rgba(0,255,178,.16);--card:rgba(255,255,255,.035)}
 html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:var(--text);overflow-x:hidden}
 .bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 20% 20%,#001f0f 0%,#000d1a 50%,#000508 100%)}
 .bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,178,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,.018) 1px,transparent 1px);background-size:44px 44px}
@@ -45,6 +45,9 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .nav-btn.gold{border-color:rgba(255,217,122,.2)}
 .nav-btn.gold::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(255,217,122,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
 .nav-btn.gold:hover{border-color:rgba(255,217,122,.45);background:rgba(255,217,122,.06);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(255,217,122,.06)}
+.nav-btn.green{border-color:rgba(0,255,136,.2)}
+.nav-btn.green::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(0,255,136,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
+.nav-btn.green:hover{border-color:rgba(0,255,136,.45);background:rgba(0,255,136,.05);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(0,255,136,.06)}
 .nav-btn.blue{border-color:rgba(0,212,255,.2)}
 .nav-btn.blue::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(0,212,255,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
 .nav-btn.blue:hover{border-color:rgba(0,212,255,.45);background:rgba(0,212,255,.06);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(0,212,255,.06)}
@@ -60,6 +63,7 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .dd-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:8px;font-size:12px;color:rgba(200,255,235,.8);cursor:pointer;text-decoration:none;color:inherit;white-space:nowrap;transition:background .15s}
 .dd-item:hover{background:rgba(0,255,178,.07);color:var(--text)}
 .dd-item.gold:hover{background:rgba(255,217,122,.07)}
+.dd-item.green:hover{background:rgba(0,255,136,.07)}
 .dd-item.blue:hover{background:rgba(0,212,255,.07)}
 .dd-sep{height:1px;background:rgba(255,255,255,.05);margin:4px 0}
 
@@ -130,7 +134,7 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
         <span class="nav-sub" id="n2-sub">Calculators & simulation</span>
       </div>
       <div class="dropdown" id="dd-trading">
-        <a class="dd-item gold" href="unda-calculator.html">⚖️ <span id="dd-calc">Risk Calculator</span></a>
+        <a class="dd-item gold" href="unda-calculator.html">⚖️ <span id="dd-calc">Position Calculator</span></a>
         <a class="dd-item gold" href="unda-simulator.html">🎲 <span id="dd-sim">Trade Simulator</span></a>
         <a class="dd-item gold" href="unda-kelly.html">📐 <span id="dd-kelly">Kelly Criterion</span></a>
         <a class="dd-item gold" href="unda-logbook.html">📒 <span id="dd-log">Trade Logbook</span></a>
@@ -139,10 +143,24 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
       </div>
     </div>
 
+    <!-- Investor Suite dropdown -->
+    <div class="dd-wrap">
+      <div class="nav-btn green" onclick="toggleDD('dd-investor')">
+        <span class="nav-icon">🌱</span>
+        <span class="nav-label" id="n4-label">Investor Suite <span class="nav-arr">▾</span></span>
+        <span class="nav-sub" id="n4-sub">Invest without leverage</span>
+      </div>
+      <div class="dropdown" id="dd-investor">
+        <a class="dd-item green" href="unda-position.html">🧮 <span id="dd-position">Position Size</span></a>
+        <div class="dd-item green" style="opacity:.4;cursor:default">📊 <span id="dd-dca">DCA Calculator</span> <span style="font-size:9px;margin-left:auto;color:rgba(0,255,136,.4)" id="dd-soon2">Soon</span></div>
+        <div class="dd-item green" style="opacity:.4;cursor:default">📈 <span id="dd-compound">Compound Calculator</span> <span style="font-size:9px;margin-left:auto;color:rgba(0,255,136,.4)">Soon</span></div>
+      </div>
+    </div>
+
     <!-- Educational dropdown -->
     <div class="dd-wrap">
       <div class="nav-btn blue" onclick="toggleDD('dd-edu')">
-        <span class="nav-icon">📚</span>
+        <span class="nav-icon">🎓</span>
         <span class="nav-label" id="n3-label">Educational <span class="nav-arr">▾</span></span>
         <span class="nav-sub" id="n3-sub">Elliott Wave & more</span>
       </div>
@@ -159,7 +177,6 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 <div class="footer" id="footer-txt">Unda · Elliott Wave · Trade Smart</div>
 
 <script>
-// ── Lang ──
 const LANG_BTN={nl:'🇳🇱 NL ▾',en:'🇬🇧 EN ▾',fr:'🇫🇷 FR ▾',es:'🇪🇸 ES ▾',de:'🇩🇪 DE ▾',it:'🇮🇹 IT ▾',pt:'🇵🇹 PT ▾',tr:'🇹🇷 TR ▾',ar:'🇸🇦 AR ▾',ru:'🇷🇺 RU ▾'};
 let lang='nl';
 
@@ -168,90 +185,110 @@ const TX={
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Stock Dashboard','n1-sub':'Posities & live koersen',
     'n2-label':'Trading Suite','n2-sub':'Calculators & simulatie',
+    'n4-label':'Investor Suite','n4-sub':'Investeer zonder hefboom',
     'n3-label':'Educatief','n3-sub':'Elliott Wave & meer',
-    'dd-calc':'Risico Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterium','dd-log':'Trade Logboek',
-    'dd-ew':'Elliott Wave','dd-ma':'Voortschrijdende gemiddelden','dd-vid':'Video\'s','dd-guide':'Handleiding','dd-soon':'Binnenkort',
+    'dd-calc':'Positie Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterium','dd-log':'Trade Logboek','dd-guide':'Handleiding',
+    'dd-position':'Positiegrootte','dd-dca':'DCA Calculator','dd-compound':'Samengestelde groei','dd-soon2':'Binnenkort',
+    'dd-ew':'Elliott Wave','dd-ma':'Voortschrijdende gemiddelden','dd-vid':'Video\'s','dd-soon':'Binnenkort',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   en:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Stock Dashboard','n1-sub':'Positions & live prices',
     'n2-label':'Trading Suite','n2-sub':'Calculators & simulation',
+    'n4-label':'Investor Suite','n4-sub':'Invest without leverage',
     'n3-label':'Educational','n3-sub':'Elliott Wave & more',
-    'dd-calc':'Risk Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook',
-    'dd-ew':'Elliott Wave','dd-ma':'Moving Averages','dd-vid':'Videos','dd-guide':'Guide','dd-soon':'Soon',
+    'dd-calc':'Position Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook','dd-guide':'Guide',
+    'dd-position':'Position Size','dd-dca':'DCA Calculator','dd-compound':'Compound Calculator','dd-soon2':'Soon',
+    'dd-ew':'Elliott Wave','dd-ma':'Moving Averages','dd-vid':'Videos','dd-soon':'Soon',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   fr:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Tableau de bord','n1-sub':'Positions & prix en direct',
     'n2-label':'Trading Suite','n2-sub':'Calculatrices & simulation',
+    'n4-label':'Investor Suite','n4-sub':'Investir sans levier',
     'n3-label':'Éducation','n3-sub':'Elliott Wave & plus',
-    'dd-calc':'Calculatrice de risque','dd-sim':'Simulateur','dd-kelly':'Critère Kelly','dd-log':'Journal de trades',
-    'dd-ew':'Elliott Wave','dd-ma':'Moyennes mobiles','dd-vid':'Vidéos','dd-guide':'Guide','dd-soon':'Bientôt',
+    'dd-calc':'Calculatrice de position','dd-sim':'Simulateur','dd-kelly':'Critère Kelly','dd-log':'Journal de trades','dd-guide':'Guide',
+    'dd-position':'Taille de position','dd-dca':'Calculatrice DCA','dd-compound':'Calculatrice de rendement','dd-soon2':'Bientôt',
+    'dd-ew':'Elliott Wave','dd-ma':'Moyennes mobiles','dd-vid':'Vidéos','dd-soon':'Bientôt',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   es:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Panel de acciones','n1-sub':'Posiciones & precios en vivo',
     'n2-label':'Trading Suite','n2-sub':'Calculadoras & simulación',
+    'n4-label':'Investor Suite','n4-sub':'Invierte sin apalancamiento',
     'n3-label':'Educación','n3-sub':'Elliott Wave & más',
-    'dd-calc':'Calculadora de riesgo','dd-sim':'Simulador','dd-kelly':'Criterio Kelly','dd-log':'Diario de trades',
-    'dd-ew':'Elliott Wave','dd-ma':'Medias móviles','dd-vid':'Videos','dd-guide':'Guía','dd-soon':'Pronto',
+    'dd-calc':'Calculadora de posición','dd-sim':'Simulador','dd-kelly':'Criterio Kelly','dd-log':'Diario de trades','dd-guide':'Guía',
+    'dd-position':'Tamaño de posición','dd-dca':'Calculadora DCA','dd-compound':'Calculadora de interés compuesto','dd-soon2':'Pronto',
+    'dd-ew':'Elliott Wave','dd-ma':'Medias móviles','dd-vid':'Videos','dd-soon':'Pronto',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   de:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Aktien Dashboard','n1-sub':'Positionen & Live-Preise',
     'n2-label':'Trading Suite','n2-sub':'Rechner & Simulation',
+    'n4-label':'Investor Suite','n4-sub':'Investieren ohne Hebel',
     'n3-label':'Bildung','n3-sub':'Elliott Wave & mehr',
-    'dd-calc':'Risikorechner','dd-sim':'Trade Simulator','dd-kelly':'Kelly Kriterium','dd-log':'Handelstagebuch',
-    'dd-ew':'Elliott Wave','dd-ma':'Gleitende Durchschnitte','dd-vid':'Videos','dd-guide':'Leitfaden','dd-soon':'Demnächst',
+    'dd-calc':'Positionsrechner','dd-sim':'Trade Simulator','dd-kelly':'Kelly Kriterium','dd-log':'Handelstagebuch','dd-guide':'Leitfaden',
+    'dd-position':'Positionsgröße','dd-dca':'DCA Rechner','dd-compound':'Zinseszins Rechner','dd-soon2':'Demnächst',
+    'dd-ew':'Elliott Wave','dd-ma':'Gleitende Durchschnitte','dd-vid':'Videos','dd-soon':'Demnächst',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   it:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Dashboard azionario','n1-sub':'Posizioni & prezzi in tempo reale',
     'n2-label':'Trading Suite','n2-sub':'Calcolatrici & simulazione',
+    'n4-label':'Investor Suite','n4-sub':'Investi senza leva',
     'n3-label':'Educazione','n3-sub':'Elliott Wave & altro',
-    'dd-calc':'Calcolatore di rischio','dd-sim':'Simulatore','dd-kelly':'Criterio Kelly','dd-log':'Diario di trading',
-    'dd-ew':'Elliott Wave','dd-ma':'Medie mobili','dd-vid':'Video','dd-guide':'Guida','dd-soon':'Presto',
+    'dd-calc':'Calcolatore di posizione','dd-sim':'Simulatore','dd-kelly':'Criterio Kelly','dd-log':'Diario di trading','dd-guide':'Guida',
+    'dd-position':'Dimensione posizione','dd-dca':'Calcolatore DCA','dd-compound':'Calcolatore composto','dd-soon2':'Presto',
+    'dd-ew':'Elliott Wave','dd-ma':'Medie mobili','dd-vid':'Video','dd-soon':'Presto',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   pt:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Painel de ações','n1-sub':'Posições & preços ao vivo',
     'n2-label':'Trading Suite','n2-sub':'Calculadoras & simulação',
+    'n4-label':'Investor Suite','n4-sub':'Invista sem alavancagem',
     'n3-label':'Educação','n3-sub':'Elliott Wave & mais',
-    'dd-calc':'Calculadora de risco','dd-sim':'Simulador','dd-kelly':'Critério Kelly','dd-log':'Diário de trades',
-    'dd-ew':'Elliott Wave','dd-ma':'Médias móveis','dd-vid':'Vídeos','dd-guide':'Guia','dd-soon':'Em breve',
+    'dd-calc':'Calculadora de posição','dd-sim':'Simulador','dd-kelly':'Critério Kelly','dd-log':'Diário de trades','dd-guide':'Guia',
+    'dd-position':'Tamanho da posição','dd-dca':'Calculadora DCA','dd-compound':'Calculadora de juros compostos','dd-soon2':'Em breve',
+    'dd-ew':'Elliott Wave','dd-ma':'Médias móveis','dd-vid':'Vídeos','dd-soon':'Em breve',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   tr:{
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Hisse Senedi Paneli','n1-sub':'Pozisyonlar & canlı fiyatlar',
     'n2-label':'Trading Suite','n2-sub':'Hesap makineleri & simülasyon',
+    'n4-label':'Investor Suite','n4-sub':'Kaldıraçsız yatırım',
     'n3-label':'Eğitim','n3-sub':'Elliott Wave & daha fazla',
-    'dd-calc':'Risk Hesaplayıcı','dd-sim':'Trade Simülatörü','dd-kelly':'Kelly Kriteri','dd-log':'İşlem Defteri',
-    'dd-ew':'Elliott Wave','dd-ma':'Hareketli Ortalamalar','dd-vid':'Videolar','dd-guide':'Rehber','dd-soon':'Yakında',
+    'dd-calc':'Pozisyon Hesaplayıcı','dd-sim':'Trade Simülatörü','dd-kelly':'Kelly Kriteri','dd-log':'İşlem Defteri','dd-guide':'Rehber',
+    'dd-position':'Pozisyon Büyüklüğü','dd-dca':'DCA Hesaplayıcı','dd-compound':'Bileşik Faiz Hesaplayıcı','dd-soon2':'Yakında',
+    'dd-ew':'Elliott Wave','dd-ma':'Hareketli Ortalamalar','dd-vid':'Videolar','dd-soon':'Yakında',
     'footer-txt':'Unda · Elliott Wave · Trade Smart'
   },
   ar:{
     'h-eyebrow':'موجة إليوت','h-tag':'تداول بذكاء.','h-cert':'CEWA I',
     'n1-label':'لوحة الأسهم','n1-sub':'المراكز والأسعار المباشرة',
     'n2-label':'مجموعة التداول','n2-sub':'الآلات الحاسبة والمحاكاة',
+    'n4-label':'مجموعة المستثمر','n4-sub':'استثمر بدون رافعة',
     'n3-label':'تعليم','n3-sub':'موجة إليوت والمزيد',
-    'dd-calc':'حاسبة المخاطر','dd-sim':'محاكي التداول','dd-kelly':'معيار كيلي','dd-log':'سجل الصفقات',
-    'dd-ew':'موجة إليوت','dd-ma':'المتوسطات المتحركة','dd-vid':'فيديوهات','dd-guide':'دليل','dd-soon':'قريباً',
+    'dd-calc':'حاسبة الصفقة','dd-sim':'محاكي التداول','dd-kelly':'معيار كيلي','dd-log':'سجل الصفقات','dd-guide':'دليل',
+    'dd-position':'حجم الصفقة','dd-dca':'حاسبة DCA','dd-compound':'حاسبة الفائدة المركبة','dd-soon2':'قريباً',
+    'dd-ew':'موجة إليوت','dd-ma':'المتوسطات المتحركة','dd-vid':'فيديوهات','dd-soon':'قريباً',
     'footer-txt':'Unda · موجة إليوت · تداول بذكاء'
   },
   ru:{
     'h-eyebrow':'Волна Эллиотта','h-tag':'Торгуй умно.','h-cert':'CEWA I',
     'n1-label':'Панель акций','n1-sub':'Позиции & живые цены',
     'n2-label':'Торговый набор','n2-sub':'Калькуляторы & симуляция',
+    'n4-label':'Инвестор набор','n4-sub':'Инвестируй без плеча',
     'n3-label':'Образование','n3-sub':'Волна Эллиотта & больше',
-    'dd-calc':'Калькулятор риска','dd-sim':'Симулятор','dd-kelly':'Критерий Келли','dd-log':'Журнал сделок',
-    'dd-ew':'Волна Эллиотта','dd-ma':'Скользящие средние','dd-vid':'Видео','dd-guide':'Руководство','dd-soon':'Скоро',
+    'dd-calc':'Калькулятор позиции','dd-sim':'Симулятор','dd-kelly':'Критерий Келли','dd-log':'Журнал сделок','dd-guide':'Руководство',
+    'dd-position':'Размер позиции','dd-dca':'Калькулятор DCA','dd-compound':'Калькулятор сложных процентов','dd-soon2':'Скоро',
+    'dd-ew':'Волна Эллиотта','dd-ma':'Скользящие средние','dd-vid':'Видео','dd-soon':'Скоро',
     'footer-txt':'Unda · Волна Эллиотта · Торгуй умно'
   }
 };
@@ -286,7 +323,6 @@ document.addEventListener('click',e=>{
     document.getElementById('lang-dd').style.display='none';
 });
 
-// ── Dropdowns ──
 function toggleDD(id){
   const el=document.getElementById(id);
   const isOpen=el.classList.contains('open');
