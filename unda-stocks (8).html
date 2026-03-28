@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unda · Stock Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--g:#00ffb2;--g2:rgba(0,255,178,.55);--gold:#ffd97a;--red:#ff4444;--text:#e0fff5;--muted:rgba(0,255,178,.45);--border:rgba(0,255,178,.18);--card:rgba(255,255,255,.035);--inp:rgba(255,255,255,.05)}
+html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:var(--text);overflow:hidden}
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 15% 15%,#001a0e 0%,#000c18 45%,#000508 100%)}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,178,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,.025) 1px,transparent 1px);background-size:40px 40px}
+.orb{position:absolute;border-radius:50%;pointer-events:none}
+.orb-1{width:600px;height:600px;top:-150px;left:-150px;background:radial-gradient(circle,rgba(0,255,178,.07) 0%,transparent 65%);animation:d1 12s ease-in-out infinite alternate}
+.orb-2{width:400px;height:400px;bottom:-100px;right:-100px;background:radial-gradient(circle,rgba(255,217,122,.06) 0%,transparent 65%);animation:d2 15s ease-in-out infinite alternate}
+@keyframes d1{from{transform:translate(0,0)}to{transform:translate(30px,20px)}}
+@keyframes d2{from{transform:translate(0,0)}to{transform:translate(-20px,-30px)}}
+.tl{position:fixed;top:0;left:0;right:0;height:2px;z-index:10;background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%);box-shadow:0 0 6px 2px var(--g),0 0 30px 10px rgba(0,255,178,.3);animation:fl 9s ease-in-out infinite}
+.ticker-wrap{position:fixed;top:2px;left:0;right:0;z-index:150;display:flex;flex-direction:column}
+.ticker-bar{height:24px;background:rgba(0,8,5,.95);backdrop-filter:blur(20px);display:flex;align-items:center;overflow:hidden}
+.ticker-bar-1{border-bottom:1px solid rgba(0,255,178,.1)}
+.ticker-bar-2{border-bottom:1px solid rgba(255,217,122,.1);background:rgba(0,5,10,.95)}
+.ticker-bar-3{border-bottom:1px solid rgba(0,200,255,.1);background:rgba(0,3,12,.95)}
+.ticker-label{flex-shrink:0;padding:0 10px;font-size:8px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--g);border-right:1px solid rgba(0,255,178,.15);height:100%;display:flex;align-items:center;background:rgba(0,255,178,.04);white-space:nowrap}
+.ticker-bar-2 .ticker-label{color:var(--gold);border-right-color:rgba(255,217,122,.15);background:rgba(255,217,122,.04)}
+.ticker-bar-3 .ticker-label{color:#00d4ff;border-right-color:rgba(0,212,255,.15);background:rgba(0,212,255,.04)}
+.ticker-track{flex:1;overflow:hidden;position:relative;height:100%}
+.ticker-inner{display:flex;align-items:center;height:100%;white-space:nowrap;animation:tickerScroll 180s linear infinite}
+.ticker-inner-rev{animation:tickerScrollRev 160s linear infinite}
+.ticker-inner:hover,.ticker-inner-rev:hover{animation-play-state:paused}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes tickerScrollRev{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+.tick-item{display:inline-flex;align-items:center;gap:5px;padding:0 12px;border-right:1px solid rgba(0,255,178,.07);font-family:'DM Mono',monospace;font-size:10px;cursor:default}
+.ticker-bar-2 .tick-item{border-right-color:rgba(255,217,122,.07)}
+.ticker-bar-3 .tick-item{border-right-color:rgba(0,212,255,.07)}
+.tick-sym{color:rgba(200,255,235,.65);font-weight:500;font-size:9px}
+.ticker-bar-2 .tick-sym{color:rgba(255,235,180,.65)}
+.ticker-bar-3 .tick-sym{color:rgba(180,230,255,.65)}
+.tick-price{color:var(--text)}
+.tick-chg{font-size:9px}
+.tick-up{color:#00ff88}
+.tick-dn{color:var(--red)}
+.tick-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.tick-dot-up{background:#00ff88}
+.tick-dot-dn{background:var(--red)}
+.tick-dot-neu{background:rgba(255,255,255,.3)}
+@keyframes fl{0%,100%{opacity:1}93%{opacity:.7}94%{opacity:1}96%{opacity:.85}97%{opacity:1}}
+
+.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;padding:10px 14px;padding-top:84px}
+@media(max-width:900px){
+  html,body{height:auto;overflow-y:auto}
+  .shell{height:auto;min-height:100vh;overflow:visible}
+  .panel{height:auto!important;overflow:visible!important;max-height:none!important}
+  .panel.active{display:flex;flex-direction:column;height:auto!important;overflow:visible!important}
+  .col-l,.col-r{height:auto!important;overflow:visible!important;max-height:none!important;width:100%!important}
+}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0}
+.brand-logo{font-size:17px;font-weight:500;background:linear-gradient(130deg,#9effd9 0%,#fff 45%,var(--gold) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-sub{font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.back-link{font-size:11px;color:var(--muted);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--g)}
+.lang-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.25);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;letter-spacing:.05em}
+.lang-btn:hover{background:rgba(0,255,178,.15);color:var(--g)}
+.lang-dd-wrap{position:relative;display:inline-block}
+.lang-dd{position:absolute;top:calc(100% + 4px);right:0;background:rgba(0,12,8,.97);border:1px solid rgba(0,255,178,.2);border-radius:10px;padding:4px;min-width:90px;z-index:999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.lang-dd.open{display:block}
+.lang-dd-item{padding:7px 12px;font-size:11px;color:rgba(200,255,235,.7);cursor:pointer;border-radius:7px;font-family:'Outfit',sans-serif;transition:background .15s}
+.lang-dd-item:hover{background:rgba(0,255,178,.08);color:#e0fff5}
+.lang-dd-item.active{color:var(--g);font-weight:600;background:rgba(0,255,178,.06)}
+
+.tabs{display:flex;gap:4px;background:rgba(0,255,178,.04);border:1px solid var(--border);border-radius:14px;padding:4px;flex-shrink:0;margin-bottom:10px}
+.tab{flex:1;padding:9px 0;border-radius:10px;border:none;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:grab;transition:all .2s;user-select:none}
+.tab:active{cursor:grabbing}
+.tab:hover{color:var(--text);background:rgba(0,255,178,.05)}
+.tab.active{background:rgba(0,255,178,.12);color:var(--g);font-weight:500}
+.tab.drag-over{background:rgba(0,255,178,.18);border:1px dashed rgba(0,255,178,.5);transform:scale(1.02)}
+.tab.dragging{opacity:.35;transform:scale(.97)}
+
+.content{flex:1;overflow:hidden;position:relative;min-height:0}
+.panel{display:none;height:100%;gap:12px}
+.panel.active{display:flex}
+.panel.col{flex-direction:column;overflow-y:auto}
+.panel.col::-webkit-scrollbar{width:3px}
+.panel.col::-webkit-scrollbar-thumb{background:rgba(0,255,178,.2);border-radius:2px}
+
+.card{background:var(--card);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-radius:18px;border:1px solid var(--border);overflow:visible;position:relative;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.1),0 8px 32px rgba(0,0,0,.6)}
+.card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45) 35%,rgba(0,255,178,.8) 50%,rgba(255,255,255,.45) 65%,transparent)}
+.card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45) 35%,rgba(0,255,178,.8) 50%,rgba(255,255,255,.45) 65%,transparent);border-radius:18px 18px 0 0;pointer-events:none;z-index:1}
+.ci{padding:14px 16px;position:relative;z-index:0}
+.sec{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(0,255,178,.32);margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,255,178,.12),transparent)}
+
+.col-l{width:305px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding-right:4px}
+.col-l::-webkit-scrollbar{width:3px}
+.col-l::-webkit-scrollbar-thumb{background:rgba(0,255,178,.2);border-radius:2px}
+.col-r{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-width:0}
+.col-r::-webkit-scrollbar{width:0}
+
+.fg{margin-bottom:.65rem}
+.fg:last-child{margin-bottom:0}
+.fl{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:4px}
+.iw{display:flex;align-items:center;background:var(--inp);border-radius:9px;border:1px solid rgba(0,255,178,.12);padding:0 11px;height:40px;position:relative;transition:border-color .2s}
+.iw:focus-within{border-color:rgba(0,255,178,.5);background:rgba(0,255,178,.04)}
+.px{font-family:'DM Mono',monospace;font-size:11px;color:var(--g2);margin-right:8px;min-width:12px}
+.iw input{background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;width:100%}
+.iw input::-webkit-inner-spin-button{opacity:.3}
+
+.tbtns{display:flex;gap:6px;margin-bottom:.8rem}
+.tb{flex:1;padding:7px 4px;border-radius:8px;border:1px solid rgba(0,255,178,.18);background:rgba(0,255,178,.04);color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;cursor:pointer;transition:all .2s;text-align:center;line-height:1.4}
+.tb.act{background:rgba(0,255,178,.14);border-color:rgba(0,255,178,.5);color:var(--g);font-weight:500}
+.tb.t33{border-color:rgba(255,200,0,.18);background:rgba(255,200,0,.04);color:rgba(255,200,0,.55)}
+.tb.t33.act{background:rgba(255,200,0,.14);border-color:rgba(255,200,0,.5);color:#ffd700}
+.tb.t50{border-color:rgba(255,68,68,.18);background:rgba(255,68,68,.04);color:rgba(255,68,68,.55)}
+.tb.t50.act{background:rgba(255,68,68,.14);border-color:rgba(255,68,68,.5);color:#ff6666}
+
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ri{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.1);border-radius:10px;padding:11px 8px;text-align:center;position:relative}
+.ri::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent)}
+.ri.hl{background:rgba(0,255,178,.09);border-color:rgba(0,255,178,.3)}
+.rl{font-size:8px;color:var(--muted);margin-bottom:5px;letter-spacing:.09em;text-transform:uppercase;line-height:1.3}
+.rv{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:#b8ffe0}
+.rv.big{font-size:19px}.rv.green{color:#00ff88}.rv.gold{color:var(--gold)}.rv.red{color:var(--red)}
+
+.tc-row{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,255,178,.06);font-size:11px}
+.tc-row:last-child{border-bottom:none}
+.tc-val{font-family:'DM Mono',monospace;font-size:11px;text-align:right}
+.tc-head{font-size:8px;letter-spacing:.1em;text-transform:uppercase;text-align:right;color:var(--muted)}
+.bdr{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,255,178,.05);font-size:11px}
+.bdr:last-child{border-bottom:none;font-weight:500}
+.bdl{color:var(--muted)}
+.bdv{font-family:'DM Mono',monospace}
+
+.btn-add{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.25);border-radius:9px;padding:9px 14px;font-size:12px;color:var(--g2);cursor:pointer;width:100%;font-family:'Outfit',sans-serif;transition:all .2s;margin-bottom:.8rem}
+.btn-add:hover{background:rgba(0,255,178,.15);color:var(--g)}
+.btn-sm{background:transparent;border:1px solid rgba(255,80,80,.22);border-radius:6px;padding:3px 10px;font-size:10px;color:rgba(255,120,120,.55);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
+.btn-sm:hover{border-color:rgba(255,80,80,.5);color:rgba(255,120,120,.9)}
+
+.twrap{border-radius:10px;border:1px solid rgba(0,255,178,.1);overflow:hidden;flex:1}
+.twrap table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px}
+.twrap thead tr{background:rgba(0,255,178,.08);position:sticky;top:0}
+.twrap th{padding:8px 9px;text-align:right;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.twrap th:first-child{text-align:left}
+.twrap td{padding:7px 9px;text-align:right;border-bottom:1px solid rgba(0,255,178,.05)}
+.twrap td:first-child{text-align:left;color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px}
+.twrap tr:last-child td{border-bottom:none}
+.twrap tr:hover td{background:rgba(0,255,178,.03)}
+.cg{color:#00ff88}.cr{color:var(--red)}.co{color:var(--gold)}
+.xbtn{background:transparent;border:none;color:rgba(255,80,80,.3);cursor:pointer;font-size:12px;transition:color .2s}
+.xbtn:hover{color:rgba(255,80,80,.7)}
+.empty{text-align:center;padding:2rem;font-size:12px;color:rgba(0,255,178,.22)}
+
+.sg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex-shrink:0}
+.st{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:10px;padding:9px 8px;text-align:center}
+.stl{font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.stv{font-family:'DM Mono',monospace;font-size:13px;color:#b8ffe0}
+
+.yfilter{display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex-shrink:0;margin-bottom:8px}
+.ybtn{padding:3px 11px;border-radius:20px;border:1px solid rgba(0,255,178,.18);background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:10px;cursor:pointer;transition:all .2s}
+.ybtn.act{background:rgba(0,255,178,.14);border-color:rgba(0,255,178,.4);color:var(--g)}
+
+.yr-banner{background:rgba(0,255,178,.06);border:1px solid rgba(0,255,178,.2);border-radius:10px;padding:11px 14px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.yr-title{font-size:11px;color:var(--g);font-weight:500}
+.yr-stats{display:flex;gap:14px;flex-wrap:wrap}
+.yr-sl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.yr-sv{font-family:'DM Mono',monospace;font-size:12px}
+
+.ctrls{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;margin-bottom:8px}
+.cbtn{padding:6px 12px;border-radius:8px;border:1px solid rgba(0,255,178,.18);background:rgba(0,255,178,.04);color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.cbtn:hover{border-color:rgba(0,255,178,.35);color:var(--g)}
+.cbtn.act{background:rgba(0,255,178,.14);border-color:rgba(0,255,178,.5);color:var(--g)}
+.chwrap{flex:1;position:relative;min-height:0}
+
+.arow-item{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.arow-item .iw{height:38px}
+.adel{background:transparent;border:none;color:rgba(255,80,80,.3);cursor:pointer;font-size:14px;transition:color .2s;padding:0 4px}
+.adel:hover{color:rgba(255,80,80,.7)}
+.aadd{background:rgba(0,255,178,.05);border:1px solid rgba(0,255,178,.16);border-radius:8px;padding:7px 12px;font-size:11px;color:var(--g2);cursor:pointer;width:100%;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:4px}
+.aadd:hover{background:rgba(0,255,178,.1);color:var(--g)}
+.pwrap{flex:1;position:relative;min-height:200px}
+.pleg{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;flex-shrink:0}
+.pli{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.pld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.info{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.17);border-radius:9px;padding:9px 12px;font-size:11px;color:rgba(0,212,255,.7);line-height:1.6;margin-top:.8rem}
+.lhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-shrink:0}
+
+/* ── Holdings tab ── */
+.three-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:10px}
+.evo-filters{display:flex;gap:2px}
+.evo-filter{background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:5px;color:rgba(255,255,255,.35);font-size:8px;padding:2px 5px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s}
+.evo-filter:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6)}
+.evo-filter.act{background:rgba(0,255,178,.12);border-color:rgba(0,255,178,.4);color:var(--g)}
+.evo-toggle{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.25);border-radius:5px;color:var(--g2);font-size:9px;font-weight:600;padding:2px 7px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;min-width:24px}
+.evo-toggle:hover{background:rgba(0,255,178,.18);color:var(--g)}
+.evo-toggle.pct{background:rgba(255,217,122,.1);border-color:rgba(255,217,122,.35);color:var(--gold)}
+@media(max-width:1100px){.chart-row{flex-direction:column}}
+@media(max-width:1100px){.chart-row .card{min-width:0;width:100%}}
+
+/* ── TABLET (max 900px) ── */
+@media(max-width:900px){
+  .shell{padding:10px 10px;padding-top:82px;height:auto;min-height:100vh;overflow-y:auto}
+  .panel{height:auto;overflow:visible}
+  .panel.active{flex-direction:column;height:auto;overflow:visible}
+  .col-l{width:100%;flex-shrink:1;overflow-y:visible;padding-right:0;max-height:none}
+  .col-r{overflow-y:visible;max-height:none}
+  .tab{font-size:11px;padding:7px 0}
+}
+
+/* ── MOBIEL (max 600px) ── */
+@media(max-width:600px){
+  .shell{padding:8px 8px;padding-top:80px;height:auto;min-height:100vh;overflow-y:auto}
+  .panel{height:auto;overflow:visible}
+  .panel.active{flex-direction:column;height:auto;overflow:visible}
+  .col-l{width:100%;overflow-y:visible;padding-right:0;max-height:none}
+  .col-r{min-width:0;overflow-y:visible;max-height:none}
+  .card{border-radius:10px}
+  .ci{padding:10px 12px}
+  .topbar{flex-wrap:wrap;gap:6px}
+  .brand-logo{font-size:13px}
+  .topbar-right{gap:6px}
+  .back-link,.lang-btn{font-size:10px;padding:4px 10px}
+  .htwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;max-height:none}
+  .hstats{grid-template-columns:repeat(3,1fr);gap:6px}
+  .hstatv{font-size:12px}
+  .hstatl{font-size:7px}
+  .chart-row{flex-direction:column}
+  .type-toggle{flex-wrap:wrap}
+  .ttbtn{font-size:10px;padding:5px 3px}
+  .hform-grid{gap:8px}
+  .fl{font-size:10px}
+  .ticker-label{font-size:7px;padding:0 6px}
+  .tick-item{padding:0 8px}
+  .tick-sym{font-size:8px}
+  .tick-price{font-size:9px}
+  .tick-chg{font-size:8px}
+}
+
+/* ── KLEINE TELEFOONS (max 380px) ── */
+@media(max-width:380px){
+  .shell{padding:6px 6px;padding-top:78px}
+  .tabs{gap:1px}
+  .tab{font-size:9px;padding:5px 0}
+  .hstats{gap:4px}
+  .hstatv{font-size:11px}
+  .ticker-label{display:none}
+}
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0;margin-bottom:8px}
+.hstat{background:rgba(0,255,178,.04);border:1px solid rgba(0,255,178,.09);border-radius:10px;padding:9px 10px;text-align:center}
+.hstatl{font-size:8px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.hstatv{font-family:'DM Mono',monospace;font-size:13px}
+.hhdr{display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.refresh-btn{background:rgba(0,255,178,.08);border:1px solid rgba(0,255,178,.25);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--g2);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px}
+.refresh-btn:hover{background:rgba(0,255,178,.15);color:var(--g)}
+.refresh-btn.loading{opacity:.6;pointer-events:none}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:1px}
+.dot-ok{background:#00ff88;box-shadow:0 0 5px #00ff8888}
+.dot-err{background:var(--red);box-shadow:0 0 5px #ff444488}
+.dot-wait{background:rgba(0,255,178,.25)}
+.dot-load{background:var(--gold);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.htwrap{border-radius:10px;border:1px solid rgba(0,255,178,.1);overflow-x:auto;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.htwrap::-webkit-scrollbar{width:4px;height:4px}
+.htwrap::-webkit-scrollbar-track{background:transparent}
+.htwrap::-webkit-scrollbar-thumb{background:rgba(0,255,178,.2);border-radius:4px}
+.htwrap::-webkit-scrollbar-thumb:hover{background:rgba(0,255,178,.4)}
+.htwrap table{width:100%;min-width:320px;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px}
+@media(max-width:600px){.htwrap table{min-width:0;width:100%;font-size:9px}}
+@media(max-width:600px){.htwrap th,.htwrap td{padding:4px 4px;font-size:9px}}
+.htwrap thead tr{background:rgba(0,255,178,.08)}
+.htwrap th{padding:7px 8px;text-align:right;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.htwrap th:first-child,.htwrap th:nth-child(2){text-align:left}
+.htwrap td{padding:6px 8px;text-align:right;border-bottom:1px solid rgba(0,255,178,.05)}
+.htwrap td:first-child{text-align:left;font-family:'Outfit',sans-serif}
+.htwrap td:nth-child(2){text-align:left}
+.htwrap tr:last-child td{border-bottom:none}
+.htwrap tr:hover td{background:rgba(0,255,178,.03)}
+.type-badge{font-size:8px;padding:2px 5px;border-radius:4px;font-family:'Outfit',sans-serif;letter-spacing:.05em}
+.type-stock{background:rgba(0,212,255,.12);color:rgba(0,212,255,.8);border:1px solid rgba(0,212,255,.2)}
+.type-crypto{background:rgba(255,217,122,.12);color:rgba(255,217,122,.8);border:1px solid rgba(255,217,122,.2)}
+.live-price{color:#b8ffe0}
+.live-err{color:rgba(255,68,68,.6);font-size:9px}
+.live-load{color:var(--gold);font-size:9px}
+.chart-row{display:flex;gap:10px;flex-wrap:wrap;min-height:0}
+.chart-row .card{flex:1;min-width:200px}
+.hform-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.type-toggle{display:flex;gap:4px;margin-bottom:.65rem}
+.ttbtn{flex:1;padding:6px 4px;border-radius:8px;border:1px solid rgba(0,255,178,.18);background:rgba(0,255,178,.04);color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;cursor:pointer;transition:all .2s;text-align:center}
+.ttbtn.act-s{background:rgba(0,212,255,.14);border-color:rgba(0,212,255,.5);color:rgba(0,212,255,.9)}
+.ttbtn.act-c{background:rgba(255,217,122,.14);border-color:rgba(255,217,122,.5);color:var(--gold)}
+.ttbtn.act-m{background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.45);color:#c8a800}
+.api-info{background:rgba(0,0,0,.25);border:1px solid rgba(0,255,178,.1);border-radius:8px;padding:8px 10px;font-size:10px;color:rgba(0,255,178,.45);line-height:1.7;margin-top:6px}
+.api-info a{color:var(--g2);text-decoration:none}
+.api-info a:hover{color:var(--g)}
+.last-upd{font-size:9px;color:var(--muted);text-align:center;margin-top:4px;flex-shrink:0}
+/* toggle switch */
+.tog-wrap{position:relative;display:inline-block;width:34px;height:18px;cursor:pointer;flex-shrink:0}
+.tog-wrap input{opacity:0;width:0;height:0}
+.tog{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:18px;border:1px solid rgba(255,255,255,.15);transition:.2s}
+.tog::before{content:'';position:absolute;width:12px;height:12px;left:2px;top:2px;background:rgba(255,255,255,.4);border-radius:50%;transition:.2s}
+.tog-wrap input:checked+.tog{background:rgba(0,255,178,.25);border-color:rgba(0,255,178,.5)}
+.tog-wrap input:checked+.tog::before{transform:translateX(16px);background:var(--g)}
+</style>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+
+<!-- 3 Ticker banners -->
+<div class="ticker-wrap">
+  <div class="ticker-bar ticker-bar-1">
+    <div class="ticker-label">📊 MARKTEN</div>
+    <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-1"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+  <div class="ticker-bar ticker-bar-2">
+    <div class="ticker-label">💹 GRONDSTOFFEN & FOREX</div>
+    <div class="ticker-track"><div class="ticker-inner ticker-inner-rev" id="ticker-inner-2"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+  <div class="ticker-bar ticker-bar-3">
+    <div class="ticker-label">🪙 CRYPTO</div>
+    <div class="ticker-track"><div class="ticker-inner" id="ticker-inner-3"><div class="tick-item"><span class="tick-sym">laden...</span></div></div></div>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="topbar">
+    <div>
+      <div class="brand-logo">Unda · Stock Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="lang-dd-wrap">
+        <button class="lang-btn" onclick="toggleLangDD()" id="lang-btn">🇳🇱 NL ▾</button>
+        <div class="lang-dd" id="lang-dd">
+          <div class="lang-dd-item active" onclick="setLang('nl')" id="ldi-nl">🇳🇱 NL</div>
+          <div class="lang-dd-item" onclick="setLang('en')" id="ldi-en">🇬🇧 EN</div>
+          <div class="lang-dd-item" onclick="setLang('fr')" id="ldi-fr">🇫🇷 FR</div>
+          <div class="lang-dd-item" onclick="setLang('es')" id="ldi-es">🇪🇸 ES</div>
+          <div class="lang-dd-item" onclick="setLang('de')" id="ldi-de">🇩🇪 DE</div>
+          <div class="lang-dd-item" onclick="setLang('it')" id="ldi-it">🇮🇹 IT</div>
+          <div class="lang-dd-item" onclick="setLang('pt')" id="ldi-pt">🇵🇹 PT</div>
+          <div class="lang-dd-item" onclick="setLang('tr')" id="ldi-tr">🇹🇷 TR</div>
+          <div class="lang-dd-item" onclick="setLang('ar')" id="ldi-ar">🇸🇦 AR</div>
+          <div class="lang-dd-item" onclick="setLang('ru')" id="ldi-ru">🇷🇺 RU</div>
+        </div>
+      </div>
+      <a class="back-link" href="index.html" id="back-lnk">← Suite</a>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs-bar">
+    <button class="tab active" id="tab-btn-hold" data-tab="hold" onclick="if(!isDragging)goTab('hold',this)">💼 <span class="t-hold">Posities</span></button>
+    <button class="tab" id="tab-btn-calc" data-tab="calc" onclick="if(!isDragging)goTab('calc',this)">⚖️ <span class="t-calc">Calculator</span></button>
+    <button class="tab" id="tab-btn-log" data-tab="log" onclick="if(!isDragging)goTab('log',this)">📒 <span class="t-log">Logboek</span></button>
+    <button class="tab" id="tab-btn-charts" data-tab="charts" onclick="if(!isDragging)goTab('charts',this)">📈 <span class="t-charts">Grafieken</span></button>
+  </div>
+
+  <div class="content">
+
+    <!-- TAB CALC -->
+    <div class="panel" id="panel-calc">
+      <div class="col-l">
+        <div class="card"><div class="ci">
+          <div class="sec" id="s-trade">Trade details</div>
+          <div class="fg"><span class="fl t-name">Aandeel / naam</span><div class="iw"><input type="text" id="sname" placeholder="bv. AAPL, KBC..."></div></div>
+          <div class="fg"><span class="fl t-bp">Aankoopprijs per aandeel</span><div class="iw"><span class="px">€</span><input type="number" id="bp" placeholder="100.00" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-sp">Verkoopprijs per aandeel</span><div class="iw"><span class="px">€</span><input type="number" id="sp" placeholder="115.00" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-sh">Aantal aandelen</span><div class="iw"><span class="px">#</span><input type="number" id="sh" placeholder="10" step="1" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-dv">Dividend (optioneel)</span><div class="iw"><span class="px">€</span><input type="number" id="dv" placeholder="0.00" step="0.01" oninput="calc()"></div></div>
+        </div></div>
+
+        <div class="card"><div class="ci">
+          <div class="sec t-costs-sec">Kosten &amp; taksen</div>
+          <div class="fg"><span class="fl t-btb">Beurstaks aankoop (%)</span><div class="iw"><span class="px">%</span><input type="number" id="btb" value="0.35" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-bts">Beurstaks verkoop (%)</span><div class="iw"><span class="px">%</span><input type="number" id="bts" value="0.35" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-brb">Bolero aankoop (€)</span><div class="iw"><span class="px">€</span><input type="number" id="brb" value="7.50" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-brs">Bolero verkoop (€)</span><div class="iw"><span class="px">€</span><input type="number" id="brs" value="7.50" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-fx">Wisselkosten (% — 0 als EUR)</span><div class="iw"><span class="px">%</span><input type="number" id="fx" value="0" step="0.01" oninput="calc()"></div></div>
+          <div class="fg"><span class="fl t-dvt">Dividendbelasting (%)</span><div class="iw"><span class="px">%</span><input type="number" id="dvt" value="30" step="1" oninput="calc()"></div></div>
+        </div></div>
+
+        <div class="card"><div class="ci">
+          <div class="sec t-tax-sec">Meerwaardebelasting</div>
+          <div class="tbtns">
+            <button class="tb act" id="t10" onclick="setTax(10)">10%<br><span class="t-part" style="font-size:9px;opacity:.7">Particulier</span></button>
+            <button class="tb t33" id="t33" onclick="setTax(33)">33%<br><span class="t-spec" style="font-size:9px;opacity:.7">Speculatief</span></button>
+            <button class="tb t50" id="t50" onclick="setTax(50)">50%<br><span class="t-prof" style="font-size:9px;opacity:.7">Beroep</span></button>
+          </div>
+          <div class="fg"><span class="fl t-custom">Aangepast percentage (0–100%)</span><div class="iw"><span class="px">%</span><input type="number" id="tc" value="10" step="1" min="0" max="100" oninput="setTaxCustom()"></div></div>
+
+          <!-- Vrijstelling toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
+            <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">🇧🇪 Jaarlijkse vrijstelling</span>
+            <label class="tog-wrap"><input type="checkbox" id="tog-exempt" onchange="toggleExemption(this.checked)"><span class="tog"></span></label>
+          </div>
+          <div id="exempt-panel" style="display:none;margin-bottom:8px">
+            <div class="fg" style="margin-bottom:4px"><span class="fl">Vrijstellingsbedrag (€)</span><div class="iw"><span class="px">€</span><input type="number" id="exempt-amt" value="10000" step="100" oninput="setExemptAmt(this.value)"></div></div>
+            <div id="exempt-used-row" style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;padding:3px 0">
+              <span>Al gebruikt dit jaar:</span><span id="exempt-used" style="font-family:'DM Mono',monospace;color:var(--gold)">€0</span>
+            </div>
+            <div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;padding:3px 0">
+              <span>Resterend:</span><span id="exempt-left" style="font-family:'DM Mono',monospace;color:#00ff88">€10.000</span>
+            </div>
+            <div class="info" style="margin-top:6px;font-size:10px">💡 De eerste €10.000 winst per jaar is vrijgesteld van meerwaardebelasting (nieuw 2026). Als je resterend vrijstellingsbedrag groot genoeg is, wordt de belasting op deze trade €0.</div>
+          </div>
+
+          <!-- Verliesoverdracht toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:4px 0">
+            <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">📉 Verliesoverdracht</span>
+            <label class="tog-wrap"><input type="checkbox" id="tog-loss" onchange="toggleLossCarry(this.checked)"><span class="tog"></span></label>
+          </div>
+          <div id="loss-panel" style="display:none">
+            <div style="font-size:10px;color:var(--muted);display:flex;justify-content:space-between;padding:3px 0;margin-bottom:4px">
+              <span>Totale verliezen opgeslagen:</span><span id="loss-total" style="font-family:'DM Mono',monospace;color:var(--red)">€0</span>
+            </div>
+            <div id="loss-list" style="max-height:80px;overflow-y:auto;margin-bottom:4px"></div>
+            <button onclick="addLossManual()" style="background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.2);border-radius:7px;padding:5px 10px;font-size:10px;color:rgba(255,120,120,.7);cursor:pointer;font-family:'Outfit',sans-serif;width:100%;margin-bottom:4px">+ Verlies manueel toevoegen</button>
+            <div class="info" style="font-size:10px">💡 Verliezen worden in mindering gebracht op de belastbare winst. Sla een trade op met verlies om het automatisch toe te voegen.</div>
+          </div>
+
+          <div class="info" id="tax-info" style="margin-top:6px">🇧🇪 Minimale meerwaardebelasting in België is <strong>10%</strong>. 33% bij speculatief gedrag, 50% als hoofdberoep. Overleg altijd met een boekhouder.</div>
+        </div></div>
+      </div>
+
+      <div class="col-r">
+        <div class="card"><div class="ci">
+          <div class="sec t-result-sec">Resultaat</div>
+          <div class="rg">
+            <div class="ri"><div class="rl t-invest">Investering</div><div class="rv" id="ri">—</div></div>
+            <div class="ri"><div class="rl t-gross">Bruto opbrengst</div><div class="rv" id="rg">—</div></div>
+            <div class="ri"><div class="rl t-costs">Totale kosten</div><div class="rv red" id="rc">—</div></div>
+            <div class="ri"><div class="rl t-taxamt">Belasting op winst</div><div class="rv red" id="rt">—</div></div>
+            <div class="ri hl" style="grid-column:1/-1"><div class="rl t-net">Netto winst / verlies</div><div class="rv big" id="rn">—</div></div>
+            <div class="ri"><div class="rl t-ret">Netto rendement</div><div class="rv big" id="rp">—</div></div>
+            <div class="ri"><div class="rl t-be">Break-even verkoopprijs</div><div class="rv gold" id="rb">—</div></div>
+          </div>
+        </div></div>
+
+        <div class="card"><div class="ci">
+          <div class="sec t-detail-sec">Kosten detail</div>
+          <div class="bdr"><span class="bdl t-btb-d">Beurstaks aankoop</span><span class="bdv" id="bbtb">—</span></div>
+          <div class="bdr"><span class="bdl t-bts-d">Beurstaks verkoop</span><span class="bdv" id="bbts">—</span></div>
+          <div class="bdr"><span class="bdl t-brb-d">Bolero aankoop</span><span class="bdv" id="bbrb">—</span></div>
+          <div class="bdr"><span class="bdl t-brs-d">Bolero verkoop</span><span class="bdv" id="bbrs">—</span></div>
+          <div class="bdr"><span class="bdl t-fx-d">Wisselkosten</span><span class="bdv" id="bfx">—</span></div>
+          <div class="bdr"><span class="bdl t-dvt-d">Dividendbelasting</span><span class="bdv" id="bdvt">—</span></div>
+          <div class="bdr" style="margin-top:3px"><span class="bdl" style="color:var(--text)"><strong class="t-total">Totaal kosten</strong></span><span class="bdv cr" id="btot">—</span></div>
+        </div></div>
+
+        <div class="card"><div class="ci">
+          <div class="sec t-compare-sec">Belasting vergelijking</div>
+          <div class="tc-row"><div></div><div class="tc-head t-h-net">Netto winst</div><div class="tc-head t-h-ret">Rendement</div><div class="tc-head t-h-rr">Min. R:R</div></div>
+          <div class="tc-row"><div style="font-size:11px;color:var(--g)">10% <span class="t-part2">particulier</span></div><div class="tc-val" id="v10n" style="color:var(--g)">—</div><div class="tc-val" id="v10p" style="color:var(--g)">—</div><div class="tc-val" id="v10r" style="color:var(--g)">—</div></div>
+          <div class="tc-row"><div style="font-size:11px;color:#ffd700">33% <span class="t-spec2">speculatief</span></div><div class="tc-val co" id="v33n">—</div><div class="tc-val co" id="v33p">—</div><div class="tc-val co" id="v33r">—</div></div>
+          <div class="tc-row"><div style="font-size:11px;color:var(--red)">50% <span class="t-prof2">beroep</span></div><div class="tc-val cr" id="v50n">—</div><div class="tc-val cr" id="v50p">—</div><div class="tc-val cr" id="v50r">—</div></div>
+          <div class="info" style="margin-top:.8rem"><span class="t-rr-info">💡 <strong>Min. R:R</strong> = minimale Risk/Reward na alle kosten en belastingen. Gebruik dit als input in de Monte Carlo simulator.</span></div>
+        </div></div>
+
+        <button class="btn-add t-save-btn" onclick="addTrade()">+ Sla huidige trade op in logboek</button>
+      </div>
+    </div>
+
+    <!-- TAB LOG -->
+    <div class="panel col" id="panel-log">
+      <div class="lhdr">
+        <div class="yfilter" id="yfilter"></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm" onclick="document.getElementById('csv-modal').style.display='flex'" style="background:rgba(0,255,178,.08);border-color:rgba(0,255,178,.25);color:var(--g2)">📥 <span class="t-csv-import">CSV Import</span></button>
+          <button class="btn-sm t-clear-btn" onclick="clearLog()">Wis alles</button>
+        </div>
+      </div>
+      <div class="yr-banner" id="yr-banner" style="display:none">
+        <div style="font-size:11px;color:var(--g);font-weight:500" id="yr-title">2025</div>
+        <div class="yr-stats">
+          <div><div class="yr-sl t-yr-trades">Trades</div><div class="yr-sv" id="yr-trades">0</div></div>
+          <div><div class="yr-sl t-yr-net">Netto totaal</div><div class="yr-sv" id="yr-net">—</div></div>
+          <div><div class="yr-sl t-yr-avg">Gem. rendement</div><div class="yr-sv" id="yr-avg">—</div></div>
+          <div><div class="yr-sl t-yr-wr">Win rate</div><div class="yr-sv" id="yr-wr">—</div></div>
+          <div><div class="yr-sl t-yr-costs">Kosten betaald</div><div class="yr-sv cr" id="yr-costs">—</div></div>
+          <div><div class="yr-sl t-yr-tax">Belasting betaald</div><div class="yr-sv cr" id="yr-tax">—</div></div>
+        </div>
+      </div>
+      <div class="sg" id="swrap" style="display:none;margin-bottom:8px">
+        <div class="st"><div class="stl t-all-trades">Alle trades</div><div class="stv" id="stot">0</div></div>
+        <div class="st"><div class="stl t-total-net">Netto totaal</div><div class="stv" id="snet">—</div></div>
+        <div class="st"><div class="stl t-avg-ret">Gem. rendement</div><div class="stv" id="savg">—</div></div>
+        <div class="st"><div class="stl t-wr">Win rate</div><div class="stv" id="swr">—</div></div>
+      </div>
+      <div id="lempty" class="empty"><span class="t-empty-log">Nog geen trades. Ga naar de Calculator tab, bereken een trade en sla hem op.</span></div>
+      <div class="twrap" id="lwrap" style="display:none;overflow-y:auto">
+        <table>
+          <thead><tr>
+            <th style="text-align:left" class="t-th-name">Aandeel</th>
+            <th style="text-align:left" class="t-th-date">Datum</th>
+            <th class="t-th-buy">Koop</th>
+            <th class="t-th-sell">Verkoop</th>
+            <th>#</th>
+            <th class="t-th-gross">Bruto</th>
+            <th class="t-th-costs">Kosten</th>
+            <th class="t-th-tax">Belasting</th>
+            <th class="t-th-net">Netto</th>
+            <th>%</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="lbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB CHARTS -->
+    <div class="panel col" id="panel-charts">
+      <div class="ctrls">
+        <button class="cbtn act t-ch-cum" onclick="setChart('cum',this)">📈 Cumulatieve groei</button>
+        <button class="cbtn t-ch-bar" onclick="setChart('bar',this)">📊 Winst per trade</button>
+        <button class="cbtn t-ch-cmp" onclick="setChart('cmp',this)">⚖️ Bruto vs Netto</button>
+        <button class="cbtn t-ch-ret" onclick="setChart('ret',this)">🎯 Rendement %</button>
+      </div>
+      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="ci" style="flex:1;display:flex;flex-direction:column;min-height:0">
+          <div class="sec" id="chart-title">Cumulatieve netto groei</div>
+          <div class="chwrap">
+            <canvas id="mc"></canvas>
+          </div>
+          <div id="chart-empty" class="empty" style="display:none"><span class="t-empty-chart">Voeg trades toe via de Calculator tab om grafieken te zien.</span></div>
+          <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:6px" class="t-hover-tip">Hover voor details per trade</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB HOLDINGS -->
+    <div class="panel" id="panel-hold">
+      <!-- LEFT: Add form + API settings -->
+      <div class="col-l" style="width:300px">
+        <div class="card"><div class="ci">
+          <div class="sec t-hold-add-sec">Positie toevoegen</div>
+          <div class="type-toggle">
+            <button class="ttbtn act-s" id="htype-stock" onclick="setHoldType('stock')">📊 <span class="t-htype-s">Aandeel</span></button>
+            <button class="ttbtn" id="htype-crypto" onclick="setHoldType('crypto')">🪙 <span class="t-htype-c">Crypto</span></button>
+            <button class="ttbtn" id="htype-metal" onclick="setHoldType('metal')">🥇 <span class="t-htype-m">Precious Metals</span></button>
+          </div>
+
+          <!-- Normaal formulier (aandeel/crypto) -->
+          <div id="form-normal">
+            <div class="hform-grid">
+              <div class="fg"><span class="fl t-hf-ticker">Ticker</span><div class="iw"><input type="text" id="hf-ticker" placeholder="AAPL / BTC" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div></div>
+              <div class="fg"><span class="fl t-hf-qty">Aantal</span><div class="iw"><span class="px">#</span><input type="number" id="hf-qty" placeholder="10" step="any"></div></div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl t-hf-buy">Gem. aankoopprijs (€)</span><div class="iw"><span class="px">€</span><input type="number" id="hf-buy" placeholder="150.00" step="0.01"></div></div>
+            </div>
+            <button class="btn-add t-hadd-btn" onclick="addHolding()" style="margin-bottom:0">+ Toevoegen</button>
+          </div>
+
+          <!-- Edelmetaal formulier -->
+          <div id="form-metal" style="display:none">
+            <div class="hform-grid">
+              <div class="fg" style="grid-column:1/-1"><span class="fl" id="mf-metal-lbl">Metal</span>
+                <div class="iw"><select id="mf-metal" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
+                  <option value="gold" id="mf-opt-gold">🥇 Gold</option>
+                  <option value="silver" id="mf-opt-silver">🥈 Silver</option>
+                </select></div>
+              </div>
+              <div class="fg"><span class="fl" id="mf-qty-lbl">Quantity</span><div class="iw"><span class="px">#</span><input type="number" id="mf-qty" placeholder="100" step="any"></div></div>
+              <div class="fg"><span class="fl" id="mf-unit-lbl2">Unit</span>
+                <div class="iw"><select id="mf-unit" onchange="updateMetalUnitLabel()" style="width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px">
+                  <option value="g" id="mf-opt-g">gram</option>
+                  <option value="kg" id="mf-opt-kg">kilogram</option>
+                  <option value="oz" id="mf-opt-oz">troy oz</option>
+                </select></div>
+              </div>
+              <div class="fg" style="grid-column:1/-1"><span class="fl"><span id="mf-buy-lbl-pre">Buy price per</span> <span id="mf-unit-lbl">gram</span> (€)</span><div class="iw"><span class="px">€</span><input type="number" id="mf-buy" placeholder="0.85" step="0.001"></div></div>
+              <div style="grid-column:1/-1;font-size:10px;color:var(--muted)">1 oz = 31.10g · 1 kg = 1000g</div>
+            </div>
+            <button class="btn-add t-metal-add-btn" onclick="addMetal()" style="margin-bottom:0;background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.4);color:#c8a800">+ Add precious metals</button>
+          </div>
+
+        </div></div>
+
+        <div class="card"><div class="ci">
+          <div class="sec t-api-sec">Live prices — API</div>
+          <div class="api-info" id="api-info-block">
+            🪙 <strong>Crypto</strong>: Binance → Kraken → Coinbase (auto fallback)<br>
+            📊 <strong id="api-stocks-lbl">Stocks</strong>: Yahoo Finance (4 CORS proxies auto)<br>
+            🥇 <strong id="api-metal-lbl">Gold & Silver</strong>: Yahoo Finance futures (GC=F / SI=F) → price per gram in EUR<br>
+            🇧🇪 Euronext Brussels: <em>ABI.BR</em>, <em>UCB.BR</em>, <em>KBC.BR</em><br>
+            🇳🇱 Euronext Amsterdam: <em>ASML.AS</em>, <em>SHELL.AS</em><br>
+            🇺🇸 NYSE/NASDAQ: <em>AAPL</em>, <em>NVDA</em>, <em>MSFT</em><br>
+            💱 <span id="api-fx-lbl">USD/GBP automatically converted to EUR</span><br>
+            🔒 <strong id="api-vpn-lbl">VPN on?</strong> <span id="api-vpn-txt">Temporarily disable VPN for live prices</span>
+          </div>
+          <div style="background:rgba(255,200,0,.04);border:1px solid rgba(255,200,0,.12);border-radius:8px;padding:8px 10px;font-size:9px;color:rgba(255,200,0,.5);line-height:1.6;margin-top:6px">
+            ⚠️ <span id="disc-text">This tool is for informational purposes only and does not constitute financial or tax advice. Calculations are estimates. Always consult a qualified advisor. The developer is not liable for any decisions made based on this tool.</span>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- RIGHT: nieuwe 3-sectie layout -->
+      <div class="col-r">
+
+        <!-- Stats row -->
+        <div class="hstats">
+          <div class="hstat"><div class="hstatl t-h-totval">Totale waarde</div><div class="hstatv" id="h-totval">€0</div></div>
+          <div class="hstat"><div class="hstatl t-h-totpl">Totale P&amp;L</div><div class="hstatv" id="h-totpl">—</div></div>
+          <div class="hstat"><div class="hstatl t-h-npos">Posities</div><div class="hstatv" id="h-npos">0</div></div>
+        </div>
+
+        <!-- Knoppen boven de 3 kolommen -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="sec t-hold-tbl-sec" style="margin-bottom:0">Huidige posities</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div id="last-upd" class="last-upd" style="font-size:9px"></div>
+            <button class="refresh-btn" id="currency-btn" onclick="toggleCurrency()" style="font-family:'DM Mono',sans-serif;font-weight:600;min-width:60px;font-size:10px">€ EUR</button>
+            <button class="refresh-btn" id="refresh-btn" onclick="fetchPrices()" style="font-size:10px">
+              <span id="refresh-spin">↻</span> <span class="t-refresh-btn">Vernieuwen</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- RIJ 1: 3 posities tabellen -->
+        <div class="three-col" style="margin-bottom:10px">
+
+          <!-- Stocks -->
+          <div class="card"><div class="ci">
+            <div class="sec" style="margin-bottom:4px;font-size:11px" id="sec-stocks">📊 Stocks</div>
+            <div class="htwrap" style="max-height:180px;overflow-y:auto">
+              <table>
+                <thead><tr>
+                  <th style="text-align:left" class="t-hth-name">Name</th>
+                  <th class="t-hth-buy">Avg buy</th>
+                  <th class="t-hth-live">Live</th>
+                  <th class="t-hth-val">Value</th>
+                  <th class="t-hth-pl">P&amp;L</th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="htbody-stock"></tbody>
+              </table>
+            </div>
+            <div id="hempty-stock" class="empty" style="font-size:10px"><span class="t-empty-stock">No stocks.</span></div>
+            <div class="type-totals" id="totals-stock" style="display:none;border-top:1px solid rgba(0,255,178,.1);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:10px;font-family:'DM Mono',monospace">
+              <span><span class="t-total-val" style="color:var(--muted)">Total:</span> <span id="tot-val-stock" style="color:var(--text)">—</span></span>
+              <span><span class="t-total-pl" style="color:var(--muted)">P&L:</span> <span id="tot-pl-stock">—</span></span>
+            </div>
+          </div></div>
+
+          <!-- Crypto -->
+          <div class="card"><div class="ci">
+            <div class="hhdr">
+              <div class="sec" style="margin-bottom:0;font-size:11px" id="sec-crypto">🪙 Crypto</div>
+            </div>
+            <div class="htwrap" style="max-height:180px;overflow-y:auto;margin-top:4px">
+              <table>
+                <thead><tr>
+                  <th style="text-align:left" class="t-hth-name">Name</th>
+                  <th class="t-hth-buy">Avg buy</th>
+                  <th class="t-hth-live">Live</th>
+                  <th class="t-hth-val">Value</th>
+                  <th class="t-hth-pl">P&amp;L</th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="htbody-crypto"></tbody>
+              </table>
+            </div>
+            <div id="hempty-crypto" class="empty" style="font-size:10px"><span class="t-empty-crypto">No crypto.</span></div>
+            <div class="type-totals" id="totals-crypto" style="display:none;border-top:1px solid rgba(255,217,122,.1);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:10px;font-family:'DM Mono',monospace">
+              <span><span class="t-total-val" style="color:var(--muted)">Total:</span> <span id="tot-val-crypto" style="color:var(--text)">—</span></span>
+              <span><span class="t-total-pl" style="color:var(--muted)">P&L:</span> <span id="tot-pl-crypto">—</span></span>
+            </div>
+          </div></div>
+
+          <!-- Precious Metals -->
+          <div class="card"><div class="ci">
+            <div class="hhdr">
+              <div class="sec" style="margin-bottom:0;font-size:11px" id="sec-metal">🥇 Precious Metals</div>
+            </div>
+            <div class="htwrap" style="max-height:180px;overflow-y:auto;margin-top:4px">
+              <table>
+                <thead><tr>
+                  <th style="text-align:left" class="t-hth-name">Name</th>
+                  <th class="t-hth-qty">Qty</th>
+                  <th class="t-hth-buy">Buy/g</th>
+                  <th class="t-hth-live">Live/g</th>
+                  <th class="t-hth-val">Value</th>
+                  <th class="t-hth-pl">P&amp;L</th>
+                  <th></th>
+                </tr></thead>
+                <tbody id="htbody-metal"></tbody>
+              </table>
+            </div>
+            <div id="hempty-metal" class="empty" style="font-size:10px"><span class="t-empty-metal">No precious metals.</span></div>
+            <div class="type-totals" id="totals-metal" style="display:none;border-top:1px solid rgba(255,200,0,.1);margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:10px;font-family:'DM Mono',monospace">
+              <span><span class="t-total-val" style="color:var(--muted)">Total:</span> <span id="tot-val-metal" style="color:var(--text)">—</span></span>
+              <span><span class="t-total-pl" style="color:var(--muted)">P&L:</span> <span id="tot-pl-metal">—</span></span>
+            </div>
+          </div></div>
+
+        </div>
+
+        <!-- RIJ 2: 3 evolutie grafieken -->
+        <div class="three-col" style="margin-bottom:10px">
+          <div class="card"><div class="ci" style="height:200px;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div class="sec" style="margin-bottom:0;font-size:10px" id="sec-stocks-evo">📊 Stocks evolution</div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <div class="evo-filters" id="ef-stock">
+                  <button class="evo-filter act" onclick="setEvoFilter('stock','all',this)" id="ef-stock-all">All</button>
+                  <button class="evo-filter" onclick="setEvoFilter('stock','1m',this)">1M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('stock','3m',this)">3M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('stock','6m',this)">6M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('stock','1y',this)">1Y</button>
+                </div>
+                <button class="evo-toggle" id="etog-stock" onclick="toggleEvoMode('stock')" title="Switch between € value and % return">€</button>
+              </div>
+            </div>
+            <div style="flex:1;position:relative"><canvas id="phc-stock"></canvas></div>
+          </div></div>
+          <div class="card"><div class="ci" style="height:200px;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div class="sec" style="margin-bottom:0;font-size:10px" id="sec-crypto-evo">🪙 Crypto evolution</div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <div class="evo-filters" id="ef-crypto">
+                  <button class="evo-filter act" onclick="setEvoFilter('crypto','all',this)" id="ef-crypto-all">All</button>
+                  <button class="evo-filter" onclick="setEvoFilter('crypto','1m',this)">1M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('crypto','3m',this)">3M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('crypto','6m',this)">6M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('crypto','1y',this)">1Y</button>
+                </div>
+                <button class="evo-toggle" id="etog-crypto" onclick="toggleEvoMode('crypto')" title="Switch between € value and % return">€</button>
+              </div>
+            </div>
+            <div style="flex:1;position:relative"><canvas id="phc-crypto"></canvas></div>
+          </div></div>
+          <div class="card"><div class="ci" style="height:200px;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div class="sec" style="margin-bottom:0;font-size:10px" id="sec-metal-evo">🥇 Precious metals evolution</div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <div class="evo-filters" id="ef-metal">
+                  <button class="evo-filter act" onclick="setEvoFilter('metal','all',this)" id="ef-metal-all">All</button>
+                  <button class="evo-filter" onclick="setEvoFilter('metal','1m',this)">1M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('metal','3m',this)">3M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('metal','6m',this)">6M</button>
+                  <button class="evo-filter" onclick="setEvoFilter('metal','1y',this)">1Y</button>
+                </div>
+                <button class="evo-toggle" id="etog-metal" onclick="toggleEvoMode('metal')" title="Switch between € value and % return">€</button>
+              </div>
+            </div>
+            <div style="flex:1;position:relative"><canvas id="phc-metal"></canvas></div>
+          </div></div>
+        </div>
+
+        <!-- RIJ 3: Allocatie + totaal evolutie -->
+        <div class="chart-row">
+          <div class="card" style="flex:0 0 240px"><div class="ci" style="display:flex;flex-direction:column;height:100%;min-height:320px">
+            <div class="sec t-halloc-sec">Allocation</div>
+            <div style="position:relative;width:150px;height:150px;margin:0 auto;flex-shrink:0"><canvas id="hpc"></canvas></div>
+            <div id="hpleg" style="margin-top:8px;overflow-y:auto;flex:1;font-size:9px;font-family:'DM Mono',monospace"></div>
+          </div></div>
+          <div class="card" style="flex:1"><div class="ci" style="height:100%;display:flex;flex-direction:column">
+            <div class="sec t-hevol-sec">Portfolio evolutie totaal</div>
+            <div class="chwrap" style="flex:1"><canvas id="phc"></canvas></div>
+            <div id="hevol-empty" class="empty" style="font-size:11px;display:none"><span class="t-hevol-empty">Ververs prijzen om de evolutie bij te houden.</span></div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let TAX=10, trades=[], allocs=[], holdings=[], portHistory=[], mci=null, pci=null, hpci=null, phci=null, chartType='cum', selYear='all', lang='nl', hTypeNew='stock';
+let useExemption=false, exemptionAmount=10000, lossCarryEnabled=false, losses=[];
+try{const ls=JSON.parse(localStorage.getItem('us3-fiscal')||'{}');useExemption=ls.useExemption||false;exemptionAmount=ls.exemptionAmount||10000;lossCarryEnabled=ls.lossCarryEnabled||false;losses=ls.losses||[];}catch(e){}
+const PAL=['#00ffb2','#ffd97a','#00d4ff','#ff6b9d','#a78bfa','#ff8c00','#38bdf8','#fb923c','#4ade80','#f472b6'];
+try{
+  const raw=JSON.parse(localStorage.getItem('us3-trades')||'[]');
+  // Handle both compressed and full format
+  trades=raw.map(t=>t.name!==undefined?t:{
+    id:t.id,name:t.n,buy:t.b||0,sell:t.s||0,shares:t.sh||0,
+    gross:t.g||0,costs:t.c||0,tax:t.tx||0,net:t.nt||0,
+    pct:t.p||0,taxPct:t.tp||0,year:t.y,date:t.d,source:t.src
+  });
+}catch(e){}
+try{allocs=JSON.parse(localStorage.getItem('us3-allocs')||'[]')}catch(e){}
+try{holdings=JSON.parse(localStorage.getItem('us3-holdings')||'[]')}catch(e){}
+try{portHistory=JSON.parse(localStorage.getItem('us3-porthist')||'[]')}catch(e){}
+
+// ── Translations ──
+const TX = {
+  nl:{
+    'brand-sub':'Belgische beleggers · Bolero · zonder hefboom',
+    't-calc':'Calculator','t-log':'Logboek','t-charts':'Grafieken','t-port':'Portfolio',
+    't-name':'Aandeel / naam','t-bp':'Aankoopprijs per aandeel','t-sp':'Verkoopprijs per aandeel',
+    't-sh':'Aantal aandelen','t-dv':'Dividend (optioneel)',
+    't-btb':'Beurstaks aankoop (%)','t-bts':'Beurstaks verkoop (%)',
+    't-brb':'Bolero aankoop (€)','t-brs':'Bolero verkoop (€)',
+    't-fx':'Wisselkosten (% — 0 als EUR)','t-dvt':'Dividendbelasting (%)',
+    't-tax-sec':'Meerwaardebelasting','t-part':'Particulier','t-spec':'Speculatief','t-prof':'Beroep',
+    't-custom':'Aangepast percentage',
+    'tax-info':'🇧🇪 Minimale meerwaardebelasting in België is <strong>10%</strong>. 33% bij speculatief gedrag, 50% als hoofdberoep. Overleg altijd met een boekhouder.',
+    't-result-sec':'Resultaat','t-invest':'Investering','t-gross':'Bruto opbrengst',
+    't-costs':'Totale kosten','t-taxamt':'Belasting op winst','t-net':'Netto winst / verlies',
+    't-ret':'Netto rendement','t-be':'Break-even verkoopprijs',
+    't-detail-sec':'Kosten detail','t-btb-d':'Beurstaks aankoop','t-bts-d':'Beurstaks verkoop',
+    't-brb-d':'Bolero aankoop','t-brs-d':'Bolero verkoop','t-fx-d':'Wisselkosten','t-dvt-d':'Dividendbelasting',
+    't-total':'Totaal kosten','t-compare-sec':'Belasting vergelijking',
+    't-h-net':'Netto winst','t-h-ret':'Rendement','t-h-rr':'Min. R:R',
+    't-part2':'particulier','t-spec2':'speculatief','t-prof2':'beroep',
+    't-rr-info':'💡 <strong>Min. R:R</strong> = minimale Risk/Reward na alle kosten en belastingen. Gebruik dit als input in de Monte Carlo simulator.',
+    't-save-btn':'+ Sla huidige trade op in logboek',
+    't-clear-btn':'Wis alles','t-empty-log':'Nog geen trades. Ga naar de Calculator tab, bereken een trade en sla hem op.',
+    't-yr-trades':'Trades','t-yr-net':'Netto totaal','t-yr-avg':'Gem. rendement',
+    't-yr-wr':'Win rate','t-yr-costs':'Kosten betaald','t-yr-tax':'Belasting betaald',
+    't-all-trades':'Alle trades','t-total-net':'Netto totaal','t-avg-ret':'Gem. rendement','t-wr':'Win rate',
+    't-th-name':'Aandeel','t-th-date':'Datum','t-th-buy':'Koop','t-th-sell':'Verkoop',
+    't-th-gross':'Bruto','t-th-costs':'Kosten','t-th-tax':'Belasting','t-th-net':'Netto',
+    't-ch-cum':'📈 Cumulatieve groei','t-ch-bar':'📊 Winst per trade','t-ch-cmp':'⚖️ Bruto vs Netto','t-ch-ret':'🎯 Rendement %',
+    't-empty-chart':'Voeg trades toe via de Calculator tab om grafieken te zien.','t-hover-tip':'Hover voor details per trade',
+    't-pos-sec':'Posities invoeren','t-col-name':'Naam','t-col-price':'Prijs/st','t-col-qty':'Aantal','t-col-cat':'Categorie',
+    't-add-pos':'+ Positie toevoegen','t-alloc-info':'Vul naam, prijs per aandeel en aantal in — de waarde berekent automatisch.',
+    't-summary-sec':'Samenvatting','t-total-inv':'Totaal geïnvesteerd','t-biggest':'Grootste positie',
+    't-alloc-sec':'Portfolio allocatie','s-trade':'Trade details','t-costs-sec':'Kosten & taksen',
+    'back-lnk':'← Suite','t-all-years':'Alle jaren',
+    'ch-cum':'Cumulatieve netto groei','ch-bar':'Netto winst per trade','ch-cmp':'Bruto vs Netto vergelijking','ch-ret':'Rendement % per trade',
+    'yr-prefix':'Overzicht',
+    't-hold':'Posities','t-hold-add-sec':'Positie toevoegen','t-htype-s':'Aandeel','t-htype-c':'Crypto','t-htype-m':'Edelmetaal',
+    't-hf-name':'Naam','t-hf-ticker':'Ticker','t-hf-qty':'Aantal','t-hf-buy':'Gem. aankoopprijs (€)',
+    't-csv-import':'CSV Importeren','t-fhkey-lbl':'Finnhub key (aandelen)',
+    't-h-totval':'Totale waarde','t-h-totpl':'Totale P&L','t-h-npos':'Posities',
+    't-hold-tbl-sec':'Huidige posities','t-refresh-btn':'Prijzen vernieuwen',
+    't-hth-name':'Naam','t-hth-qty':'Aantal','t-hth-buy':'Aankoop','t-hth-live':'Live prijs','t-hth-val':'Waarde','t-hth-pl':'P&L',
+    't-hempty':'Nog geen posities. Voeg aandelen of crypto toe via het formulier links.',
+    't-halloc-sec':'Allocatie','t-hevol-sec':'Portfolio evolutie',
+    't-hevol-empty':'Ververs prijzen om de evolutie bij te houden.',
+    'sec-stocks':'📊 Aandelen','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Edelmetaal',
+    'sec-stocks-evo':'📊 Aandelen evolutie','sec-crypto-evo':'🪙 Crypto evolutie','sec-metal-evo':'🥇 Edelmetaal evolutie',
+    'api-stocks-lbl':'Aandelen','api-metal-lbl':'Goud & Zilver',
+    'api-fx-lbl':'USD/GBP automatisch omgezet naar EUR',
+    'api-vpn-lbl':'VPN aan?','api-vpn-txt':'Zet VPN tijdelijk uit voor live prijzen','disc-text':'Deze tool is uitsluitend informatief en vormt geen fiscaal of financieel advies. Berekeningen zijn schattingen. Raadpleeg altijd een erkend adviseur. De ontwikkelaar is niet aansprakelijk voor beslissingen op basis van deze tool.',
+    't-metal-add-btn':'+ Edelmetaal toevoegen',
+    'mf-metal-lbl':'Metaal','mf-qty-lbl':'Hoeveelheid','mf-unit-lbl2':'Eenheid',
+    'mf-opt-gold':'🥇 Goud','mf-opt-silver':'🥈 Zilver',
+    'mf-buy-pre':'Aankoopprijs per','mf-opt-g':'gram','mf-opt-kg':'kilogram','mf-opt-oz':'troy oz','t-empty-stock':'Geen aandelen.','t-empty-crypto':'Geen crypto.','t-empty-metal':'Geen edelmetalen.','t-total-val':'Totaal:','t-total-pl':'P&L:'
+  },
+  en:{
+    'brand-sub':'Belgian investors · Bolero · no leverage',
+    't-calc':'Calculator','t-log':'Logbook','t-charts':'Charts','t-port':'Portfolio',
+    't-name':'Stock / name','t-bp':'Buy price per share','t-sp':'Sell price per share',
+    't-sh':'Number of shares','t-dv':'Dividend (optional)',
+    't-btb':'Stock tax buy (%)','t-bts':'Stock tax sell (%)',
+    't-brb':'Broker fee buy (€)','t-brs':'Broker fee sell (€)',
+    't-fx':'Exchange cost (% — 0 if EUR)','t-dvt':'Dividend tax (%)',
+    't-tax-sec':'Capital gains tax','t-part':'Individual','t-spec':'Speculative','t-prof':'Professional',
+    't-custom':'Custom percentage',
+    'tax-info':'🇧🇪 Minimum capital gains tax in Belgium is <strong>10%</strong>. 33% for speculative trading, 50% as primary occupation. Always consult a tax advisor.',
+    't-result-sec':'Result','t-invest':'Investment','t-gross':'Gross proceeds',
+    't-costs':'Total costs','t-taxamt':'Tax on profit','t-net':'Net profit / loss',
+    't-ret':'Net return','t-be':'Break-even sell price',
+    't-detail-sec':'Cost breakdown','t-btb-d':'Stock tax buy','t-bts-d':'Stock tax sell',
+    't-brb-d':'Broker fee buy','t-brs-d':'Broker fee sell','t-fx-d':'Exchange costs','t-dvt-d':'Dividend tax',
+    't-total':'Total costs','t-compare-sec':'Tax comparison',
+    't-h-net':'Net profit','t-h-ret':'Return','t-h-rr':'Min. R:R',
+    't-part2':'individual','t-spec2':'speculative','t-prof2':'professional',
+    't-rr-info':'💡 <strong>Min. R:R</strong> = minimum Risk/Reward after all costs and taxes. Use this as input for the Monte Carlo simulator.',
+    't-save-btn':'+ Save trade to logbook',
+    't-clear-btn':'Clear all','t-empty-log':'No trades yet. Go to the Calculator tab, calculate a trade and save it.',
+    't-yr-trades':'Trades','t-yr-net':'Net total','t-yr-avg':'Avg return',
+    't-yr-wr':'Win rate','t-yr-costs':'Costs paid','t-yr-tax':'Tax paid',
+    't-all-trades':'All trades','t-total-net':'Net total','t-avg-ret':'Avg return','t-wr':'Win rate',
+    't-th-name':'Stock','t-th-date':'Date','t-th-buy':'Buy','t-th-sell':'Sell',
+    't-th-gross':'Gross','t-th-costs':'Costs','t-th-tax':'Tax','t-th-net':'Net',
+    't-ch-cum':'📈 Cumulative growth','t-ch-bar':'📊 Profit per trade','t-ch-cmp':'⚖️ Gross vs Net','t-ch-ret':'🎯 Return %',
+    't-empty-chart':'Add trades via the Calculator tab to see charts.','t-hover-tip':'Hover for details per trade',
+    't-pos-sec':'Enter positions','t-col-name':'Name','t-col-price':'Price/sh','t-col-qty':'Qty','t-col-cat':'Category',
+    't-add-pos':'+ Add position','t-alloc-info':'Enter name, price per share and quantity — value is calculated automatically.',
+    't-summary-sec':'Summary','t-total-inv':'Total invested','t-biggest':'Largest position',
+    't-alloc-sec':'Portfolio allocation','s-trade':'Trade details','t-costs-sec':'Costs & fees',
+    'back-lnk':'← Suite','t-all-years':'All years',
+    'ch-cum':'Cumulative net growth','ch-bar':'Net profit per trade','ch-cmp':'Gross vs Net comparison','ch-ret':'Return % per trade',
+    'yr-prefix':'Overview',
+    't-hold':'Holdings','t-hold-add-sec':'Add position','t-htype-s':'Stock','t-htype-c':'Crypto','t-htype-m':'Precious Metals',
+    't-hf-name':'Name','t-hf-ticker':'Ticker','t-hf-qty':'Quantity','t-hf-buy':'Avg buy price (€)',
+    't-csv-import':'CSV Import','t-fhkey-lbl':'Finnhub key (stocks)',
+    't-h-totval':'Total value','t-h-totpl':'Total P&L','t-h-npos':'Positions',
+    't-hold-tbl-sec':'Current holdings','t-refresh-btn':'Refresh prices',
+    't-hth-name':'Name','t-hth-qty':'Qty','t-hth-buy':'Avg buy','t-hth-live':'Live price','t-hth-val':'Value','t-hth-pl':'P&L',
+    't-hempty':'No positions yet. Add stocks or crypto via the form on the left.',
+    't-halloc-sec':'Allocation','t-hevol-sec':'Portfolio evolution',
+    't-hevol-empty':'Refresh prices to track portfolio evolution.',
+    'sec-stocks':'📊 Stocks','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Precious Metals',
+    'sec-stocks-evo':'📊 Stocks evolution','sec-crypto-evo':'🪙 Crypto evolution','sec-metal-evo':'🥇 Precious metals evolution',
+    'api-stocks-lbl':'Stocks','api-metal-lbl':'Gold & Silver',
+    'api-fx-lbl':'USD/GBP automatically converted to EUR',
+    'api-vpn-lbl':'VPN on?','api-vpn-txt':'Temporarily disable VPN for live prices',
+    'disc-text':'This tool is for informational purposes only and does not constitute financial or tax advice. Calculations are estimates. Always consult a qualified advisor. The developer is not liable for any decisions made based on this tool.',
+    'mf-metal-lbl':'Metal','mf-qty-lbl':'Quantity','mf-unit-lbl2':'Unit',
+    'mf-opt-gold':'🥇 Gold','mf-opt-silver':'🥈 Silver',
+    'mf-buy-pre':'Buy price per','mf-opt-g':'gram','mf-opt-kg':'kilogram','mf-opt-oz':'troy oz','t-empty-stock':'No stocks.','t-empty-crypto':'No crypto.','t-empty-metal':'No precious metals.','t-total-val':'Total:','t-total-pl':'P&L:'
+  },
+  fr:{
+    'brand-sub':'Investisseurs belges · Bolero · sans effet de levier',
+    't-calc':'Calculatrice','t-log':'Journal','t-charts':'Graphiques','t-port':'Portefeuille',
+    't-name':'Action / nom','t-bp':'Prix d\'achat par action','t-sp':'Prix de vente par action',
+    't-sh':'Nombre d\'actions','t-dv':'Dividende (optionnel)',
+    't-btb':'Taxe boursière achat (%)','t-bts':'Taxe boursière vente (%)',
+    't-brb':'Frais courtier achat (€)','t-brs':'Frais courtier vente (€)',
+    't-fx':'Frais de change (% — 0 si EUR)','t-dvt':'Taxe sur dividende (%)',
+    't-tax-sec':'Impôt sur les plus-values','t-part':'Particulier','t-spec':'Spéculatif','t-prof':'Professionnel',
+    't-custom':'Pourcentage personnalisé',
+    'tax-info':'🇧🇪 L\'impôt minimum sur les plus-values en Belgique est de <strong>10%</strong>. 33% pour le trading spéculatif, 50% comme activité principale. Consultez toujours un conseiller fiscal.',
+    't-result-sec':'Résultat','t-invest':'Investissement','t-gross':'Produit brut',
+    't-costs':'Coûts totaux','t-taxamt':'Impôt sur le bénéfice','t-net':'Bénéfice net / perte',
+    't-ret':'Rendement net','t-be':'Prix de vente seuil de rentabilité',
+    't-detail-sec':'Détail des coûts','t-btb-d':'Taxe boursière achat','t-bts-d':'Taxe boursière vente',
+    't-brb-d':'Frais courtier achat','t-brs-d':'Frais courtier vente','t-fx-d':'Frais de change','t-dvt-d':'Taxe dividende',
+    't-total':'Coûts totaux','t-compare-sec':'Comparaison fiscale',
+    't-h-net':'Bénéfice net','t-h-ret':'Rendement','t-h-rr':'R:R min.',
+    't-part2':'particulier','t-spec2':'spéculatif','t-prof2':'professionnel',
+    't-rr-info':'💡 <strong>R:R min.</strong> = Risk/Reward minimum après tous les coûts et impôts. Utilisez ceci comme entrée pour le simulateur Monte Carlo.',
+    't-save-btn':'+ Enregistrer dans le journal',
+    't-clear-btn':'Tout effacer','t-empty-log':'Aucun trade. Allez dans Calculatrice, calculez un trade et enregistrez-le.',
+    't-yr-trades':'Trades','t-yr-net':'Total net','t-yr-avg':'Rendement moy.',
+    't-yr-wr':'Taux de réussite','t-yr-costs':'Coûts payés','t-yr-tax':'Impôts payés',
+    't-all-trades':'Tous les trades','t-total-net':'Total net','t-avg-ret':'Rendement moy.','t-wr':'Taux de réussite',
+    't-th-name':'Action','t-th-date':'Date','t-th-buy':'Achat','t-th-sell':'Vente',
+    't-th-gross':'Brut','t-th-costs':'Coûts','t-th-tax':'Impôt','t-th-net':'Net',
+    't-ch-cum':'📈 Croissance cumulative','t-ch-bar':'📊 Bénéfice par trade','t-ch-cmp':'⚖️ Brut vs Net','t-ch-ret':'🎯 Rendement %',
+    't-empty-chart':'Ajoutez des trades via la Calculatrice pour voir les graphiques.','t-hover-tip':'Survolez pour les détails',
+    't-pos-sec':'Saisir positions','t-col-name':'Nom','t-col-price':'Prix/action','t-col-qty':'Qté','t-col-cat':'Catégorie',
+    't-add-pos':'+ Ajouter position','t-alloc-info':'Entrez le nom, le prix par action et la quantité.',
+    't-summary-sec':'Résumé','t-total-inv':'Total investi','t-biggest':'Position la plus grande',
+    't-alloc-sec':'Allocation du portefeuille','s-trade':'Détails du trade','t-costs-sec':'Coûts & frais',
+    'back-lnk':'← Suite','t-all-years':'Toutes années',
+    'ch-cum':'Croissance nette cumulative','ch-bar':'Bénéfice net par trade','ch-cmp':'Comparaison Brut vs Net','ch-ret':'Rendement % par trade',
+    'yr-prefix':'Aperçu',
+    't-hold':'Positions','t-hold-add-sec':'Ajouter position','t-htype-s':'Action','t-htype-c':'Crypto','t-htype-m':'Métaux précieux',
+    't-hf-name':'Nom','t-hf-ticker':'Ticker','t-hf-qty':'Quantité','t-hf-buy':'Prix d\'achat moy. (€)',
+    't-hadd-btn':'+ Ajouter','t-api-sec':'Prix en direct — API','t-fhkey-lbl':'Clé Finnhub (actions)',
+    't-h-totval':'Valeur totale','t-h-totpl':'P&L total','t-h-npos':'Positions',
+    't-hold-tbl-sec':'Positions actuelles','t-refresh-btn':'Actualiser les prix',
+    't-hth-name':'Nom','t-hth-qty':'Qté','t-hth-buy':'Achat moy.','t-hth-live':'Prix actuel','t-hth-val':'Valeur','t-hth-pl':'P&L',
+    't-hempty':'Aucune position. Ajoutez des actions ou crypto via le formulaire.',
+    't-halloc-sec':'Allocation','t-hevol-sec':'Évolution du portefeuille',
+    't-hevol-empty':'Actualisez les prix pour suivre l\'évolution.',
+    'sec-stocks':'📊 Actions','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Métaux précieux',
+    'sec-stocks-evo':'📊 Évolution actions','sec-crypto-evo':'🪙 Évolution crypto','sec-metal-evo':'🥇 Évolution métaux',
+    'api-stocks-lbl':'Actions','api-metal-lbl':'Or & Argent',
+    'api-fx-lbl':'USD/GBP converti automatiquement en EUR',
+    'api-vpn-lbl':'VPN activé ?','api-vpn-txt':'Désactivez temporairement le VPN pour les prix en direct',
+    'disc-text':'Cet outil est uniquement informatif et ne constitue pas un conseil fiscal ou financier. Les calculs sont des estimations. Consultez toujours un conseiller qualifié. Le développeur décline toute responsabilité pour les décisions prises.',
+    'mf-metal-lbl':'Métal','mf-qty-lbl':'Quantité','mf-unit-lbl2':'Unité',
+    'mf-opt-gold':'🥇 Or','mf-opt-silver':'🥈 Argent',
+    'mf-buy-pre':'Prix achat par','mf-opt-g':'gramme','mf-opt-kg':'kilogramme','mf-opt-oz':'once troy',
+    't-empty-stock':'Aucune action.','t-empty-crypto':'Aucune crypto.','t-empty-metal':'Aucun métal précieux.','t-total-val':'Total :','t-total-pl':'P&L :'
+  },
+  es:{
+    'brand-sub':'Inversores belgas · Bolero · sin apalancamiento',
+    't-calc':'Calculadora','t-log':'Diario','t-charts':'Gráficos','t-port':'Cartera',
+    't-name':'Acción / nombre','t-bp':'Precio de compra por acción','t-sp':'Precio de venta por acción',
+    't-sh':'Número de acciones','t-dv':'Dividendo (opcional)',
+    't-btb':'Impuesto bursátil compra (%)','t-bts':'Impuesto bursátil venta (%)',
+    't-brb':'Comisión broker compra (€)','t-brs':'Comisión broker venta (€)',
+    't-fx':'Coste de cambio (% — 0 si EUR)','t-dvt':'Impuesto sobre dividendo (%)',
+    't-tax-sec':'Impuesto sobre ganancias','t-part':'Particular','t-spec':'Especulativo','t-prof':'Profesional',
+    't-custom':'Porcentaje personalizado',
+    'tax-info':'🇧🇪 El impuesto mínimo sobre ganancias en Bélgica es del <strong>10%</strong>. 33% para trading especulativo, 50% como actividad principal. Consulte siempre a un asesor fiscal.',
+    't-result-sec':'Resultado','t-invest':'Inversión','t-gross':'Ingresos brutos',
+    't-costs':'Costes totales','t-taxamt':'Impuesto sobre beneficio','t-net':'Beneficio neto / pérdida',
+    't-ret':'Rendimiento neto','t-be':'Precio de venta de equilibrio',
+    't-detail-sec':'Desglose de costes','t-btb-d':'Impuesto bursátil compra','t-bts-d':'Impuesto bursátil venta',
+    't-brb-d':'Comisión broker compra','t-brs-d':'Comisión broker venta','t-fx-d':'Costes de cambio','t-dvt-d':'Impuesto dividendo',
+    't-total':'Costes totales','t-compare-sec':'Comparación fiscal',
+    't-h-net':'Beneficio neto','t-h-ret':'Rendimiento','t-h-rr':'R:R mín.',
+    't-part2':'particular','t-spec2':'especulativo','t-prof2':'profesional',
+    't-rr-info':'💡 <strong>R:R mín.</strong> = Risk/Reward mínimo después de todos los costes e impuestos. Úselo como entrada para el simulador Monte Carlo.',
+    't-save-btn':'+ Guardar en el diario',
+    't-clear-btn':'Borrar todo','t-empty-log':'Sin trades. Ve a la Calculadora, calcula un trade y guárdalo.',
+    't-yr-trades':'Trades','t-yr-net':'Total neto','t-yr-avg':'Rendimiento med.',
+    't-yr-wr':'Tasa de éxito','t-yr-costs':'Costes pagados','t-yr-tax':'Impuestos pagados',
+    't-all-trades':'Todos los trades','t-total-net':'Total neto','t-avg-ret':'Rendimiento med.','t-wr':'Tasa de éxito',
+    't-th-name':'Acción','t-th-date':'Fecha','t-th-buy':'Compra','t-th-sell':'Venta',
+    't-th-gross':'Bruto','t-th-costs':'Costes','t-th-tax':'Impuesto','t-th-net':'Neto',
+    't-ch-cum':'📈 Crecimiento acumulativo','t-ch-bar':'📊 Beneficio por trade','t-ch-cmp':'⚖️ Bruto vs Neto','t-ch-ret':'🎯 Rendimiento %',
+    't-empty-chart':'Añade trades en la Calculadora para ver gráficos.','t-hover-tip':'Pasa el ratón para detalles',
+    't-pos-sec':'Introducir posiciones','t-col-name':'Nombre','t-col-price':'Precio/acc','t-col-qty':'Cant','t-col-cat':'Categoría',
+    't-add-pos':'+ Añadir posición','t-alloc-info':'Introduce nombre, precio por acción y cantidad.',
+    't-summary-sec':'Resumen','t-total-inv':'Total invertido','t-biggest':'Posición más grande',
+    't-alloc-sec':'Asignación de cartera','s-trade':'Detalles del trade','t-costs-sec':'Costes y comisiones',
+    'back-lnk':'← Suite','t-all-years':'Todos los años',
+    'ch-cum':'Crecimiento neto acumulativo','ch-bar':'Beneficio neto por trade','ch-cmp':'Comparación Bruto vs Neto','ch-ret':'Rendimiento % por trade',
+    'yr-prefix':'Resumen',
+    't-hold':'Posiciones','t-hold-add-sec':'Añadir posición','t-htype-s':'Acción','t-htype-c':'Crypto','t-htype-m':'Metales preciosos',
+    't-hf-name':'Nombre','t-hf-ticker':'Ticker','t-hf-qty':'Cantidad','t-hf-buy':'Precio compra med. (€)',
+    't-hadd-btn':'+ Añadir','t-api-sec':'Precios en vivo — API','t-fhkey-lbl':'Clave Finnhub (acciones)',
+    't-h-totval':'Valor total','t-h-totpl':'P&L total','t-h-npos':'Posiciones',
+    't-hold-tbl-sec':'Posiciones actuales','t-refresh-btn':'Actualizar precios',
+    't-hth-name':'Nombre','t-hth-qty':'Cant','t-hth-buy':'Compra med.','t-hth-live':'Precio actual','t-hth-val':'Valor','t-hth-pl':'P&L',
+    't-hempty':'Sin posiciones. Añade acciones o crypto en el formulario.',
+    't-halloc-sec':'Asignación','t-hevol-sec':'Evolución del portafolio',
+    't-hevol-empty':'Actualiza precios para ver la evolución.',
+    'sec-stocks':'📊 Acciones','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Metales preciosos',
+    'sec-stocks-evo':'📊 Evolución acciones','sec-crypto-evo':'🪙 Evolución crypto','sec-metal-evo':'🥇 Evolución metales',
+    'api-stocks-lbl':'Acciones','api-metal-lbl':'Oro & Plata',
+    'api-fx-lbl':'USD/GBP convertido automáticamente a EUR',
+    'api-vpn-lbl':'¿VPN activado?','api-vpn-txt':'Desactiva temporalmente el VPN para precios en vivo',
+    'disc-text':'Esta herramienta es solo informativa y no constituye asesoramiento fiscal o financiero. Los cálculos son estimaciones. Consulte siempre a un asesor cualificado. El desarrollador no es responsable de las decisiones tomadas.',
+    'mf-metal-lbl':'Metal','mf-qty-lbl':'Cantidad','mf-unit-lbl2':'Unidad',
+    'mf-opt-gold':'🥇 Oro','mf-opt-silver':'🥈 Plata',
+    'mf-buy-pre':'Precio de compra por','mf-opt-g':'gramo','mf-opt-kg':'kilogramo','mf-opt-oz':'onza troy',
+    't-empty-stock':'Sin acciones.','t-empty-crypto':'Sin crypto.','t-empty-metal':'Sin metales preciosos.','t-total-val':'Total:','t-total-pl':'P&L:'
+  },
+  de:{
+    'brand-sub':'Belgische Anleger · Bolero · ohne Hebelwirkung',
+    't-calc':'Rechner','t-log':'Handelsbuch','t-charts':'Diagramme','t-port':'Portfolio',
+    't-name':'Aktie / Name','t-bp':'Kaufpreis pro Aktie','t-sp':'Verkaufspreis pro Aktie',
+    't-sh':'Anzahl Aktien','t-dv':'Dividende (optional)',
+    't-btb':'Börsensteuer Kauf (%)','t-bts':'Börsensteuer Verkauf (%)',
+    't-brb':'Brokergebühr Kauf (€)','t-brs':'Brokergebühr Verkauf (€)',
+    't-fx':'Wechselkosten (% — 0 wenn EUR)','t-dvt':'Dividendensteuer (%)',
+    't-tax-sec':'Kapitalertragssteuer','t-part':'Privatperson','t-spec':'Spekulativ','t-prof':'Beruflich',
+    't-custom':'Benutzerdefinierter Prozentsatz',
+    'tax-info':'🇧🇪 Mindest-Kapitalertragssteuer in Belgien: <strong>10%</strong>. 33% für spekulativen Handel, 50% als Haupttätigkeit. Konsultieren Sie immer einen Steuerberater.',
+    't-result-sec':'Ergebnis','t-invest':'Investition','t-gross':'Bruttoerlös',
+    't-costs':'Gesamtkosten','t-taxamt':'Steuer auf Gewinn','t-net':'Nettogewinn / -verlust',
+    't-ret':'Nettorendite','t-be':'Break-even Verkaufspreis',
+    't-detail-sec':'Kostenaufschlüsselung','t-btb-d':'Börsensteuer Kauf','t-bts-d':'Börsensteuer Verkauf',
+    't-brb-d':'Brokergebühr Kauf','t-brs-d':'Brokergebühr Verkauf','t-fx-d':'Wechselkosten','t-dvt-d':'Dividendensteuer',
+    't-total':'Gesamtkosten','t-compare-sec':'Steuervergleich',
+    't-h-net':'Nettogewinn','t-h-ret':'Rendite','t-h-rr':'Min. R:R',
+    't-part2':'privat','t-spec2':'spekulativ','t-prof2':'beruflich',
+    't-rr-info':'💡 <strong>Min. R:R</strong> = minimales Risk/Reward nach allen Kosten und Steuern.',
+    't-save-btn':'+ Im Handelsbuch speichern',
+    't-clear-btn':'Alle löschen','t-empty-log':'Keine Trades. Gehen Sie zum Rechner, berechnen Sie einen Trade und speichern Sie ihn.',
+    't-yr-trades':'Trades','t-yr-net':'Netto gesamt','t-yr-avg':'Ø Rendite',
+    't-yr-wr':'Gewinnrate','t-yr-costs':'Gezahlte Kosten','t-yr-tax':'Gezahlte Steuern',
+    't-all-trades':'Alle Trades','t-total-net':'Netto gesamt','t-avg-ret':'Ø Rendite','t-wr':'Gewinnrate',
+    't-th-name':'Aktie','t-th-date':'Datum','t-th-buy':'Kauf','t-th-sell':'Verkauf',
+    't-th-gross':'Brutto','t-th-costs':'Kosten','t-th-tax':'Steuer','t-th-net':'Netto',
+    't-ch-cum':'📈 Kumulatives Wachstum','t-ch-bar':'📊 Gewinn pro Trade','t-ch-cmp':'⚖️ Brutto vs Netto','t-ch-ret':'🎯 Rendite %',
+    't-empty-chart':'Fügen Sie Trades über den Rechner hinzu.','t-hover-tip':'Hover für Details',
+    't-pos-sec':'Positionen eingeben','t-col-name':'Name','t-col-price':'Preis/Aktie','t-col-qty':'Menge','t-col-cat':'Kategorie',
+    't-add-pos':'+ Position hinzufügen','t-alloc-info':'Name, Preis pro Aktie und Menge eingeben.',
+    't-summary-sec':'Zusammenfassung','t-total-inv':'Gesamt investiert','t-biggest':'Größte Position',
+    't-alloc-sec':'Portfolio-Allokation','s-trade':'Trade-Details','t-costs-sec':'Kosten & Gebühren',
+    'back-lnk':'← Suite','t-all-years':'Alle Jahre',
+    'ch-cum':'Kumulatives Nettowachstum','ch-bar':'Nettogewinn pro Trade','ch-cmp':'Brutto vs Netto Vergleich','ch-ret':'Rendite % pro Trade',
+    'yr-prefix':'Übersicht',
+    't-hold':'Positionen','t-hold-add-sec':'Position hinzufügen','t-htype-s':'Aktie','t-htype-c':'Krypto','t-htype-m':'Edelmetalle',
+    't-hf-name':'Name','t-hf-ticker':'Ticker','t-hf-qty':'Menge','t-hf-buy':'Ø Kaufpreis (€)',
+    't-hadd-btn':'+ Hinzufügen','t-api-sec':'Live-Preise — API','t-fhkey-lbl':'Finnhub-Schlüssel',
+    't-h-totval':'Gesamtwert','t-h-totpl':'P&L gesamt','t-h-npos':'Positionen',
+    't-hold-tbl-sec':'Aktuelle Positionen','t-refresh-btn':'Preise aktualisieren',
+    't-hth-name':'Name','t-hth-qty':'Menge','t-hth-buy':'Ø Kauf','t-hth-live':'Live-Preis','t-hth-val':'Wert','t-hth-pl':'P&L',
+    't-hempty':'Keine Positionen. Fügen Sie Aktien oder Krypto hinzu.',
+    't-halloc-sec':'Allokation','t-hevol-sec':'Portfolio-Entwicklung',
+    't-hevol-empty':'Preise aktualisieren um Entwicklung zu verfolgen.',
+    'sec-stocks':'📊 Aktien','sec-crypto':'🪙 Krypto','sec-metal':'🥇 Edelmetalle',
+    'sec-stocks-evo':'📊 Aktienentwicklung','sec-crypto-evo':'🪙 Krypto-Entwicklung','sec-metal-evo':'🥇 Edelmetallentwicklung',
+    'api-stocks-lbl':'Aktien','api-metal-lbl':'Gold & Silber',
+    'api-fx-lbl':'USD/GBP automatisch in EUR umgerechnet',
+    'api-vpn-lbl':'VPN aktiv?','api-vpn-txt':'VPN vorübergehend deaktivieren für Live-Preise',
+    'disc-text':'Dieses Tool dient nur zu Informationszwecken und stellt keine Steuer- oder Finanzberatung dar. Berechnungen sind Schätzungen. Konsultieren Sie immer einen qualifizierten Berater. Der Entwickler haftet nicht für getroffene Entscheidungen.',
+    'mf-metal-lbl':'Metall','mf-qty-lbl':'Menge','mf-unit-lbl2':'Einheit',
+    'mf-opt-gold':'🥇 Gold','mf-opt-silver':'🥈 Silber',
+    'mf-buy-pre':'Kaufpreis pro','mf-opt-g':'Gramm','mf-opt-kg':'Kilogramm','mf-opt-oz':'Feinunze',
+    't-empty-stock':'Keine Aktien.','t-empty-crypto':'Kein Krypto.','t-empty-metal':'Keine Edelmetalle.','t-total-val':'Gesamt:','t-total-pl':'P&L:'
+  },
+  it:{
+    'brand-sub':'Investitori belgi · Bolero · senza leva',
+    't-calc':'Calcolatrice','t-log':'Diario','t-charts':'Grafici','t-port':'Portafoglio',
+    't-name':'Azione / nome','t-bp':'Prezzo acquisto per azione','t-sp':'Prezzo vendita per azione',
+    't-sh':'Numero di azioni','t-dv':'Dividendo (opzionale)',
+    't-btb':'Tassa borsistica acquisto (%)','t-bts':'Tassa borsistica vendita (%)',
+    't-brb':'Commissione broker acquisto (€)','t-brs':'Commissione broker vendita (€)',
+    't-fx':'Costo cambio (% — 0 se EUR)','t-dvt':'Tassa sul dividendo (%)',
+    't-tax-sec':'Imposta sulle plusvalenze','t-part':'Privato','t-spec':'Speculativo','t-prof':'Professionale',
+    't-custom':'Percentuale personalizzata',
+    'tax-info':'🇧🇪 L\'imposta minima sulle plusvalenze in Belgio è del <strong>10%</strong>. 33% per il trading speculativo, 50% come attività principale. Consultare sempre un consulente fiscale.',
+    't-result-sec':'Risultato','t-invest':'Investimento','t-gross':'Ricavi lordi',
+    't-costs':'Costi totali','t-taxamt':'Imposta sul profitto','t-net':'Profitto netto / perdita',
+    't-ret':'Rendimento netto','t-be':'Prezzo di vendita break-even',
+    't-detail-sec':'Dettaglio costi','t-btb-d':'Tassa borsistica acquisto','t-bts-d':'Tassa borsistica vendita',
+    't-brb-d':'Commissione acquisto','t-brs-d':'Commissione vendita','t-fx-d':'Costi cambio','t-dvt-d':'Tassa dividendo',
+    't-total':'Costi totali','t-compare-sec':'Confronto fiscale',
+    't-h-net':'Profitto netto','t-h-ret':'Rendimento','t-h-rr':'R:R min.',
+    't-part2':'privato','t-spec2':'speculativo','t-prof2':'professionale',
+    't-rr-info':'💡 <strong>R:R min.</strong> = Risk/Reward minimo dopo tutti i costi e le imposte.',
+    't-save-btn':'+ Salva nel diario',
+    't-clear-btn':'Cancella tutto','t-empty-log':'Nessun trade. Vai alla Calcolatrice, calcola un trade e salvalo.',
+    't-yr-trades':'Trade','t-yr-net':'Totale netto','t-yr-avg':'Rendimento med.',
+    't-yr-wr':'Tasso di successo','t-yr-costs':'Costi pagati','t-yr-tax':'Imposte pagate',
+    't-all-trades':'Tutti i trade','t-total-net':'Totale netto','t-avg-ret':'Rendimento med.','t-wr':'Tasso di successo',
+    't-th-name':'Azione','t-th-date':'Data','t-th-buy':'Acquisto','t-th-sell':'Vendita',
+    't-th-gross':'Lordo','t-th-costs':'Costi','t-th-tax':'Imposta','t-th-net':'Netto',
+    't-ch-cum':'📈 Crescita cumulativa','t-ch-bar':'📊 Profitto per trade','t-ch-cmp':'⚖️ Lordo vs Netto','t-ch-ret':'🎯 Rendimento %',
+    't-empty-chart':'Aggiungi trade tramite la Calcolatrice.','t-hover-tip':'Passa sopra per i dettagli',
+    't-pos-sec':'Inserisci posizioni','t-col-name':'Nome','t-col-price':'Prezzo/az','t-col-qty':'Qtà','t-col-cat':'Categoria',
+    't-add-pos':'+ Aggiungi posizione','t-alloc-info':'Inserisci nome, prezzo per azione e quantità.',
+    't-summary-sec':'Riepilogo','t-total-inv':'Totale investito','t-biggest':'Posizione più grande',
+    't-alloc-sec':'Allocazione portafoglio','s-trade':'Dettagli trade','t-costs-sec':'Costi & commissioni',
+    'back-lnk':'← Suite','t-all-years':'Tutti gli anni',
+    'ch-cum':'Crescita netta cumulativa','ch-bar':'Profitto netto per trade','ch-cmp':'Confronto Lordo vs Netto','ch-ret':'Rendimento % per trade',
+    'yr-prefix':'Panoramica',
+    't-hold':'Posizioni','t-hold-add-sec':'Aggiungi posizione','t-htype-s':'Azione','t-htype-c':'Crypto','t-htype-m':'Metalli preziosi',
+    't-hf-name':'Nome','t-hf-ticker':'Ticker','t-hf-qty':'Quantità','t-hf-buy':'Prezzo acquisto med. (€)',
+    't-hadd-btn':'+ Aggiungi','t-api-sec':'Prezzi in tempo reale — API','t-fhkey-lbl':'Chiave Finnhub',
+    't-h-totval':'Valore totale','t-h-totpl':'P&L totale','t-h-npos':'Posizioni',
+    't-hold-tbl-sec':'Posizioni attuali','t-refresh-btn':'Aggiorna prezzi',
+    't-hth-name':'Nome','t-hth-qty':'Qtà','t-hth-buy':'Acquisto med.','t-hth-live':'Prezzo attuale','t-hth-val':'Valore','t-hth-pl':'P&L',
+    't-hempty':'Nessuna posizione. Aggiungi azioni o crypto.',
+    't-halloc-sec':'Allocazione','t-hevol-sec':'Evoluzione portafoglio',
+    't-hevol-empty':'Aggiorna prezzi per monitorare l\'evoluzione.',
+    'sec-stocks':'📊 Azioni','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Metalli preziosi',
+    'sec-stocks-evo':'📊 Evoluzione azioni','sec-crypto-evo':'🪙 Evoluzione crypto','sec-metal-evo':'🥇 Evoluzione metalli',
+    'api-stocks-lbl':'Azioni','api-metal-lbl':'Oro & Argento',
+    'api-fx-lbl':'USD/GBP convertito automaticamente in EUR',
+    'api-vpn-lbl':'VPN attivo?','api-vpn-txt':'Disattiva temporaneamente il VPN per i prezzi in tempo reale',
+    'disc-text':'Questo strumento è solo informativo e non costituisce consulenza fiscale o finanziaria. I calcoli sono stime. Consultate sempre un consulente qualificato. Lo sviluppatore non è responsabile per le decisioni prese.',
+    'mf-metal-lbl':'Metallo','mf-qty-lbl':'Quantità','mf-unit-lbl2':'Unità',
+    'mf-opt-gold':'🥇 Oro','mf-opt-silver':'🥈 Argento',
+    'mf-buy-pre':'Prezzo acquisto per','mf-opt-g':'grammo','mf-opt-kg':'chilogrammo','mf-opt-oz':'oncia troy',
+    't-empty-stock':'Nessuna azione.','t-empty-crypto':'Nessuna crypto.','t-empty-metal':'Nessun metallo prezioso.','t-total-val':'Totale:','t-total-pl':'P&L:'
+  },
+  pt:{
+    'brand-sub':'Investidores belgas · Bolero · sem alavancagem',
+    't-calc':'Calculadora','t-log':'Diário','t-charts':'Gráficos','t-port':'Portfólio',
+    't-name':'Ação / nome','t-bp':'Preço de compra por ação','t-sp':'Preço de venda por ação',
+    't-sh':'Número de ações','t-dv':'Dividendo (opcional)',
+    't-btb':'Imposto bolsa compra (%)','t-bts':'Imposto bolsa venda (%)',
+    't-brb':'Taxa corretor compra (€)','t-brs':'Taxa corretor venda (€)',
+    't-fx':'Custo câmbio (% — 0 se EUR)','t-dvt':'Imposto sobre dividendo (%)',
+    't-tax-sec':'Imposto sobre ganhos de capital','t-part':'Particular','t-spec':'Especulativo','t-prof':'Profissional',
+    't-custom':'Percentagem personalizada',
+    'tax-info':'🇧🇪 O imposto mínimo sobre ganhos de capital na Bélgica é de <strong>10%</strong>. 33% para trading especulativo, 50% como atividade principal. Consulte sempre um consultor fiscal.',
+    't-result-sec':'Resultado','t-invest':'Investimento','t-gross':'Receita bruta',
+    't-costs':'Custos totais','t-taxamt':'Imposto sobre lucro','t-net':'Lucro líquido / perda',
+    't-ret':'Rendimento líquido','t-be':'Preço de venda break-even',
+    't-detail-sec':'Detalhe de custos','t-btb-d':'Imposto bolsa compra','t-bts-d':'Imposto bolsa venda',
+    't-brb-d':'Taxa corretor compra','t-brs-d':'Taxa corretor venda','t-fx-d':'Custos câmbio','t-dvt-d':'Imposto dividendo',
+    't-total':'Custos totais','t-compare-sec':'Comparação fiscal',
+    't-h-net':'Lucro líquido','t-h-ret':'Rendimento','t-h-rr':'R:R mín.',
+    't-part2':'particular','t-spec2':'especulativo','t-prof2':'profissional',
+    't-rr-info':'💡 <strong>R:R mín.</strong> = Risk/Reward mínimo após todos os custos e impostos.',
+    't-save-btn':'+ Guardar no diário',
+    't-clear-btn':'Apagar tudo','t-empty-log':'Sem trades. Vá à Calculadora, calcule um trade e guarde-o.',
+    't-yr-trades':'Trades','t-yr-net':'Total líquido','t-yr-avg':'Rendimento méd.',
+    't-yr-wr':'Taxa de sucesso','t-yr-costs':'Custos pagos','t-yr-tax':'Impostos pagos',
+    't-all-trades':'Todos os trades','t-total-net':'Total líquido','t-avg-ret':'Rendimento méd.','t-wr':'Taxa de sucesso',
+    't-th-name':'Ação','t-th-date':'Data','t-th-buy':'Compra','t-th-sell':'Venda',
+    't-th-gross':'Bruto','t-th-costs':'Custos','t-th-tax':'Imposto','t-th-net':'Líquido',
+    't-ch-cum':'📈 Crescimento cumulativo','t-ch-bar':'📊 Lucro por trade','t-ch-cmp':'⚖️ Bruto vs Líquido','t-ch-ret':'🎯 Rendimento %',
+    't-empty-chart':'Adicione trades pela Calculadora.','t-hover-tip':'Passe o rato para detalhes',
+    't-pos-sec':'Inserir posições','t-col-name':'Nome','t-col-price':'Preço/ação','t-col-qty':'Qtd','t-col-cat':'Categoria',
+    't-add-pos':'+ Adicionar posição','t-alloc-info':'Introduza nome, preço por ação e quantidade.',
+    't-summary-sec':'Resumo','t-total-inv':'Total investido','t-biggest':'Maior posição',
+    't-alloc-sec':'Alocação do portfólio','s-trade':'Detalhes do trade','t-costs-sec':'Custos & taxas',
+    'back-lnk':'← Suite','t-all-years':'Todos os anos',
+    'ch-cum':'Crescimento líquido cumulativo','ch-bar':'Lucro líquido por trade','ch-cmp':'Comparação Bruto vs Líquido','ch-ret':'Rendimento % por trade',
+    'yr-prefix':'Visão geral',
+    't-hold':'Posições','t-hold-add-sec':'Adicionar posição','t-htype-s':'Ação','t-htype-c':'Crypto','t-htype-m':'Metais preciosos',
+    't-hf-name':'Nome','t-hf-ticker':'Ticker','t-hf-qty':'Quantidade','t-hf-buy':'Preço compra méd. (€)',
+    't-hadd-btn':'+ Adicionar','t-api-sec':'Preços ao vivo — API','t-fhkey-lbl':'Chave Finnhub',
+    't-h-totval':'Valor total','t-h-totpl':'P&L total','t-h-npos':'Posições',
+    't-hold-tbl-sec':'Posições atuais','t-refresh-btn':'Atualizar preços',
+    't-hth-name':'Nome','t-hth-qty':'Qtd','t-hth-buy':'Compra méd.','t-hth-live':'Preço atual','t-hth-val':'Valor','t-hth-pl':'P&L',
+    't-hempty':'Sem posições. Adicione ações ou crypto.',
+    't-halloc-sec':'Alocação','t-hevol-sec':'Evolução do portfólio',
+    't-hevol-empty':'Atualize preços para acompanhar a evolução.',
+    'sec-stocks':'📊 Ações','sec-crypto':'🪙 Crypto','sec-metal':'🥇 Metais preciosos',
+    'sec-stocks-evo':'📊 Evolução ações','sec-crypto-evo':'🪙 Evolução crypto','sec-metal-evo':'🥇 Evolução metais',
+    'api-stocks-lbl':'Ações','api-metal-lbl':'Ouro & Prata',
+    'api-fx-lbl':'USD/GBP convertido automaticamente em EUR',
+    'api-vpn-lbl':'VPN ativo?','api-vpn-txt':'Desative temporariamente o VPN para preços ao vivo',
+    'disc-text':'Esta ferramenta é apenas informativa e não constitui aconselhamento fiscal ou financeiro. Os cálculos são estimativas. Consulte sempre um consultor qualificado. O desenvolvedor não é responsável pelas decisões tomadas.',
+    'mf-metal-lbl':'Metal','mf-qty-lbl':'Quantidade','mf-unit-lbl2':'Unidade',
+    'mf-opt-gold':'🥇 Ouro','mf-opt-silver':'🥈 Prata',
+    'mf-buy-pre':'Preço de compra por','mf-opt-g':'grama','mf-opt-kg':'quilograma','mf-opt-oz':'onça troy',
+    't-empty-stock':'Sem ações.','t-empty-crypto':'Sem crypto.','t-empty-metal':'Sem metais preciosos.','t-total-val':'Total:','t-total-pl':'P&L:'
+  },
+  tr:{
+    'brand-sub':'Belçikalı yatırımcılar · Bolero · kaldıraçsız',
+    't-calc':'Hesap Makinesi','t-log':'İşlem Defteri','t-charts':'Grafikler','t-port':'Portföy',
+    't-name':'Hisse / ad','t-bp':'Hisse başına alış fiyatı','t-sp':'Hisse başına satış fiyatı',
+    't-sh':'Hisse sayısı','t-dv':'Temettü (isteğe bağlı)',
+    't-btb':'Borsa vergisi alış (%)','t-bts':'Borsa vergisi satış (%)',
+    't-brb':'Aracı kurum ücreti alış (€)','t-brs':'Aracı kurum ücreti satış (€)',
+    't-fx':'Döviz maliyeti (% — EUR ise 0)','t-dvt':'Temettü vergisi (%)',
+    't-tax-sec':'Sermaye kazancı vergisi','t-part':'Bireysel','t-spec':'Spekülatif','t-prof':'Profesyonel',
+    't-custom':'Özel yüzde',
+    'tax-info':'🇧🇪 Belçika\'da minimum sermaye kazancı vergisi <strong>%10</strong>\'dur. Spekülatif işlemler için %33, ana faaliyet olarak %50. Her zaman bir vergi danışmanına başvurun.',
+    't-result-sec':'Sonuç','t-invest':'Yatırım','t-gross':'Brüt gelir',
+    't-costs':'Toplam maliyet','t-taxamt':'Kâr vergisi','t-net':'Net kâr / zarar',
+    't-ret':'Net getiri','t-be':'Başabaş satış fiyatı',
+    't-detail-sec':'Maliyet dökümü','t-btb-d':'Borsa vergisi alış','t-bts-d':'Borsa vergisi satış',
+    't-brb-d':'Aracı ücreti alış','t-brs-d':'Aracı ücreti satış','t-fx-d':'Döviz maliyeti','t-dvt-d':'Temettü vergisi',
+    't-total':'Toplam maliyet','t-compare-sec':'Vergi karşılaştırması',
+    't-h-net':'Net kâr','t-h-ret':'Getiri','t-h-rr':'Min. R:R',
+    't-part2':'bireysel','t-spec2':'spekülatif','t-prof2':'profesyonel',
+    't-rr-info':'💡 <strong>Min. R:R</strong> = tüm maliyet ve vergilerden sonra minimum Risk/Ödül.',
+    't-save-btn':'+ İşlem defterine kaydet',
+    't-clear-btn':'Tümünü sil','t-empty-log':'İşlem yok. Hesap makinesine gidin, bir işlem hesaplayın ve kaydedin.',
+    't-yr-trades':'İşlemler','t-yr-net':'Net toplam','t-yr-avg':'Ort. getiri',
+    't-yr-wr':'Kazanma oranı','t-yr-costs':'Ödenen maliyetler','t-yr-tax':'Ödenen vergiler',
+    't-all-trades':'Tüm işlemler','t-total-net':'Net toplam','t-avg-ret':'Ort. getiri','t-wr':'Kazanma oranı',
+    't-th-name':'Hisse','t-th-date':'Tarih','t-th-buy':'Alış','t-th-sell':'Satış',
+    't-th-gross':'Brüt','t-th-costs':'Maliyetler','t-th-tax':'Vergi','t-th-net':'Net',
+    't-ch-cum':'📈 Kümülatif büyüme','t-ch-bar':'📊 İşlem başına kâr','t-ch-cmp':'⚖️ Brüt vs Net','t-ch-ret':'🎯 Getiri %',
+    't-empty-chart':'Grafikleri görmek için Hesap Makinesi\'nden işlem ekleyin.','t-hover-tip':'Detaylar için üzerine gelin',
+    't-pos-sec':'Pozisyon girin','t-col-name':'Ad','t-col-price':'Fiyat/hisse','t-col-qty':'Adet','t-col-cat':'Kategori',
+    't-add-pos':'+ Pozisyon ekle','t-alloc-info':'Ad, hisse başına fiyat ve miktarı girin.',
+    't-summary-sec':'Özet','t-total-inv':'Toplam yatırım','t-biggest':'En büyük pozisyon',
+    't-alloc-sec':'Portföy dağılımı','s-trade':'İşlem detayları','t-costs-sec':'Maliyetler & ücretler',
+    'back-lnk':'← Suite','t-all-years':'Tüm yıllar',
+    'ch-cum':'Kümülatif net büyüme','ch-bar':'İşlem başına net kâr','ch-cmp':'Brüt vs Net karşılaştırma','ch-ret':'İşlem başına getiri %',
+    'yr-prefix':'Genel bakış',
+    't-hold':'Pozisyonlar','t-hold-add-sec':'Pozisyon ekle','t-htype-s':'Hisse','t-htype-c':'Kripto','t-htype-m':'Değerli metaller',
+    't-hf-name':'Ad','t-hf-ticker':'Ticker','t-hf-qty':'Miktar','t-hf-buy':'Ort. alış fiyatı (€)',
+    't-hadd-btn':'+ Ekle','t-api-sec':'Canlı fiyatlar — API','t-fhkey-lbl':'Finnhub anahtarı',
+    't-h-totval':'Toplam değer','t-h-totpl':'Toplam P&L','t-h-npos':'Pozisyonlar',
+    't-hold-tbl-sec':'Mevcut pozisyonlar','t-refresh-btn':'Fiyatları yenile',
+    't-hth-name':'Ad','t-hth-qty':'Adet','t-hth-buy':'Ort. alış','t-hth-live':'Canlı fiyat','t-hth-val':'Değer','t-hth-pl':'P&L',
+    't-hempty':'Pozisyon yok. Formdaki hisse veya kripto ekleyin.',
+    't-halloc-sec':'Dağılım','t-hevol-sec':'Portföy gelişimi',
+    't-hevol-empty':'Gelişimi takip etmek için fiyatları yenileyin.',
+    'sec-stocks':'📊 Hisseler','sec-crypto':'🪙 Kripto','sec-metal':'🥇 Değerli metaller',
+    'sec-stocks-evo':'📊 Hisse gelişimi','sec-crypto-evo':'🪙 Kripto gelişimi','sec-metal-evo':'🥇 Metal gelişimi',
+    'api-stocks-lbl':'Hisseler','api-metal-lbl':'Altın & Gümüş',
+    'api-fx-lbl':'USD/GBP otomatik olarak EUR\'ya çevrildi',
+    'api-vpn-lbl':'VPN açık mı?','api-vpn-txt':'Canlı fiyatlar için VPN\'i geçici olarak devre dışı bırakın',
+    'disc-text':'Bu araç yalnızca bilgilendirme amaçlıdır ve mali veya vergi danışmanlığı teşkil etmez. Hesaplamalar tahminidir. Her zaman nitelikli bir danışmana başvurun. Geliştirici, bu araç temelinde alınan kararlardan sorumlu değildir.',
+    't-metal-add-btn':'+ Değerli metal ekle',
+    'mf-metal-lbl':'Metal','mf-qty-lbl':'Miktar','mf-unit-lbl2':'Birim',
+    'mf-opt-gold':'🥇 Altın','mf-opt-silver':'🥈 Gümüş',
+    'mf-buy-pre':'Alış fiyatı per','mf-opt-g':'gram','mf-opt-kg':'kilogram','mf-opt-oz':'troy ons',
+    't-empty-stock':'Hisse yok.','t-empty-crypto':'Kripto yok.','t-empty-metal':'Değerli metal yok.','t-total-val':'Toplam:','t-total-pl':'P&L:'
+  },
+  ar:{
+    'brand-sub':'مستثمرون بلجيكيون · Bolero · بدون رافعة مالية',
+    't-calc':'الآلة الحاسبة','t-log':'سجل التداول','t-charts':'الرسوم البيانية','t-port':'المحفظة',
+    't-name':'السهم / الاسم','t-bp':'سعر الشراء للسهم','t-sp':'سعر البيع للسهم',
+    't-sh':'عدد الأسهم','t-dv':'الأرباح (اختياري)',
+    't-btb':'ضريبة البورصة شراء (%)','t-bts':'ضريبة البورصة بيع (%)',
+    't-brb':'رسوم الوسيط شراء (€)','t-brs':'رسوم الوسيط بيع (€)',
+    't-fx':'تكلفة الصرف (% — 0 إذا EUR)','t-dvt':'ضريبة الأرباح (%)',
+    't-tax-sec':'ضريبة أرباح رأس المال','t-part':'فردي','t-spec':'مضاربي','t-prof':'مهني',
+    't-custom':'نسبة مخصصة',
+    'tax-info':'🇧🇪 الحد الأدنى لضريبة أرباح رأس المال في بلجيكا هو <strong>10%</strong>. 33% للتداول المضاربي، 50% كنشاط رئيسي. استشر دائماً مستشاراً ضريبياً.',
+    't-result-sec':'النتيجة','t-invest':'الاستثمار','t-gross':'العائد الإجمالي',
+    't-costs':'التكاليف الإجمالية','t-taxamt':'الضريبة على الربح','t-net':'صافي الربح / الخسارة',
+    't-ret':'صافي العائد','t-be':'سعر البيع للتعادل',
+    't-detail-sec':'تفصيل التكاليف','t-btb-d':'ضريبة البورصة شراء','t-bts-d':'ضريبة البورصة بيع',
+    't-brb-d':'رسوم الوسيط شراء','t-brs-d':'رسوم الوسيط بيع','t-fx-d':'تكاليف الصرف','t-dvt-d':'ضريبة الأرباح',
+    't-total':'إجمالي التكاليف','t-compare-sec':'مقارنة ضريبية',
+    't-h-net':'صافي الربح','t-h-ret':'العائد','t-h-rr':'R:R الأدنى',
+    't-part2':'فردي','t-spec2':'مضاربي','t-prof2':'مهني',
+    't-rr-info':'💡 <strong>R:R الأدنى</strong> = الحد الأدنى للمخاطرة/المكافأة بعد جميع التكاليف والضرائب.',
+    't-save-btn':'+ حفظ في السجل',
+    't-clear-btn':'مسح الكل','t-empty-log':'لا توجد صفقات. اذهب إلى الآلة الحاسبة واحسب صفقة واحفظها.',
+    't-yr-trades':'الصفقات','t-yr-net':'الإجمالي الصافي','t-yr-avg':'متوسط العائد',
+    't-yr-wr':'معدل الفوز','t-yr-costs':'التكاليف المدفوعة','t-yr-tax':'الضرائب المدفوعة',
+    't-all-trades':'جميع الصفقات','t-total-net':'الإجمالي الصافي','t-avg-ret':'متوسط العائد','t-wr':'معدل الفوز',
+    't-th-name':'السهم','t-th-date':'التاريخ','t-th-buy':'شراء','t-th-sell':'بيع',
+    't-th-gross':'إجمالي','t-th-costs':'التكاليف','t-th-tax':'الضريبة','t-th-net':'صافي',
+    't-ch-cum':'📈 النمو التراكمي','t-ch-bar':'📊 الربح لكل صفقة','t-ch-cmp':'⚖️ الإجمالي مقابل الصافي','t-ch-ret':'🎯 العائد %',
+    't-empty-chart':'أضف صفقات عبر الآلة الحاسبة.','t-hover-tip':'مرر للتفاصيل',
+    't-pos-sec':'إدخال المراكز','t-col-name':'الاسم','t-col-price':'السعر/سهم','t-col-qty':'الكمية','t-col-cat':'الفئة',
+    't-add-pos':'+ إضافة مركز','t-alloc-info':'أدخل الاسم والسعر لكل سهم والكمية.',
+    't-summary-sec':'ملخص','t-total-inv':'إجمالي الاستثمار','t-biggest':'أكبر مركز',
+    't-alloc-sec':'توزيع المحفظة','s-trade':'تفاصيل الصفقة','t-costs-sec':'التكاليف والرسوم',
+    'back-lnk':'← Suite','t-all-years':'جميع السنوات',
+    'ch-cum':'النمو الصافي التراكمي','ch-bar':'صافي الربح لكل صفقة','ch-cmp':'مقارنة الإجمالي مقابل الصافي','ch-ret':'العائد % لكل صفقة',
+    'yr-prefix':'نظرة عامة',
+    't-hold':'المراكز','t-hold-add-sec':'إضافة مركز','t-htype-s':'أسهم','t-htype-c':'كريبتو','t-htype-m':'المعادن الثمينة',
+    't-hf-name':'الاسم','t-hf-ticker':'الرمز','t-hf-qty':'الكمية','t-hf-buy':'متوسط سعر الشراء (€)',
+    't-hadd-btn':'+ إضافة','t-api-sec':'الأسعار المباشرة — API','t-fhkey-lbl':'مفتاح Finnhub',
+    't-h-totval':'القيمة الإجمالية','t-h-totpl':'إجمالي P&L','t-h-npos':'المراكز',
+    't-hold-tbl-sec':'المراكز الحالية','t-refresh-btn':'تحديث الأسعار',
+    't-hth-name':'الاسم','t-hth-qty':'الكمية','t-hth-buy':'متوسط الشراء','t-hth-live':'السعر الحالي','t-hth-val':'القيمة','t-hth-pl':'P&L',
+    't-hempty':'لا توجد مراكز. أضف أسهماً أو كريبتو.',
+    't-halloc-sec':'التوزيع','t-hevol-sec':'تطور المحفظة',
+    't-hevol-empty':'حدّث الأسعار لتتبع التطور.',
+    'sec-stocks':'📊 أسهم','sec-crypto':'🪙 كريبتو','sec-metal':'🥇 معادن ثمينة',
+    'sec-stocks-evo':'📊 تطور الأسهم','sec-crypto-evo':'🪙 تطور الكريبتو','sec-metal-evo':'🥇 تطور المعادن',
+    'api-stocks-lbl':'أسهم','api-metal-lbl':'ذهب وفضة',
+    'api-fx-lbl':'USD/GBP محوّل تلقائياً إلى EUR',
+    'api-vpn-lbl':'VPN مفعّل؟','api-vpn-txt':'عطّل VPN مؤقتاً للأسعار المباشرة',
+    'disc-text':'هذه الأداة للأغراض المعلوماتية فقط ولا تشكل نصيحة مالية أو ضريبية. الحسابات تقديرية. استشر دائماً مستشاراً مؤهلاً. المطور غير مسؤول عن أي قرارات اتُخذت بناءً على هذه الأداة.',
+    't-metal-add-btn':'+ إضافة معادن ثمينة',
+    'mf-metal-lbl':'المعدن','mf-qty-lbl':'الكمية','mf-unit-lbl2':'الوحدة',
+    'mf-opt-gold':'🥇 ذهب','mf-opt-silver':'🥈 فضة',
+    'mf-buy-pre':'سعر الشراء لكل','mf-opt-g':'غرام','mf-opt-kg':'كيلوغرام','mf-opt-oz':'أوقية تروي',
+    't-empty-stock':'لا توجد أسهم.','t-empty-crypto':'لا توجد كريبتو.','t-empty-metal':'لا توجد معادن ثمينة.','t-total-val':'الإجمالي:','t-total-pl':'P&L:'
+  },
+  ru:{
+    'brand-sub':'Бельгийские инвесторы · Bolero · без кредитного плеча',
+    't-calc':'Калькулятор','t-log':'Журнал сделок','t-charts':'Графики','t-port':'Портфель',
+    't-name':'Акция / название','t-bp':'Цена покупки за акцию','t-sp':'Цена продажи за акцию',
+    't-sh':'Количество акций','t-dv':'Дивиденды (необязательно)',
+    't-btb':'Биржевой налог покупка (%)','t-bts':'Биржевой налог продажа (%)',
+    't-brb':'Комиссия брокера покупка (€)','t-brs':'Комиссия брокера продажа (€)',
+    't-fx':'Стоимость обмена (% — 0 если EUR)','t-dvt':'Налог на дивиденды (%)',
+    't-tax-sec':'Налог на прирост капитала','t-part':'Частное лицо','t-spec':'Спекулятивный','t-prof':'Профессиональный',
+    't-custom':'Пользовательский процент',
+    'tax-info':'🇧🇪 Минимальный налог на прирост капитала в Бельгии: <strong>10%</strong>. 33% для спекулятивной торговли, 50% как основная деятельность. Всегда консультируйтесь с налоговым советником.',
+    't-result-sec':'Результат','t-invest':'Инвестиция','t-gross':'Валовая выручка',
+    't-costs':'Общие затраты','t-taxamt':'Налог на прибыль','t-net':'Чистая прибыль / убыток',
+    't-ret':'Чистая доходность','t-be':'Цена продажи безубыточности',
+    't-detail-sec':'Разбивка затрат','t-btb-d':'Биржевой налог покупка','t-bts-d':'Биржевой налог продажа',
+    't-brb-d':'Комиссия покупка','t-brs-d':'Комиссия продажа','t-fx-d':'Затраты на обмен','t-dvt-d':'Налог на дивиденды',
+    't-total':'Общие затраты','t-compare-sec':'Сравнение налогов',
+    't-h-net':'Чистая прибыль','t-h-ret':'Доходность','t-h-rr':'Мин. R:R',
+    't-part2':'частное','t-spec2':'спекулятивное','t-prof2':'профессиональное',
+    't-rr-info':'💡 <strong>Мин. R:R</strong> = минимальное соотношение риска/прибыли после всех затрат и налогов.',
+    't-save-btn':'+ Сохранить в журнал',
+    't-clear-btn':'Очистить всё','t-empty-log':'Нет сделок. Перейдите в Калькулятор, рассчитайте сделку и сохраните её.',
+    't-yr-trades':'Сделки','t-yr-net':'Чистый итог','t-yr-avg':'Средняя доходность',
+    't-yr-wr':'Процент побед','t-yr-costs':'Оплаченные расходы','t-yr-tax':'Уплаченные налоги',
+    't-all-trades':'Все сделки','t-total-net':'Чистый итог','t-avg-ret':'Средняя доходность','t-wr':'Процент побед',
+    't-th-name':'Акция','t-th-date':'Дата','t-th-buy':'Покупка','t-th-sell':'Продажа',
+    't-th-gross':'Брутто','t-th-costs':'Расходы','t-th-tax':'Налог','t-th-net':'Нетто',
+    't-ch-cum':'📈 Кумулятивный рост','t-ch-bar':'📊 Прибыль за сделку','t-ch-cmp':'⚖️ Брутто vs Нетто','t-ch-ret':'🎯 Доходность %',
+    't-empty-chart':'Добавьте сделки через Калькулятор.','t-hover-tip':'Наведите для деталей',
+    't-pos-sec':'Ввести позиции','t-col-name':'Название','t-col-price':'Цена/акция','t-col-qty':'Кол-во','t-col-cat':'Категория',
+    't-add-pos':'+ Добавить позицию','t-alloc-info':'Введите название, цену за акцию и количество.',
+    't-summary-sec':'Сводка','t-total-inv':'Всего инвестировано','t-biggest':'Крупнейшая позиция',
+    't-alloc-sec':'Распределение портфеля','s-trade':'Детали сделки','t-costs-sec':'Расходы и комиссии',
+    'back-lnk':'← Suite','t-all-years':'Все годы',
+    'ch-cum':'Кумулятивный чистый рост','ch-bar':'Чистая прибыль за сделку','ch-cmp':'Сравнение Брутто vs Нетто','ch-ret':'Доходность % за сделку',
+    'yr-prefix':'Обзор',
+    't-hold':'Позиции','t-hold-add-sec':'Добавить позицию','t-htype-s':'Акция','t-htype-c':'Крипто','t-htype-m':'Драгоценные металлы',
+    't-hf-name':'Название','t-hf-ticker':'Тикер','t-hf-qty':'Количество','t-hf-buy':'Средняя цена покупки (€)',
+    't-hadd-btn':'+ Добавить','t-api-sec':'Живые цены — API','t-fhkey-lbl':'Ключ Finnhub',
+    't-h-totval':'Общая стоимость','t-h-totpl':'Общий P&L','t-h-npos':'Позиции',
+    't-hold-tbl-sec':'Текущие позиции','t-refresh-btn':'Обновить цены',
+    't-hth-name':'Название','t-hth-qty':'Кол-во','t-hth-buy':'Средняя покупка','t-hth-live':'Текущая цена','t-hth-val':'Стоимость','t-hth-pl':'P&L',
+    't-hempty':'Нет позиций. Добавьте акции или крипто.',
+    't-halloc-sec':'Распределение','t-hevol-sec':'Эволюция портфеля',
+    't-hevol-empty':'Обновите цены для отслеживания эволюции.',
+    'sec-stocks':'📊 Акции','sec-crypto':'🪙 Крипто','sec-metal':'🥇 Драгоценные металлы',
+    'sec-stocks-evo':'📊 Эволюция акций','sec-crypto-evo':'🪙 Эволюция крипто','sec-metal-evo':'🥇 Эволюция металлов',
+    'api-stocks-lbl':'Акции','api-metal-lbl':'Золото и серебро',
+    'api-fx-lbl':'USD/GBP автоматически конвертируется в EUR',
+    'api-vpn-lbl':'VPN включён?','api-vpn-txt':'Временно отключите VPN для живых цен',
+    'disc-text':'Этот инструмент предназначен только для информационных целей и не является финансовым или налоговым советом. Расчёты являются приблизительными. Всегда консультируйтесь с квалифицированным советником. Разработчик не несёт ответственности за принятые решения.',
+    't-metal-add-btn':'+ Добавить драгоценные металлы',
+    'mf-metal-lbl':'Металл','mf-qty-lbl':'Количество','mf-unit-lbl2':'Единица',
+    'mf-opt-gold':'🥇 Золото','mf-opt-silver':'🥈 Серебро',
+    'mf-buy-pre':'Цена покупки за','mf-opt-g':'грамм','mf-opt-kg':'килограмм','mf-opt-oz':'тройская унция',
+    't-empty-stock':'Нет акций.','t-empty-crypto':'Нет крипто.','t-empty-metal':'Нет драгоценных металлов.','t-total-val':'Итого:','t-total-pl':'P&L:'
+  }
+};
+const chartTitles = {
+  nl:{cum:'Cumulatieve netto groei',bar:'Netto winst per trade',cmp:'Bruto vs Netto vergelijking',ret:'Rendement % per trade'},
+  en:{cum:'Cumulative net growth',bar:'Net profit per trade',cmp:'Gross vs Net comparison',ret:'Return % per trade'},
+  fr:{cum:'Croissance nette cumulative',bar:'Bénéfice net par trade',cmp:'Comparaison Brut vs Net',ret:'Rendement % par trade'},
+  es:{cum:'Crecimiento neto acumulativo',bar:'Beneficio neto por trade',cmp:'Comparación Bruto vs Neto',ret:'Rendimiento % por trade'},
+  de:{cum:'Kumulatives Nettowachstum',bar:'Nettogewinn pro Trade',cmp:'Brutto vs Netto Vergleich',ret:'Rendite % pro Trade'},
+  it:{cum:'Crescita netta cumulativa',bar:'Profitto netto per trade',cmp:'Confronto Lordo vs Netto',ret:'Rendimento % per trade'},
+  pt:{cum:'Crescimento líquido cumulativo',bar:'Lucro líquido por trade',cmp:'Comparação Bruto vs Líquido',ret:'Rendimento % por trade'},
+  tr:{cum:'Kümülatif net büyüme',bar:'İşlem başına net kâr',cmp:'Brüt vs Net karşılaştırma',ret:'İşlem başına getiri %'},
+  ar:{cum:'النمو الصافي التراكمي',bar:'صافي الربح لكل صفقة',cmp:'مقارنة الإجمالي مقابل الصافي',ret:'العائد % لكل صفقة'},
+  ru:{cum:'Кумулятивный чистый рост',bar:'Чистая прибыль за сделку',cmp:'Сравнение Брутто vs Нетто',ret:'Доходность % за сделку'}
+};
+
+function applyLang() {
+  const t = TX[lang]||TX.en;
+  const bs=document.getElementById('brand-sub'); if(bs)bs.textContent=t['brand-sub'];
+  const bl=document.getElementById('back-lnk'); if(bl)bl.textContent=t['back-lnk'];
+  document.getElementById('lang-btn').textContent=LANG_BTN_LBL[lang]||'🇬🇧 EN ▾';
+  Object.keys(t).forEach(cls => {
+    document.querySelectorAll('.'+cls).forEach(el => {
+      if (cls==='tax-info'||cls==='t-rr-info') el.innerHTML=t[cls];
+      else el.textContent=t[cls];
+    });
+  });
+  // Apply by ID
+  const idKeys=['sec-stocks','sec-crypto','sec-metal','sec-stocks-evo','sec-crypto-evo','sec-metal-evo',
+    'api-stocks-lbl','api-metal-lbl','api-fx-lbl','api-vpn-lbl','api-vpn-txt',
+    'mf-metal-lbl','mf-qty-lbl','mf-unit-lbl2','mf-opt-gold','mf-opt-silver','mf-opt-g','mf-opt-kg','mf-opt-oz','disc-text'];
+  idKeys.forEach(id=>{const el=document.getElementById(id);if(el&&t[id])el.textContent=t[id];});
+  // Update evo toggle tooltips
+  ['stock','crypto','metal'].forEach(type=>{
+    const btn=fe('etog-'+type);
+    if(!btn)return;
+    const isEur=evoMode[type]==='eur';
+    btn.title=isEur
+      ?(lang==='nl'?'Portefeuillewaarde in EUR':'Portfolio value in EUR')
+      :(lang==='nl'?'P&L % rendement sinds aankoop':'P&L % return since purchase');
+  });
+  const st=document.getElementById('s-trade'); if(st)st.textContent=t['s-trade'];
+  const ct=fe('chart-title'); if(ct)ct.textContent=chartTitles[lang][chartType];
+  updateMetalUnitLabel();
+  renderLog();
+}
+
+const LANGS_STOCKS=['nl','en','fr','es'];
+const LANG_NEXT={nl:'en',en:'fr',fr:'es',es:'nl'};
+const LANG_BTN_LBL={nl:'🇳🇱 NL ▾',en:'🇬🇧 EN ▾',fr:'🇫🇷 FR ▾',es:'🇪🇸 ES ▾',de:'🇩🇪 DE ▾',it:'🇮🇹 IT ▾',pt:'🇵🇹 PT ▾',tr:'🇹🇷 TR ▾',ar:'🇸🇦 AR ▾',ru:'🇷🇺 RU ▾'};
+const LANG_FLAGS={nl:'🇧🇪',en:'🇬🇧',fr:'🇫🇷',es:'🇪🇸'};
+
+function toggleLangDD(){
+  const dd=document.getElementById('lang-dd');
+  dd.classList.toggle('open');
+}
+function setLang(l){
+  lang=l;
+  const dd=document.getElementById('lang-dd');
+  if(dd)dd.classList.remove('open');
+  const btn=document.getElementById('lang-btn');
+  if(btn)btn.textContent=LANG_BTN_LBL[lang];
+  document.querySelectorAll('.lang-dd-item').forEach(el=>el.classList.remove('active'));
+  const active=document.getElementById('ldi-'+lang);
+  if(active)active.classList.add('active');
+  applyLang();
+  renderPortHistory();
+  renderTypeCharts();
+}
+function toggleLang(){setLang(LANG_NEXT[lang]||'en');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.lang-dd-wrap')){
+    const dd=document.getElementById('lang-dd');
+    if(dd)dd.classList.remove('open');
+  }
+});
+
+// ── Tab navigation ──
+function goTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='charts') setTimeout(renderCharts, 50);
+  if (id==='port') setTimeout(renderPie, 50);
+  if (id==='hold') setTimeout(()=>{renderHoldingsTable();renderHoldingPie();renderPortHistory();renderTypeCharts();}, 50);
+}
+
+// ── Tab drag-and-drop reordering (pointer-based, werkt op buttons) ──
+let dragSrc=null, dragClone=null, dragOffX=0, dragOffY=0, isDragging=false;
+
+function initTabDrag(){
+  const bar=fe('tabs-bar');
+  bar.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('mousedown',e=>{
+      if(e.button!==0)return;
+      dragSrc=tab;
+      isDragging=false;
+      const rect=tab.getBoundingClientRect();
+      dragOffX=e.clientX-rect.left;
+      dragOffY=e.clientY-rect.top;
+    });
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(!dragSrc)return;
+    if(!isDragging&&Math.abs(e.movementX)+Math.abs(e.movementY)>3){
+      isDragging=true;
+      // Maak visuele clone
+      dragClone=dragSrc.cloneNode(true);
+      dragClone.style.cssText=`position:fixed;pointer-events:none;z-index:9999;opacity:.85;
+        background:rgba(0,255,178,.18);border:1px solid rgba(0,255,178,.5);border-radius:10px;
+        color:var(--g);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+        padding:9px 16px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5);`;
+      document.body.appendChild(dragClone);
+      dragSrc.style.opacity='0.3';
+    }
+    if(!isDragging||!dragClone)return;
+    dragClone.style.left=(e.clientX-dragOffX)+'px';
+    dragClone.style.top=(e.clientY-dragOffY)+'px';
+
+    // Highlight drop target
+    const bar=fe('tabs-bar');
+    bar.querySelectorAll('.tab').forEach(t=>t.classList.remove('drag-over'));
+    const target=getTabUnderCursor(e.clientX, e.clientY);
+    if(target&&target!==dragSrc)target.classList.add('drag-over');
+  });
+
+  document.addEventListener('mouseup',e=>{
+    if(!dragSrc)return;
+    if(isDragging){
+      const bar=fe('tabs-bar');
+      const target=getTabUnderCursor(e.clientX, e.clientY);
+      if(target&&target!==dragSrc){
+        const tabs=[...bar.querySelectorAll('.tab')];
+        const fi=tabs.indexOf(dragSrc), ti=tabs.indexOf(target);
+        if(fi<ti)bar.insertBefore(dragSrc,target.nextSibling);
+        else bar.insertBefore(dragSrc,target);
+        saveTabOrder();
+      }
+      bar.querySelectorAll('.tab').forEach(t=>t.classList.remove('drag-over'));
+      if(dragClone){dragClone.remove();dragClone=null;}
+      dragSrc.style.opacity='';
+    }
+    dragSrc=null; isDragging=false;
+  });
+}
+
+function getTabUnderCursor(cx,cy){
+  const bar=fe('tabs-bar');
+  for(const tab of bar.querySelectorAll('.tab')){
+    const r=tab.getBoundingClientRect();
+    if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom)return tab;
+  }
+  return null;
+}
+
+function saveTabOrder(){
+  const order=[...fe('tabs-bar').querySelectorAll('.tab')].map(t=>t.dataset.tab);
+  try{localStorage.setItem('us3-taborder',JSON.stringify(order));}catch(e){}
+}
+function loadTabOrder(){
+  try{
+    const order=JSON.parse(localStorage.getItem('us3-taborder')||'null');
+    if(!order||!Array.isArray(order))return;
+    const bar=fe('tabs-bar');
+    order.forEach(id=>{
+      const btn=bar.querySelector(`[data-tab="${id}"]`);
+      if(btn)bar.appendChild(btn);
+    });
+  }catch(e){}
+}
+
+// ── Helpers ──
+const fe = id => document.getElementById(id);
+const fE = n => '€'+Math.abs(n).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fS = n => (n>=0?'+':'-')+'€'+Math.abs(n).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fP = n => (n>=0?'+':'')+n.toFixed(2)+'%';
+
+// ── Fiscal helpers (vrijstelling + verliesoverdracht) ──
+function saveFiscal(){
+  try{localStorage.setItem('us3-fiscal',JSON.stringify({useExemption,exemptionAmount,lossCarryEnabled,losses}));}catch(e){}
+}
+function toggleExemption(on){
+  useExemption=on;
+  fe('exempt-panel').style.display=on?'block':'none';
+  saveFiscal();updateExemptDisplay();calc();
+}
+function setExemptAmt(v){
+  exemptionAmount=Math.max(0,parseFloat(v)||0);
+  saveFiscal();updateExemptDisplay();calc();
+}
+function updateExemptDisplay(){
+  if(!useExemption)return;
+  const year=new Date().getFullYear();
+  const usedThisYear=trades.filter(t=>t.year===year&&t.net>0).reduce((s,t)=>s+t.net,0);
+  const left=Math.max(0,exemptionAmount-usedThisYear);
+  fe('exempt-used').textContent='€'+usedThisYear.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  fe('exempt-left').textContent='€'+left.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  fe('exempt-left').style.color=left>0?'#00ff88':'var(--muted)';
+}
+function toggleLossCarry(on){
+  lossCarryEnabled=on;
+  fe('loss-panel').style.display=on?'block':'none';
+  saveFiscal();renderLossList();calc();
+}
+function renderLossList(){
+  const el=fe('loss-list');if(!el)return;
+  if(!losses.length){el.innerHTML='<div style="font-size:10px;color:var(--muted);text-align:center;padding:6px">Geen verliezen opgeslagen.</div>';fe('loss-total').textContent='€0';return;}
+  const tot=losses.reduce((s,l)=>s+l.amt,0);
+  fe('loss-total').textContent='-€'+Math.abs(tot).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  el.innerHTML=losses.map((l,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:3px 0;border-bottom:1px solid rgba(255,68,68,.07)">
+    <span style="color:var(--muted)">${l.name} <span style="opacity:.5">${l.date||''}</span></span>
+    <span style="font-family:'DM Mono',monospace;color:var(--red)">-€${Math.abs(l.amt).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+    <button onclick="delLoss(${i})" style="background:transparent;border:none;color:rgba(255,80,80,.4);cursor:pointer;font-size:11px;padding:0 3px">×</button>
+  </div>`).join('');
+}
+function delLoss(i){losses.splice(i,1);saveFiscal();renderLossList();calc();}
+function addLossManual(){
+  const amt=parseFloat(prompt('Verliesbedrag in € (positief getal):')||'0');
+  if(!amt||amt<=0)return;
+  const name=prompt('Omschrijving (bv. TSLA 2024):')||'Manueel verlies';
+  losses.push({name,amt,date:new Date().getFullYear().toString()});
+  saveFiscal();renderLossList();calc();
+}
+function getTotalLossCarry(){
+  return lossCarryEnabled?losses.reduce((s,l)=>s+l.amt,0):0;
+}
+function getExemptionLeft(){
+  if(!useExemption)return 0;
+  const year=new Date().getFullYear();
+  const used=trades.filter(t=>t.year===year&&t.net>0).reduce((s,t)=>s+t.net,0);
+  return Math.max(0,exemptionAmount-used);
+}
+
+// ── Tax ──
+function setTax(p) {
+  TAX=p;
+  ['t10','t33','t50'].forEach(id=>fe(id).classList.remove('act'));
+  const m={10:'t10',33:'t33',50:'t50'};
+  if(m[p])fe(m[p]).classList.add('act');
+  fe('tc').value=p; calc();
+}
+function setTaxCustom() {
+  TAX=Math.max(0,parseFloat(fe('tc').value)||0);
+  fe('tc').value=TAX;
+  ['t10','t33','t50'].forEach(id=>fe(id).classList.remove('act'));
+  calc();
+}
+
+// ── Calculator ──
+let LC={};
+function cn(bP,sP,sh,dv,btb,bts,brb,brs,fx,dvt,tx) {
+  const inv=bP*sh,gS=sP*sh,btbA=inv*(btb/100),btsA=gS*(bts/100),fxA=(inv+gS)*(fx/100),dvtA=dv*(dvt/100);
+  const tc=btbA+btsA+brb+brs+fxA+dvtA,gP=gS-inv+dv,txbl=Math.max(0,gP-(btbA+btsA+brb+brs+fxA)),txA=txbl*(tx/100);
+  const net=gP-tc-txA,ret=inv>0?(net/inv)*100:0,be=inv>0?(inv+brb+brs+inv*(btb/100))/(sh*(1-bts/100)):0;
+  return{inv,gS,tc,txA,net,ret,be,btbA,btsA,fxA,dvtA,gP};
+}
+function calc() {
+  const bP=parseFloat(fe('bp').value)||0,sP=parseFloat(fe('sp').value)||0,sh=parseFloat(fe('sh').value)||0;
+  const dv=parseFloat(fe('dv').value)||0,btb=parseFloat(fe('btb').value)||0,bts=parseFloat(fe('bts').value)||0;
+  const brb=parseFloat(fe('brb').value)||0,brs=parseFloat(fe('brs').value)||0;
+  const fx=parseFloat(fe('fx').value)||0,dvt=parseFloat(fe('dvt').value)||0;
+  if(!bP||!sh)return;
+  const r=cn(bP,sP,sh,dv,btb,bts,brb,brs,fx,dvt,TAX);
+
+  // Vrijstelling & verliesoverdracht toepassen op belastbaar bedrag
+  const exemLeft=getExemptionLeft();
+  const lossCarry=getTotalLossCarry();
+  const txblBase=Math.max(0,r.gP-(r.btbA+r.btsA+brb+brs+r.fxA)); // belastbaar vóór aftrekken
+  const txblAfterLoss=Math.max(0,txblBase-lossCarry);
+  const txblFinal=Math.max(0,txblAfterLoss-exemLeft);
+  const txAdjusted=txblFinal*(TAX/100);
+  const netAdjusted=r.gP-r.tc-txAdjusted;
+  const retAdjusted=r.inv>0?(netAdjusted/r.inv)*100:0;
+
+  LC={bP,sP,sh,dv,btb,bts,brb,brs,fx,dvt,...r,txAdjusted,netAdjusted,retAdjusted};
+  fe('ri').textContent=fE(r.inv); fe('rg').textContent=sP?fE(r.gS):'—';
+  fe('rc').textContent=fE(r.tc);
+
+  // Belasting tonen met aanpassingen
+  let txLabel=fE(txAdjusted)+' ('+TAX+'%)';
+  if(useExemption&&exemLeft>0&&txblBase>0)txLabel+=' 🇧🇪';
+  if(lossCarryEnabled&&lossCarry>0&&txblBase>0)txLabel+=' 📉';
+  fe('rt').textContent=txLabel;
+  fe('rb').textContent=fE(r.be);
+
+  const ne=fe('rn'),pe=fe('rp');
+  ne.textContent=sP?fS(netAdjusted):'—'; ne.className='rv big '+(netAdjusted>=0?'green':'red');
+  pe.textContent=sP?fP(retAdjusted):'—'; pe.className='rv big '+(netAdjusted>=0?'green':'red');
+  fe('bbtb').textContent=fE(r.btbA); fe('bbts').textContent=fE(r.btsA);
+  fe('bbrb').textContent=fE(brb); fe('bbrs').textContent=fE(brs);
+  fe('bfx').textContent=fE(r.fxA); fe('bdvt').textContent=fE(r.dvtA);
+  fe('btot').textContent=fE(r.tc);
+  if(sP){[10,33,50].forEach(t=>{
+    const x=cn(bP,sP,sh,dv,btb,bts,brb,brs,fx,dvt,t),gW=x.gS-x.inv+dv,td=x.tc+x.txA;
+    fe('v'+t+'n').textContent=fS(x.net);
+    fe('v'+t+'p').textContent=fP(x.ret);
+    fe('v'+t+'r').textContent=gW>0&&td>0?'1:'+(gW/td).toFixed(2):'—';
+  });}
+}
+
+// ── Logbook ──
+function addTrade() {
+  const name=fe('sname').value||'—';
+  if(!LC.bP||!LC.sP){alert(lang==='nl'?'Vul eerst aankoop- en verkoopprijs in.':'Please fill in buy and sell price first.');return;}
+  const now=new Date();
+  const netToSave=LC.netAdjusted!=null?LC.netAdjusted:LC.net;
+  trades.unshift({id:Date.now(),name,buy:LC.bP,sell:LC.sP,shares:LC.sh,
+    gross:LC.gS-LC.inv,costs:LC.tc,tax:LC.txAdjusted!=null?LC.txAdjusted:LC.txA,
+    net:netToSave,pct:LC.retAdjusted!=null?LC.retAdjusted:LC.ret,taxPct:TAX,
+    year:now.getFullYear(),
+    date:now.toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'})});
+  if(trades.length>10000000000)trades.pop();
+  // Auto-opslaan verlies
+  if(lossCarryEnabled&&netToSave<0){
+    losses.push({name,amt:Math.abs(netToSave),date:now.getFullYear().toString()});
+    saveFiscal();renderLossList();
+  }
+  save(); renderLog(); renderCharts(); updateExemptDisplay();
+  alert(lang==='nl'?'Trade opgeslagen! Bekijk hem in het Logboek.':'Trade saved! View it in the Logbook.');
+}
+function delTrade(id){trades=trades.filter(t=>t.id!==id);save();renderLog();renderCharts();}
+function clearLog(){if(!confirm(lang==='nl'?'Wis alle trades?':'Clear all trades?'))return;trades=[];save();renderLog();renderCharts();}
+function save(){
+  try{
+    // Compress trades - only save essential fields
+    const compact=trades.map(t=>({id:t.id,n:t.name,b:t.buy,s:t.sell,sh:t.shares,g:t.gross,c:t.costs,tx:t.tax,nt:t.net,p:t.pct,tp:t.taxPct,y:t.year,d:t.date,src:t.source}));
+    localStorage.setItem('us3-trades',JSON.stringify(compact));
+  }catch(e){
+    // If still too large, save without source field
+    try{
+      const mini=trades.map(t=>({id:t.id,n:t.name,b:t.buy,s:t.sell,sh:t.shares,nt:t.net,p:t.pct,y:t.year,d:t.date}));
+      localStorage.setItem('us3-trades',JSON.stringify(mini));
+    }catch(e2){console.warn('Storage full');}
+  }
+  try{localStorage.setItem('us3-allocs',JSON.stringify(allocs));}catch(e){}
+}
+
+function renderLog() {
+  const t=TX[lang];
+  const years=[...new Set(trades.map(t=>t.year))].sort((a,b)=>b-a);
+  const yf=fe('yfilter');
+  yf.innerHTML=`<button class="ybtn ${selYear==='all'?'act':''}" onclick="setYear('all')">${t['t-all-years']||'All years'}</button>`+
+    years.map(y=>`<button class="ybtn ${selYear==y?'act':''}" onclick="setYear(${y})">${y}</button>`).join('');
+
+  const filtered=selYear==='all'?trades:trades.filter(tr=>tr.year==selYear);
+
+  if(selYear!=='all'&&filtered.length>0){
+    fe('yr-banner').style.display='flex';
+    fe('yr-title').textContent=(t['yr-prefix']||'Overview')+' '+selYear;
+    const tn=filtered.reduce((a,b)=>a+b.net,0),ap=filtered.reduce((a,b)=>a+b.pct,0)/filtered.length;
+    const wins=filtered.filter(tr=>tr.net>0).length,tc2=filtered.reduce((a,b)=>a+b.costs,0),tt=filtered.reduce((a,b)=>a+b.tax,0);
+    fe('yr-trades').textContent=filtered.length;
+    const ynel=fe('yr-net'); ynel.textContent=fS(tn); ynel.className='yr-sv '+(tn>=0?'cg':'cr');
+    fe('yr-avg').textContent=fP(ap);
+    fe('yr-wr').textContent=(wins/filtered.length*100).toFixed(0)+'%';
+    fe('yr-costs').textContent='-'+fE(tc2);
+    fe('yr-tax').textContent='-'+fE(tt);
+  } else { fe('yr-banner').style.display='none'; }
+
+  if(trades.length>0){
+    fe('swrap').style.display='grid';
+    const tn=trades.reduce((a,b)=>a+b.net,0),ap=trades.reduce((a,b)=>a+b.pct,0)/trades.length;
+    const wins=trades.filter(tr=>tr.net>0).length;
+    fe('stot').textContent=trades.length;
+    const ne=fe('snet'); ne.textContent=fS(tn); ne.className='stv '+(tn>=0?'cg':'cr');
+    fe('savg').textContent=fP(ap);
+    fe('swr').textContent=(wins/trades.length*100).toFixed(0)+'%';
+  } else { fe('swrap').style.display='none'; }
+
+  if(!filtered.length){fe('lempty').style.display='block';fe('lwrap').style.display='none';return;}
+  fe('lempty').style.display='none'; fe('lwrap').style.display='block';
+  fe('lbody').innerHTML=filtered.map(tr=>`<tr>
+    <td>${tr.name}</td><td style="font-family:'Outfit',sans-serif">${tr.date}</td>
+    <td>€${tr.buy.toFixed(2)}</td><td>€${tr.sell.toFixed(2)}</td><td>${tr.shares}</td>
+    <td>${tr.gross>=0?'+':''}€${Math.abs(tr.gross).toFixed(2)}</td>
+    <td class="cr">-€${Math.abs(tr.costs).toFixed(2)}</td>
+    <td class="cr">-€${Math.abs(tr.tax).toFixed(2)}<span style="opacity:.4"> ${tr.taxPct}%</span></td>
+    <td class="${tr.net>=0?'cg':'cr'}">${tr.net>=0?'+':''}€${Math.abs(tr.net).toFixed(2)}</td>
+    <td class="${tr.pct>=0?'cg':'cr'}">${tr.pct>=0?'+':''}${tr.pct.toFixed(2)}%</td>
+    <td><button class="xbtn" onclick="delTrade(${tr.id})">×</button></td>
+  </tr>`).join('');
+}
+function setYear(y){selYear=y;renderLog();}
+
+// ── Charts ──
+function setChart(type, btn) {
+  chartType=type;
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+  fe('chart-title').textContent=chartTitles[lang][type];
+  renderCharts();
+}
+function renderCharts() {
+  const ctx=fe('mc').getContext('2d');
+  if(mci){mci.destroy();mci=null;}
+  if(!trades.length){fe('chart-empty').style.display='block';return;}
+  fe('chart-empty').style.display='none';
+  const rev=[...trades].reverse();
+  const labels=rev.map(tr=>tr.name+' '+tr.date.split(' ')[0]+'/'+tr.date.split(' ')[1]);
+  const gc='rgba(0,255,178,.06)',tc='rgba(180,240,220,.45)';
+  const base={
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{color:tc,font:{family:'DM Mono',size:11},boxWidth:12}},
+      tooltip:{backgroundColor:'rgba(0,10,6,.95)',borderColor:'rgba(0,255,178,.3)',borderWidth:1,titleColor:'#00ffb2',bodyColor:'#e0fff5',
+        callbacks:{label:c=>' '+c.dataset.label+': €'+parseFloat(c.raw).toLocaleString('nl-BE',{minimumFractionDigits:2})}}
+    },
+    scales:{
+      x:{ticks:{color:tc,font:{family:'DM Mono',size:9},maxTicksLimit:12},grid:{color:gc}},
+      y:{ticks:{color:tc,font:{family:'DM Mono',size:9},callback:v=>v.toLocaleString()},grid:{color:gc}}
+    }
+  };
+  if(chartType==='cum'){
+    let cum=0; const data=rev.map(tr=>parseFloat((cum+=tr.net).toFixed(2)));
+    mci=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:chartTitles[lang].cum,data,
+      borderColor:'#00ffb2',backgroundColor:'rgba(0,255,178,.07)',borderWidth:2,
+      pointRadius:4,pointBackgroundColor:data.map(v=>v>=0?'#00ffb2':'#ff4444'),fill:true,tension:.3}]},options:base});
+  } else if(chartType==='bar'){
+    const data=rev.map(tr=>parseFloat(tr.net.toFixed(2)));
+    mci=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:chartTitles[lang].bar,data,
+      backgroundColor:data.map(v=>v>=0?'rgba(0,255,178,.7)':'rgba(255,68,68,.7)'),borderRadius:5}]},options:base});
+  } else if(chartType==='cmp'){
+    mci=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+      {label:lang==='nl'?'Bruto winst':'Gross profit',data:rev.map(tr=>parseFloat(tr.gross.toFixed(2))),backgroundColor:'rgba(0,212,255,.55)',borderRadius:4},
+      {label:lang==='nl'?'Netto winst':'Net profit',data:rev.map(tr=>parseFloat(tr.net.toFixed(2))),backgroundColor:'rgba(0,255,178,.75)',borderRadius:4}
+    ]},options:base});
+  } else {
+    const data=rev.map(tr=>parseFloat(tr.pct.toFixed(2)));
+    const bRet={...base,scales:{...base.scales,y:{...base.scales.y,ticks:{...base.scales.y.ticks,callback:v=>v+'%'}}}};
+    bRet.plugins={...base.plugins,tooltip:{...base.plugins.tooltip,callbacks:{label:c=>' '+c.dataset.label+': '+parseFloat(c.raw).toFixed(2)+'%'}}};
+    mci=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:chartTitles[lang].ret,data,
+      backgroundColor:data.map(v=>v>=0?'rgba(0,255,178,.7)':'rgba(255,68,68,.7)'),borderRadius:5}]},options:bRet});
+  }
+}
+
+// ── Portfolio ──
+function saveAllocs() {
+  allocs=[];
+  document.querySelectorAll('.arow-item').forEach(row=>{
+    const name=row.querySelector('.an').value.trim();
+    const price=parseFloat(row.querySelector('.ap').value)||0;
+    const qty=parseFloat(row.querySelector('.aq').value)||0;
+    const cat=row.querySelector('.ac').value.trim()||(lang==='nl'?'Overige':'Other');
+    if(name&&price>0&&qty>0)allocs.push({name,price,qty,val:price*qty,cat});
+  });
+  try{localStorage.setItem('us3-allocs',JSON.stringify(allocs));}catch(e){}
+  renderPie();
+}
+
+// ── Holdings ──
+
+function setHoldType(t){
+  hTypeNew=t;
+  fe('htype-stock').className='ttbtn'+(t==='stock'?' act-s':'');
+  fe('htype-crypto').className='ttbtn'+(t==='crypto'?' act-c':'');
+  fe('htype-metal').className='ttbtn'+(t==='metal'?' act-m':'');
+  const isMetal=t==='metal';
+  fe('form-normal').style.display=isMetal?'none':'block';
+  fe('form-metal').style.display=isMetal?'block':'none';
+  if(!isMetal)fe('hf-ticker').placeholder=t==='stock'?'AAPL / ABI.BR':'BTC / ETH';
+}
+
+function updateMetalUnitLabel(){
+  const unit=fe('mf-unit').value;
+  const lbl=fe('mf-unit-lbl');
+  const pre=fe('mf-buy-lbl-pre');
+  const inp=fe('mf-buy');
+  const t=TX[lang]||TX.en;
+  if(pre) pre.textContent=t['mf-buy-pre']||'Buy price per';
+  if(unit==='oz'){lbl.textContent=t['mf-opt-oz']||'troy oz';inp.placeholder='27.00';}
+  else if(unit==='kg'){lbl.textContent=t['mf-opt-kg']||'kilogram';inp.placeholder='850.00';}
+  else{lbl.textContent=t['mf-opt-g']||'gram';inp.placeholder='0.85';}
+}
+
+function addMetal(){
+  const qty=parseFloat(fe('mf-qty').value)||0;
+  const buyInput=parseFloat(fe('mf-buy').value)||0;
+  const metalType=fe('mf-metal').value;
+  const unit=fe('mf-unit').value;
+  if(qty<=0||buyInput<=0){
+    alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;
+  }
+  let grams=qty;
+  if(unit==='kg')grams=qty*1000;
+  if(unit==='oz')grams=qty*31.1035;
+  let avgBuyPerGram=buyInput;
+  if(unit==='kg')avgBuyPerGram=buyInput/1000;
+  if(unit==='oz')avgBuyPerGram=buyInput/31.1035;
+  const unitLabel=unit==='g'?qty+'g':unit==='kg'?qty+'kg':qty+' oz';
+  const ticker=metalType==='gold'?'XAU':'XAG';
+  const name=metalType==='gold'?'Gold':'Silver';
+  holdings.push({id:Date.now(),name,ticker,type:'metal',metalType,unit,qtyOrig:qty,qty:grams,avgBuy:avgBuyPerGram,livePrice:null,err:null,unitLabel});
+  saveHoldings();
+  fe('mf-qty').value='';fe('mf-buy').value='';
+  renderHoldingsTable();renderHoldingPie();
+}
+function saveHoldings(){
+  try{localStorage.setItem('us3-holdings',JSON.stringify(holdings));}catch(e){}
+}
+function savePortHistory(){
+  if(portHistory.length>180)portHistory.splice(0,portHistory.length-180);
+  try{localStorage.setItem('us3-porthist',JSON.stringify(portHistory));}catch(e){}
+}
+function addHolding(){
+  const currentType=document.querySelector('#htype-metal.act-m')?'metal':document.querySelector('#htype-crypto.act-c')?'crypto':'stock';
+  hTypeNew=currentType;
+  if(hTypeNew==='metal'){addMetal();return;}
+  const ticker=fe('hf-ticker').value.trim().toUpperCase();
+  const qty=parseFloat(fe('hf-qty').value)||0;
+  const avgBuy=parseFloat(fe('hf-buy').value)||0;
+  if(!ticker||qty<=0||avgBuy<=0){
+    alert(lang==='nl'?'Vul alle velden correct in.':'Please fill in all fields correctly.');return;
+  }
+  holdings.push({id:Date.now(),name:ticker,ticker,type:hTypeNew,qty,avgBuy,livePrice:null,err:null});
+  saveHoldings();
+  fe('hf-ticker').value='';fe('hf-qty').value='';fe('hf-buy').value='';
+  renderHoldingsTable();renderHoldingPie();
+}
+function confirmDel(id, name){
+  const msg=lang==='nl'
+    ?`Weet je zeker dat je "${name}" wil verwijderen?`
+    :`Are you sure you want to delete "${name}"?`;
+  if(confirm(msg))delHolding(id);
+}
+function delHolding(id){
+  holdings=holdings.filter(h=>h.id!==id);
+  saveHoldings();renderHoldingsTable();renderHoldingPie();renderPortHistory();renderTypeCharts();
+}
+// ── Currency toggle EUR/USD ──
+let displayCurrency='EUR';
+let usdToEurRate=null; // bijv. 0.92 betekent 1 USD = 0.92 EUR
+
+async function getUsdEurRate(){
+  if(usdToEurRate)return usdToEurRate;
+  try{const r=await safeFetch('https://api.frankfurter.app/latest?from=USD&to=EUR');const d=await r.json();if(d.rates?.EUR>0){usdToEurRate=d.rates.EUR;return usdToEurRate;}}catch(e){}
+  try{const r=await safeFetch('https://open.er-api.com/v6/latest/USD');const d=await r.json();if(d.rates?.EUR>0){usdToEurRate=d.rates.EUR;return usdToEurRate;}}catch(e){}
+  return 0.92; // fallback
+}
+
+async function toggleCurrency(){
+  displayCurrency=displayCurrency==='EUR'?'USD':'EUR';
+  const btn=fe('currency-btn');
+  if(btn)btn.textContent=displayCurrency==='EUR'?'€ EUR':'$ USD';
+  if(displayCurrency==='USD')await getUsdEurRate();
+  renderHoldingsTable();
+}
+
+function toDisplay(amountEur){
+  if(displayCurrency==='USD'&&usdToEurRate){
+    return '$'+(amountEur/usdToEurRate).toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  return '€'+amountEur.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toDisplayPrice(priceEur,decimals){
+  if(displayCurrency==='USD'&&usdToEurRate){
+    const usd=priceEur/usdToEurRate;
+    return '$'+usd.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:decimals||2});
+  }
+  return '€'+priceEur.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:decimals||2});
+}
+
+function renderHoldingsTable(){
+  const types=['stock','crypto','metal'];
+  let totalVal=0,totalCost=0,hasLive=false;
+
+  types.forEach(type=>{
+    const tbody=fe('htbody-'+type);
+    const empty=fe('hempty-'+type);
+    const totalsDiv=fe('totals-'+type);
+    if(!tbody)return;
+    const subset=holdings.filter(h=>h.type===type);
+    if(!subset.length){
+      tbody.innerHTML='';
+      if(empty)empty.style.display='block';
+      if(totalsDiv)totalsDiv.style.display='none';
+      return;
+    }
+    if(empty)empty.style.display='none';
+    if(totalsDiv)totalsDiv.style.display='flex';
+
+    let typeVal=0,typeCost=0,typeHasLive=false;
+
+    tbody.innerHTML=subset.map(h=>{
+      const cost=h.avgBuy*h.qty;
+      const val=h.livePrice!=null?h.livePrice*h.qty:null;
+      const pl=val!=null?val-cost:null;
+      const plp=pl!=null&&cost>0?(pl/cost*100):null;
+      if(val!=null){totalVal+=val;typeVal+=val;hasLive=true;typeHasLive=true;}
+      else if(h.livePrice==null&&!h.err){totalVal+=cost;typeVal+=cost;}
+      totalCost+=cost;typeCost+=cost;
+      const liveTd=h.err
+        ?`<td><span class="live-err" title="${h.err}">err</span></td>`
+        :h.manualPrice!=null
+          ?`<td class="live-price">${toDisplayPrice(h.manualPrice,h.manualPrice<1?6:2)} <span style="font-size:8px;color:var(--gold)">✎</span></td>`
+          :h.livePrice==null
+            ?`<td><span class="live-load">...</span></td>`
+            :`<td class="live-price">${toDisplayPrice(h.livePrice,h.livePrice<1?6:2)} <span style="font-size:8px;color:var(--muted)">${h.src||''}</span></td>`;
+      const valTd=val!=null?`<td>${toDisplay(val)}</td>`:`<td style="color:var(--muted)">${toDisplay(cost)}</td>`;
+      const plTd=pl!=null
+        ?`<td class="${pl>=0?'cg':'cr'}">${pl>=0?'+':''}${toDisplay(Math.abs(pl))} <span style="font-size:9px;opacity:.7">${pl>=0?'+':''}${plp.toFixed(1)}%</span></td>`
+        :`<td style="color:var(--muted)">—</td>`;
+      if(type==='metal'){
+        return `<tr>
+          <td><strong style="font-size:11px">${h.name}</strong></td>
+          <td style="font-size:10px;color:var(--muted)">${h.unitLabel||h.qty.toFixed(1)+'g'}</td>
+          <td>${toDisplayPrice(h.avgBuy,4)}</td>
+          ${liveTd}${valTd}${plTd}
+          <td><button class="xbtn" onclick="confirmDel(${h.id},'${h.name}')">×</button></td>
+        </tr>`;
+      }
+      return `<tr>
+        <td><strong style="font-size:11px">${h.name}</strong></td>
+        <td>${toDisplayPrice(h.avgBuy,2)}</td>
+        ${liveTd}${valTd}${plTd}
+        <td><button class="xbtn" onclick="confirmDel(${h.id},'${h.name}')">×</button></td>
+      </tr>`;
+    }).join('');
+
+    // Per-type totals
+    const typePL=typeVal-typeCost;
+    const tvEl=fe('tot-val-'+type);
+    const tpEl=fe('tot-pl-'+type);
+    if(tvEl)tvEl.textContent=toDisplay(typeVal);
+    if(tpEl){
+      if(typeHasLive){
+        const typePct=typeCost>0?(typePL/typeCost*100):0;
+        tpEl.textContent=(typePL>=0?'+':'')+toDisplay(Math.abs(typePL))+' '+(typePL>=0?'+':'')+typePct.toFixed(1)+'%';
+        tpEl.className=typePL>=0?'cg':'cr';
+      } else {tpEl.textContent='—';}
+    }
+  });
+
+  fe('h-npos').textContent=holdings.length;
+  fe('h-totval').textContent=toDisplay(totalVal);
+  const totalPL=totalVal-totalCost;
+  const plEl=fe('h-totpl');
+  if(hasLive){
+    const totalPct=totalCost>0?(totalPL/totalCost*100):0;
+    plEl.textContent=(totalPL>=0?'+':'')+toDisplay(Math.abs(totalPL))+' '+(totalPL>=0?'+':'')+totalPct.toFixed(1)+'%';
+    plEl.className='hstatv '+(totalPL>=0?'cg':'cr');
+  } else {plEl.textContent='—';plEl.className='hstatv';}
+}
+function renderHoldingPie(){
+  const ctx=fe('hpc').getContext('2d');
+  if(hpci){hpci.destroy();hpci=null;}
+  const leg=fe('hpleg');
+  leg.innerHTML='';
+  if(!holdings.length)return;
+
+  // Color palettes per type
+  const stockPal=['#00d4ff','#00b8dd','#009bb8','#0082a0','#006688','#004455','#003344'];
+  const cryptoPal=['#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#5b21b6'];
+  const metalPal=['#ffb347','#e8962a','#cc7a10','#aa6000'];
+  const typeOrder=['stock','crypto','metal'];
+  const typeColors={stock:stockPal,crypto:cryptoPal,metal:metalPal};
+  const typeLabels={stock:'📊 Stocks',crypto:'🪙 Crypto',metal:'🥇 Metals'};
+  const typeCatColors={stock:'#00d4ff',crypto:'#a78bfa',metal:'#ffb347'};
+
+  const allLabels=[],allData=[],allColors=[],allBorders=[];
+
+  typeOrder.forEach(type=>{
+    const subset=holdings.filter(h=>h.type===type);
+    if(!subset.length)return;
+    const pal=typeColors[type];
+    subset.forEach((h,i)=>{
+      const val=h.livePrice!=null?h.livePrice*h.qty:h.avgBuy*h.qty;
+      allLabels.push(h.name);
+      allData.push(val);
+      allColors.push(pal[i%pal.length]+'cc');
+      allBorders.push(pal[i%pal.length]);
+    });
+  });
+
+  const total=allData.reduce((a,b)=>a+b,0);
+  if(!total)return;
+
+  hpci=new Chart(ctx,{type:'pie',data:{
+    labels:allLabels,
+    datasets:[{data:allData,
+      backgroundColor:allColors,
+      borderColor:allBorders,
+      borderWidth:1.5,
+      hoverBorderColor:'#fff',
+      hoverBorderWidth:2
+    }]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'rgba(0,10,6,.95)',borderColor:'rgba(0,255,178,.3)',borderWidth:1,titleColor:'#00ffb2',bodyColor:'#e0fff5',
+        callbacks:{label:c=>' '+c.label+': '+(c.raw/total*100).toFixed(1)+'%'}}}
+  }});
+
+  // Build legend grouped by type
+  let legHtml='';
+  typeOrder.forEach(type=>{
+    const subset=holdings.filter(h=>h.type===type);
+    if(!subset.length)return;
+    const pal=typeColors[type];
+    legHtml+=`<div style="font-size:9px;font-weight:600;color:${typeCatColors[type]};margin-bottom:3px;margin-top:6px">${typeLabels[type]}</div>`;
+    subset.forEach((h,i)=>{
+      const val=h.livePrice!=null?h.livePrice*h.qty:h.avgBuy*h.qty;
+      const pct=(val/total*100).toFixed(1);
+      legHtml+=`<div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+        <div style="width:7px;height:7px;border-radius:50%;background:${pal[i%pal.length]};flex-shrink:0"></div>
+        <span style="color:rgba(200,255,235,.7);font-size:9px">${h.name}</span>
+        <span style="margin-left:auto;color:rgba(200,255,235,.4);font-size:9px">${pct}%</span>
+      </div>`;
+    });
+  });
+  leg.innerHTML=legHtml;
+}
+function renderPortHistory(){
+  const ctx=fe('phc').getContext('2d');
+  if(phci){phci.destroy();phci=null;}
+  if(portHistory.length<2){fe('hevol-empty').style.display='block';return;}
+  fe('hevol-empty').style.display='none';
+  const labels=portHistory.map(s=>{const d=new Date(s.ts);return d.getDate()+'/'+(d.getMonth()+1);});
+  const data=portHistory.map(s=>s.val);
+  const gc='rgba(0,255,178,.06)',tc='rgba(180,240,220,.45)';
+  phci=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:lang==='nl'?'Portfolio waarde':'Portfolio value',data,
+    borderColor:'#00ffb2',backgroundColor:'rgba(0,255,178,.07)',borderWidth:2,
+    pointRadius:data.length>30?1:3,pointBackgroundColor:data.map((v,i)=>i===0?'#00ffb2':v>=data[i-1]?'#00ffb2':'#ff4444'),fill:true,tension:.3}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:tc,font:{family:'DM Mono',size:10},boxWidth:10}},
+      tooltip:{backgroundColor:'rgba(0,10,6,.95)',borderColor:'rgba(0,255,178,.3)',borderWidth:1,titleColor:'#00ffb2',bodyColor:'#e0fff5',
+        callbacks:{label:c=>' €'+parseFloat(c.raw).toLocaleString('nl-BE',{minimumFractionDigits:2})}}},
+    scales:{x:{ticks:{color:tc,font:{family:'DM Mono',size:8},maxTicksLimit:15},grid:{color:gc}},
+      y:{ticks:{color:tc,font:{family:'DM Mono',size:9},callback:v=>'€'+v.toLocaleString()},grid:{color:gc}}}}});
+}
+
+// ── Per-type mini evolutie grafieken ──
+let phciStock=null,phciCrypto=null,phciMetal=null;
+const evoMode={stock:'eur',crypto:'eur',metal:'eur'};
+const evoFilter={stock:'all',crypto:'all',metal:'all'};
+
+function filterHistory(hist, period){
+  if(period==='all')return hist;
+  const now=Date.now();
+  const ms={'1m':30,'3m':90,'6m':180,'1y':365};
+  const days=ms[period]||9999;
+  return hist.filter(s=>now-s.ts<=days*86400000);
+}
+
+function setEvoFilter(type, period, btn){
+  evoFilter[type]=period;
+  const container=fe('ef-'+type);
+  if(container)container.querySelectorAll('.evo-filter').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+  renderTypeCharts();
+}
+
+function toggleEvoMode(type){
+  evoMode[type]=evoMode[type]==='eur'?'pct':'eur';
+  const btn=fe('etog-'+type);
+  if(btn){
+    const isEur=evoMode[type]==='eur';
+    btn.textContent=isEur?'€':'%';
+    btn.classList.toggle('pct',!isEur);
+    btn.title=isEur
+      ?(lang==='nl'?'Portefeuillewaarde in EUR':'Portfolio value in EUR')
+      :(lang==='nl'?'P&L % rendement sinds aankoop':'P&L % return since purchase');
+  }
+  renderTypeCharts();
+}
+
+function renderTypeChart(canvasId, typeKey, color, chartRef){
+  const canvas=fe(canvasId);
+  if(!canvas)return chartRef;
+  if(chartRef){chartRef.destroy();chartRef=null;}
+  const allHist=portHistory.filter(s=>s[typeKey]!=null&&s[typeKey]>0);
+  const hist=filterHistory(allHist, evoFilter[typeKey]);
+  if(hist.length<2)return chartRef;
+
+  const labels=hist.map(s=>{const d=new Date(s.ts);return d.getDate()+'/'+(d.getMonth()+1);});
+  const mode=evoMode[typeKey];
+
+  let data;
+  if(mode==='pct'){
+    // Bereken % tov aankoop van de holdings van dit type
+    const typeCost=holdings.filter(h=>h.type===typeKey).reduce((s,h)=>s+h.avgBuy*h.qty,0);
+    data=hist.map(s=>{
+      if(!typeCost)return 0;
+      return parseFloat(((s[typeKey]-typeCost)/typeCost*100).toFixed(2));
+    });
+  } else {
+    data=hist.map(s=>parseFloat(s[typeKey].toFixed(2)));
+  }
+
+  const gc='rgba(255,255,255,.04)',tc='rgba(200,220,210,.35)';
+  const ctx=canvas.getContext('2d');
+  chartRef=new Chart(ctx,{type:'line',data:{labels,datasets:[{data,
+    borderColor:color,backgroundColor:color.replace('1)','0.07)'),borderWidth:1.5,
+    pointRadius:data.length>30?0:2,fill:true,tension:.3}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'rgba(0,10,6,.9)',borderColor:color,borderWidth:1,titleColor:color,bodyColor:'#e0fff5',
+        callbacks:{label:c=>mode==='pct'?` ${c.raw>=0?'+':''}${c.raw}%`:` €${parseFloat(c.raw).toLocaleString('nl-BE',{minimumFractionDigits:2})}`}}},
+    scales:{x:{ticks:{color:tc,font:{size:7},maxTicksLimit:8},grid:{color:gc}},
+      y:{ticks:{color:tc,font:{size:7},callback:v=>mode==='pct'?v+'%':'€'+v.toLocaleString()},grid:{color:gc}}}}});
+  return chartRef;
+}
+
+function renderTypeCharts(){
+  phciStock=renderTypeChart('phc-stock','stock','rgba(0,212,255,1)',phciStock);
+  phciCrypto=renderTypeChart('phc-crypto','crypto','rgba(167,139,250,1)',phciCrypto);
+  phciMetal=renderTypeChart('phc-metal','metal','rgba(255,200,0,1)',phciMetal);
+}
+
+// ── Price helpers ──
+function withTimeout(promise,ms){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);}
+async function safeFetch(url){const r=await withTimeout(fetch(url,{cache:'no-store'}),7000);if(!r.ok)throw new Error('HTTP '+r.status);return r;}
+
+async function fetchViaProxy(targetUrl){
+  // 1. Direct
+  try{const r=await safeFetch(targetUrl);return await r.text();}catch(e){}
+  // 2. corsproxy.io (correct formaat zonder "url=")
+  try{const r=await safeFetch('https://corsproxy.io/?'+encodeURIComponent(targetUrl));return await r.text();}catch(e){}
+  // 3. allorigins (geeft {contents:"..."})
+  try{const r=await safeFetch('https://api.allorigins.win/get?url='+encodeURIComponent(targetUrl));const j=await r.json();if(j.contents)return j.contents;}catch(e){}
+  // 4. thingproxy
+  try{const r=await safeFetch('https://thingproxy.freeboard.io/fetch/'+targetUrl);return await r.text();}catch(e){}
+  throw new Error('alle proxies gefaald');
+}
+
+async function getUsdEur(){
+  try{const r=await safeFetch('https://api.frankfurter.app/latest?from=USD&to=EUR');const d=await r.json();if(d.rates?.EUR>0)return d.rates.EUR;}catch(e){}
+  try{const r=await safeFetch('https://open.er-api.com/v6/latest/USD');const d=await r.json();if(d.rates?.EUR>0)return d.rates.EUR;}catch(e){}
+  return 0.92;
+}
+
+async function getCryptoPrice(ticker){
+  const t=ticker.toUpperCase();
+  try{const r=await safeFetch('https://api.binance.com/api/v3/ticker/price?symbol='+t+'EUR');const d=await r.json();if(d.price&&+d.price>0)return{p:+d.price,cur:'EUR',src:'Binance'};}catch(e){}
+  try{const r=await safeFetch('https://api.binance.com/api/v3/ticker/price?symbol='+t+'USDT');const d=await r.json();if(d.price&&+d.price>0)return{p:+d.price,cur:'USD',src:'Binance'};}catch(e){}
+  try{
+    const km={'BTC':'XBT','ETH':'ETH','XRP':'XRP','LTC':'LTC','ADA':'ADA','SOL':'SOL','DOT':'DOT','DOGE':'DOGE','AVAX':'AVAX','LINK':'LINK','ATOM':'ATOM','BNB':'BNB'};
+    const pair=(km[t]||t)+'EUR';
+    const r=await safeFetch('https://api.kraken.com/0/public/Ticker?pair='+pair);
+    const d=await r.json();const res=d.result&&Object.values(d.result)[0];
+    if(res?.c?.[0]&&+res.c[0]>0)return{p:+res.c[0],cur:'EUR',src:'Kraken'};
+  }catch(e){}
+  try{
+    const r=await safeFetch('https://api.coinbase.com/v2/prices/'+t+'-EUR/spot');
+    const d=await r.json();if(d.data?.amount&&+d.data.amount>0)return{p:+d.data.amount,cur:'EUR',src:'Coinbase'};
+  }catch(e){}
+  return null;
+}
+
+async function getStockPrice(ticker){
+  const url='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ticker)+'?interval=1d&range=1d';
+  try{
+    const text=await fetchViaProxy(url);
+    let data;
+    try{data=JSON.parse(text);}catch(e){try{const w=JSON.parse(text);data=JSON.parse(w.contents);}catch(e2){}}
+    const meta=data?.chart?.result?.[0]?.meta;
+    if(meta?.regularMarketPrice>0)return{p:meta.regularMarketPrice,cur:(meta.currency||'USD').toUpperCase(),src:'Yahoo'};
+  }catch(e){}
+  return null;
+}
+
+async function getMetalPricePerGram(metalType){
+  // XAU = gold per troy oz, XAG = silver per troy oz
+  // 1 troy oz = 31.1035 gram
+  const symbol=metalType==='gold'?'GC=F':'SI=F'; // Yahoo Finance futures
+  const ticker=metalType==='gold'?'GC=F':'SI=F';
+  try{
+    const url='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ticker)+'?interval=1d&range=1d';
+    const text=await fetchViaProxy(url);
+    let data;
+    try{data=JSON.parse(text);}catch(e){try{const w=JSON.parse(text);data=JSON.parse(w.contents);}catch(e2){}}
+    const meta=data?.chart?.result?.[0]?.meta;
+    if(meta?.regularMarketPrice>0){
+      const pricePerOzUSD=meta.regularMarketPrice;
+      const usdEur=await getUsdEur();
+      const pricePerOzEur=pricePerOzUSD*usdEur;
+      const pricePerGram=pricePerOzEur/31.1035;
+      return{p:pricePerGram,src:'Yahoo'};
+    }
+  }catch(e){}
+  return null;
+}
+
+async function fetchPrices(){
+  if(!holdings.length)return;
+  const btn=fe('refresh-btn'),spin=fe('refresh-spin');
+  btn.classList.add('loading');spin.className='spin';spin.textContent='↻';
+  holdings.forEach(h=>{if(!h.manualPrice){h.livePrice=null;h.err=null;}});
+  renderHoldingsTable();
+
+  const usdeur=await getUsdEur();
+
+  await Promise.all(holdings.map(async h=>{
+    if(h.manualPrice)return;
+    try{
+      if(h.type==='crypto'){
+        const res=await getCryptoPrice(h.ticker);
+        if(res){h.livePrice=res.cur==='EUR'?res.p:res.p*usdeur;h.src=res.src;}
+        else{h.err='Niet gevonden — voer prijs manueel in';}
+      } else if(h.type==='metal'){
+        const res=await getMetalPricePerGram(h.metalType);
+        if(res){h.livePrice=res.p;h.src=res.src;} // livePrice = prijs per gram in EUR
+        else{h.err='Niet gevonden — voer prijs manueel in';}
+      } else {
+        const res=await getStockPrice(h.ticker);
+        if(res){
+          if(res.cur==='EUR'){h.livePrice=res.p;}
+          else if(res.cur==='USD'){h.livePrice=res.p*usdeur;}
+          else if(res.cur==='GBP'){h.livePrice=res.p*(usdeur*1.27);}
+          else if(res.cur==='GBp'){h.livePrice=(res.p/100)*(usdeur*1.27);}
+          else{h.livePrice=res.p*usdeur;}
+          h.src=res.src;
+        } else{h.err='Niet gevonden — check ticker of voer manueel in';}
+      }
+    }catch(e){h.err='Fout: '+e.message;}
+  }));
+
+  const snapTotal=holdings.reduce((s,h)=>s+(h.manualPrice||h.livePrice||h.avgBuy)*h.qty,0);
+  const snapStock=holdings.filter(h=>h.type==='stock').reduce((s,h)=>s+(h.manualPrice||h.livePrice||h.avgBuy)*h.qty,0);
+  const snapCrypto=holdings.filter(h=>h.type==='crypto').reduce((s,h)=>s+(h.manualPrice||h.livePrice||h.avgBuy)*h.qty,0);
+  const snapMetal=holdings.filter(h=>h.type==='metal').reduce((s,h)=>s+(h.manualPrice||h.livePrice||h.avgBuy)*h.qty,0);
+  portHistory.push({ts:Date.now(),val:parseFloat(snapTotal.toFixed(2)),stock:parseFloat(snapStock.toFixed(2)),crypto:parseFloat(snapCrypto.toFixed(2)),metal:parseFloat(snapMetal.toFixed(2))});
+  savePortHistory();
+  saveHoldings();
+  fe('last-upd').textContent=(lang==='nl'?'Bijgewerkt om ':'Updated at ')+
+    new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})+
+    ' · USD/EUR: '+usdeur.toFixed(4);
+  btn.classList.remove('loading');spin.className='';spin.textContent='↻';
+  renderHoldingsTable();renderHoldingPie();renderPortHistory();renderTypeCharts();
+}
+
+function setManualPrice(id,val){
+  const h=holdings.find(h=>h.id===id);if(!h)return;
+  const p=parseFloat(val);
+  if(!val||isNaN(p)||p<=0){h.manualPrice=null;h.err=null;}
+  else{h.manualPrice=p;h.livePrice=null;h.err=null;}
+  saveHoldings();renderHoldingsTable();renderHoldingPie();
+}
+
+// ── Init ──
+if(typeof allocs!=='undefined'&&allocs.length)allocs.forEach(a=>addAllocRow(a));else if(typeof addAllocRow!=='undefined')addAllocRow({});
+if(typeof renderPie!=='undefined')renderPie();
+if(typeof renderLog!=='undefined')renderLog();
+if(typeof calc!=='undefined')calc();
+if(typeof applyLang!=='undefined')applyLang();
+if(typeof loadTabOrder!=='undefined')loadTabOrder();
+if(typeof initTabDrag!=='undefined')initTabDrag();
+// Start op Posities tab
+const firstTab=fe('tab-btn-hold');
+if(firstTab)goTab('hold',firstTab);
+if(typeof renderHoldingsTable!=='undefined'){renderHoldingsTable();renderHoldingPie();renderPortHistory();renderTypeCharts();}
+// Restore fiscal state
+if(useExemption){const cb=fe('tog-exempt');if(cb){cb.checked=true;fe('exempt-panel').style.display='block';if(fe('exempt-amt'))fe('exempt-amt').value=exemptionAmount;updateExemptDisplay();}}
+if(lossCarryEnabled){const cb=fe('tog-loss');if(cb){cb.checked=true;fe('loss-panel').style.display='block';renderLossList();}}
+
+// ── TICKER ──
+const TICKER_ROW1=[
+  {sym:'^GSPC',type:'stock',label:'S&P 500'},{sym:'^IXIC',type:'stock',label:'NASDAQ'},{sym:'^DJI',type:'stock',label:'DOW'},
+  {sym:'^BFX',type:'stock',label:'BEL 20'},{sym:'^GDAXI',type:'stock',label:'DAX'},{sym:'^FCHI',type:'stock',label:'CAC 40'},
+  {sym:'^AEX',type:'stock',label:'AEX'},{sym:'^FTSE',type:'stock',label:'FTSE 100'},{sym:'^N225',type:'stock',label:'Nikkei'},
+  {sym:'^HSI',type:'stock',label:'Hang Seng'},{sym:'^NSEI',type:'stock',label:'Nifty 50'},{sym:'^AXJO',type:'stock',label:'ASX 200'},
+  {sym:'^SSMI',type:'stock',label:'SMI'},{sym:'^IBEX',type:'stock',label:'IBEX 35'},
+  {sym:'SPY',type:'stock',label:'SPY ETF'},{sym:'QQQ',type:'stock',label:'QQQ ETF'},{sym:'IWDA.AS',type:'stock',label:'IWDA'},
+  {sym:'VWCE.DE',type:'stock',label:'VWCE'},{sym:'EEM',type:'stock',label:'iSh EM'},
+  {sym:'AAPL',type:'stock',label:'Apple'},{sym:'NVDA',type:'stock',label:'Nvidia'},{sym:'MSFT',type:'stock',label:'Microsoft'},
+  {sym:'TSLA',type:'stock',label:'Tesla'},{sym:'ASML.AS',type:'stock',label:'ASML'},{sym:'MC.PA',type:'stock',label:'LVMH'},
+  {sym:'SAP.DE',type:'stock',label:'SAP'},{sym:'ABI.BR',type:'stock',label:'AB InBev'},{sym:'KBC.BR',type:'stock',label:'KBC'},
+  {sym:'SIE.DE',type:'stock',label:'Siemens'},{sym:'AMZN',type:'stock',label:'Amazon'},
+];
+const TICKER_ROW2=[
+  {sym:'EURUSD=X',type:'stock',label:'EUR/USD'},{sym:'EURGBP=X',type:'stock',label:'EUR/GBP'},{sym:'EURJPY=X',type:'stock',label:'EUR/JPY'},
+  {sym:'JPY=X',type:'stock',label:'USD/JPY'},{sym:'GBPUSD=X',type:'stock',label:'GBP/USD'},{sym:'EURCHF=X',type:'stock',label:'EUR/CHF'},
+  {sym:'CHFUSD=X',type:'stock',label:'USD/CHF'},{sym:'AUDUSD=X',type:'stock',label:'AUD/USD'},{sym:'CADUSD=X',type:'stock',label:'USD/CAD'},
+  {sym:'GC=F',type:'stock',label:'GOLD'},{sym:'SI=F',type:'stock',label:'SILVER'},{sym:'CL=F',type:'stock',label:'OIL WTI'},
+  {sym:'BZ=F',type:'stock',label:'BRENT'},{sym:'NG=F',type:'stock',label:'NAT GAS'},{sym:'HG=F',type:'stock',label:'COPPER'},
+  {sym:'PL=F',type:'stock',label:'PLATINUM'},{sym:'PA=F',type:'stock',label:'PALLADIUM'},{sym:'ZW=F',type:'stock',label:'WHEAT'},
+  {sym:'KC=F',type:'stock',label:'COFFEE'},{sym:'CC=F',type:'stock',label:'COCOA'},
+  {sym:'^TNX',type:'stock',label:'US 10Y'},{sym:'^TYX',type:'stock',label:'US 30Y'},{sym:'^IRX',type:'stock',label:'US 3M'},{sym:'^IRDE',type:'stock',label:'DE 10Y'},
+];
+const TICKER_ROW3=[
+  {sym:'BTC',type:'crypto',label:'BTC'},{sym:'ETH',type:'crypto',label:'ETH'},{sym:'BNB',type:'crypto',label:'BNB'},
+  {sym:'SOL',type:'crypto',label:'SOL'},{sym:'XRP',type:'crypto',label:'XRP'},{sym:'ADA',type:'crypto',label:'ADA'},
+  {sym:'AVAX',type:'crypto',label:'AVAX'},{sym:'DOGE',type:'crypto',label:'DOGE'},{sym:'DOT',type:'crypto',label:'DOT'},
+  {sym:'MATIC',type:'crypto',label:'MATIC'},{sym:'LINK',type:'crypto',label:'LINK'},{sym:'TRX',type:'crypto',label:'TRX'},
+  {sym:'SHIB',type:'crypto',label:'SHIB'},{sym:'LTC',type:'crypto',label:'LTC'},{sym:'UNI',type:'crypto',label:'UNI'},
+  {sym:'ATOM',type:'crypto',label:'ATOM'},{sym:'XLM',type:'crypto',label:'XLM'},{sym:'ALGO',type:'crypto',label:'ALGO'},
+  {sym:'FIL',type:'crypto',label:'FIL'},{sym:'NEAR',type:'crypto',label:'NEAR'},
+];
+const TICKER_SYMBOLS_ALL=[...TICKER_ROW1,...TICKER_ROW2,...TICKER_ROW3];
+let tickerData2={};
+
+async function fetchTickerPrices(){
+  const cryptos=TICKER_SYMBOLS_ALL.filter(s=>s.type==='crypto');
+  for(const s of cryptos){
+    try{
+      let r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}EUR`);
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData2[s.sym]={price:+d.lastPrice,chg:+d.priceChangePercent};continue;}}
+      r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${s.sym}USDT`);
+      if(r.ok){const d=await r.json();if(d.lastPrice&&+d.lastPrice>0){tickerData2[s.sym]={price:+d.lastPrice*0.92,chg:+d.priceChangePercent};}}
+    }catch(e){}
+  }
+  const stocks=TICKER_SYMBOLS_ALL.filter(s=>s.type==='stock');
+  for(const s of stocks){
+    try{
+      const url=`https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(s.sym)}?interval=1d&range=1d`;
+      const proxy=`https://corsproxy.io/?${encodeURIComponent(url)}`;
+      const r=await fetch(proxy,{cache:'no-store'});
+      if(!r.ok)continue;
+      const data=await r.json();
+      const meta=data?.chart?.result?.[0]?.meta;
+      if(meta?.regularMarketPrice>0){
+        const price=meta.regularMarketPrice;
+        const prev=meta.chartPreviousClose||meta.previousClose||price;
+        const chg=prev>0?((price-prev)/prev*100):0;
+        const cur=(meta.currency||'USD').toUpperCase();
+        const eur=cur==='EUR'?price:price*0.92;
+        tickerData2[s.sym]={price:eur,chg,cur};
+      }
+    }catch(e){}
+  }
+  renderTicker();
+}
+
+function buildTickerHtml(symbols){
+  let html='';
+  for(const s of symbols){
+    const d=tickerData2[s.sym];
+    if(!d){html+=`<div class="tick-item"><span class="tick-sym">${s.label}</span><span class="tick-price" style="opacity:.4">—</span></div>`;continue;}
+    const up=d.chg>=0;
+    const p=d.price;
+    const priceStr=p>=10000?p.toLocaleString('nl-BE',{maximumFractionDigits:0}):p>=100?p.toLocaleString('nl-BE',{minimumFractionDigits:2,maximumFractionDigits:2}):p>=1?p.toLocaleString('nl-BE',{minimumFractionDigits:3,maximumFractionDigits:3}):p.toLocaleString('nl-BE',{minimumFractionDigits:5,maximumFractionDigits:5});
+    const isForex=s.label.includes('/')||s.label.includes('Y')||s.label.includes('3M');
+    const prefix=isForex?'':' €';
+    const sign=up?'+':'';
+    html+=`<div class="tick-item"><div class="tick-dot ${up?'tick-dot-up':'tick-dot-dn'}"></div><span class="tick-sym">${s.label}</span><span class="tick-price">${prefix}${priceStr}</span><span class="tick-chg ${up?'tick-up':'tick-dn'}">${sign}${d.chg.toFixed(2)}%</span></div>`;
+  }
+  return html;
+}
+
+function renderTicker(){
+  const i1=document.getElementById('ticker-inner-1');
+  const i2=document.getElementById('ticker-inner-2');
+  const i3=document.getElementById('ticker-inner-3');
+  if(i1)i1.innerHTML=buildTickerHtml(TICKER_ROW1)+buildTickerHtml(TICKER_ROW1);
+  if(i2)i2.innerHTML=buildTickerHtml(TICKER_ROW2)+buildTickerHtml(TICKER_ROW2);
+  if(i3)i3.innerHTML=buildTickerHtml(TICKER_ROW3)+buildTickerHtml(TICKER_ROW3);
+}
+
+renderTicker();
+fetchTickerPrices();
+setInterval(fetchTickerPrices,60000);
+</script>
+<!-- CSV IMPORT MODAL -->
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+<!-- CSV IMPORT MODAL -->
+<div id="csv-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#050f0a;border:1px solid rgba(0,255,178,.2);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;padding:22px;font-family:'Outfit',sans-serif">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:600;color:var(--g)">📥 CSV Import</div>
+      <button onclick="csvClose()" style="background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <!-- Step 1 -->
+    <div id="cs1">
+      <label id="csv-dz" style="display:block;border:2px dashed rgba(0,255,178,.2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;color:var(--muted)">
+        <div style="font-size:30px;margin-bottom:8px">📂</div>
+        <div style="color:var(--g2);font-size:13px;margin-bottom:6px">Klik of sleep CSV bestand hier</div>
+        <div style="font-size:10px;opacity:.45;line-height:1.6">Bybit · Binance · Crypto.com · Degiro · Bolero · Keytrade · Lynx · IBKR · eToro · Trading212<br>Revolut · Coinbase · Kraken · OKX · KuCoin · Bitget · MetaTrader · Bitvavo · Gate.io · MEXC<br>Phemex · Deribit · Bitmex · HTX/Huobi · Saxo · Swissquote · Flatex · Scalable · Trade Republic · en meer</div>
+        <input type="file" id="csv-fi" accept=".csv,.txt,.tsv" style="display:none" onchange="csvLoad(this.files[0])">
+      </label>
+    </div>
+    <!-- Step 2 -->
+    <div id="cs2" style="display:none">
+      <div id="csv-info" style="font-size:11px;padding:8px 12px;border-radius:8px;background:rgba(0,255,178,.05);border:1px solid rgba(0,255,178,.1);margin-bottom:12px"></div>
+      <div id="csv-mapping" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="csvStep(1)" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px;color:var(--muted);font-size:11px;cursor:pointer">← Terug</button>
+        <button onclick="csvImport()" style="flex:2;background:rgba(0,255,178,.1);border:1px solid rgba(0,255,178,.3);border-radius:8px;padding:9px;color:var(--g);font-size:12px;font-weight:600;cursor:pointer">✅ Importeren</button>
+      </div>
+    </div>
+    <!-- Step 3 -->
+    <div id="cs3" style="display:none;text-align:center;padding:24px 0">
+      <div style="font-size:36px;margin-bottom:10px">✅</div>
+      <div id="csv-r1" style="font-size:15px;color:var(--g);font-weight:600"></div>
+      <div id="csv-r2" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+      <button onclick="csvClose()" style="margin-top:18px;background:rgba(0,255,178,.1);border:1px solid rgba(0,255,178,.3);border-radius:8px;padding:8px 24px;color:var(--g);font-size:12px;cursor:pointer">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════ CSV ENGINE v4 ══════════════════════════════════════
+let _rows=[], _hdrs=[], _broker='', _map={};
+
+// Value parser: handles €, $, commas, European format
+function pV(v){
+  if(!v&&v!==0)return 0;
+  let s=String(v).replace(/[€$£¥₩\s"']/g,'').trim();
+  if(!s||s==='-'||s==='—')return 0;
+  // European: 1.234,56 → 1234.56
+  if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else if(/^-?\d+,\d{1,4}$/.test(s)) s=s.replace(',','.');
+  return parseFloat(s)||0;
+}
+
+// Date parser
+function pD(v){
+  if(!v)return{s:'—',y:new Date().getFullYear()};
+  const d=new Date(String(v).replace('T',' ').replace('Z',''));
+  if(!isNaN(d.getTime()))return{s:d.toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'}),y:d.getFullYear()};
+  const m=/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/.exec(String(v));
+  if(m){const d2=new Date(`${m[3].length===2?'20'+m[3]:m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`);if(!isNaN(d2))return{s:d2.toLocaleDateString('nl-BE',{day:'2-digit',month:'short',year:'2-digit'}),y:d2.getFullYear()};}
+  return{s:String(v).slice(0,10),y:parseInt(String(v))||new Date().getFullYear()};
+}
+
+// Smart CSV parser: auto-detects delimiter, finds real header row (skips metadata rows)
+function pCSV(txt){
+  const raw=txt.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  // Find best delimiter from first 5 non-empty lines
+  const sample=raw.filter(l=>l.trim()).slice(0,5);
+  const delims=[',',';','\t','|'];
+  let D=',',mx=0;
+  delims.forEach(d=>{
+    const counts=sample.map(l=>(l.match(new RegExp('\\'+d,'g'))||[]).length);
+    const consistent=counts.every(c=>c===counts[0])&&counts[0]>0;
+    if(consistent&&counts[0]>mx){mx=counts[0];D=d;}
+    else if(!consistent){const avg=counts.reduce((a,b)=>a+b,0)/counts.length;if(avg>mx){mx=avg;D=d;}}
+  });
+
+  function spl(line){
+    const r=[];let c='',q=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"')q=!q;
+      else if(line[i]===D&&!q){r.push(c.replace(/^"|"$/g,'').trim());c='';}
+      else c+=line[i];
+    }
+    r.push(c.replace(/^"|"$/g,'').trim());
+    return r;
+  }
+
+  // Find header row: the row where most cells look like column names (not numbers/dates)
+  const nonEmpty=raw.filter(l=>l.trim());
+  let headerIdx=0;
+  let bestScore=-1;
+  for(let i=0;i<Math.min(10,nonEmpty.length);i++){
+    const cells=spl(nonEmpty[i]);
+    // Score: cells that are text (not pure numbers, not dates, not empty)
+    let score=cells.filter(c=>c&&isNaN(parseFloat(c))&&!/^\d{4}-\d{2}/.test(c)&&!/^\d{1,2}[\/\-]\d{1,2}/.test(c)).length;
+    // Bonus if cells match known column patterns
+    const lower=cells.map(c=>c.toLowerCase());
+    const knownWords=['symbol','date','price','pair','amount','profit','size','time','volume','asset','name','side','open','close','entry','exit','pnl','net'];
+    score+=lower.filter(c=>knownWords.some(w=>c.includes(w))).length*3;
+    if(score>bestScore){bestScore=score;headerIdx=i;}
+  }
+
+  const headers=spl(nonEmpty[headerIdx]);
+  const rows=[];
+  for(let i=headerIdx+1;i<nonEmpty.length;i++){
+    if(!nonEmpty[i].trim())continue;
+    const vals=spl(nonEmpty[i]);
+    const row={};
+    headers.forEach((h,j)=>row[h]=(vals[j]||'').replace(/^"|"$/g,'').trim());
+    rows.push(row);
+  }
+  return{h:headers,r:rows};
+}
+
+// ── SMART COLUMN GUESSER (regex patterns, ordered by priority) ──────────────
+const GUESS={
+  name:[/^symbol$/i,/^pair$/i,/^asset$/i,/^ticker$/i,/^coin$/i,/^market$/i,/^instrument$/i,/^product$/i,/^contract$/i,/^currency$/i,/^description$/i,/^naam$/i,/symbol/i,/pair/i,/instrument/i,/product/i,/ticker/i,/contract/i],
+  date:[/^closetime$/i,/^closedate$/i,/^close_time$/i,/^close_date$/i,/^transacttime$/i,/^transact_time$/i,/closetime/i,/closedate/i,/opentime/i,/opendate/i,/trade time/i,/^date\(utc\)$/i,/^timestamp/i,/^completed/i,/^time$/i,/^date$/i,/datum/i,/trade.*time/i,/trade.*date/i,/create.*time/i],
+  buy:[/^averageentry$/i,/^avg.*entry/i,/^entryprice$/i,/^entry price$/i,/^entry.*price$/i,/^openprice$/i,/^open price$/i,/^open.*price$/i,/^openrate$/i,/^open.*rate$/i,/averageentry/i,/entryprice/i,/entry price/i,/openprice/i,/buy.*price/i,/aankoopkoers/i,/prix.*achat/i,/^price$/i,/^t\. price$/i,/deal.*price/i,/unit.*price/i,/avg.*price/i],
+  sell:[/^averageexit$/i,/^avg.*exit/i,/^exitprice$/i,/^exit price$/i,/^exit.*price$/i,/^closeprice$/i,/^close price$/i,/^close.*price$/i,/^closerate$/i,/^close.*rate$/i,/averageexit/i,/exitprice/i,/exit price/i,/closeprice/i,/sell.*price/i,/verkoopkoers/i,/prix.*vente/i],
+  qty:[/^size$/i,/^qty$/i,/^vol$/i,/^units$/i,/^shares$/i,/^amount$/i,/^lots$/i,/^filled qty$/i,/^order qty$/i,/quantity/i,/volume/i,/aantal/i,/filled/i,/deal.*amount/i,/exec.*qty/i,/order.*qty/i,/no.*shares/i],
+  net:[/^realisedpnl$/i,/^realizedpnl$/i,/^closedpnl$/i,/^closed p&l$/i,/^closed.*p&l$/i,/^pnl$/i,/^net$/i,/^profit$/i,/^result$/i,/realisedpnl/i,/realizedpnl/i,/closedpnl/i,/closed p&l/i,/realized.*p/i,/realised.*p/i,/profit.*loss/i,/gain.*loss/i,/p&l/i,/netto/i,/winst/i],
+};
+
+function guessCol(headers,field){
+  for(const pat of GUESS[field]){
+    const found=headers.find(h=>pat.test(h));
+    if(found)return found;
+  }
+  return '';
+}
+
+// ── EXCHANGE PROFILES (score-based matching) ────────────────────────────────
+const PROFILES=[
+  // Bybit (various export formats)
+  {name:'Bybit',score:h=>(h.includes('averageEntry')?5:0)+(h.includes('averageExit')?5:0)+(h.includes('realisedPnL')?5:0)+(h.includes('closeDate')?3:0)+(h.includes('symbol')?1:0)},
+  {name:'Bybit',score:h=>(h.includes('Entry Price')?4:0)+(h.includes('Exit Price')?4:0)+(h.includes('Closed P&L')?4:0)+(h.includes('Symbol')?1:0)},
+  // Binance
+  {name:'Binance',score:h=>(h.includes('Date(UTC)')?5:0)+(h.includes('Pair')?3:0)+(h.includes('Side')?2:0)+(h.includes('Filled')?2:0)},
+  {name:'Binance',score:h=>(h.includes('UTC_Time')?4:0)+(h.includes('Operation')?4:0)+(h.includes('Change')?3:0)},
+  // Crypto.com
+  {name:'Crypto.com',score:h=>(h.includes('Transaction Kind')?6:0)+(h.includes('Timestamp (UTC)')?4:0)+(h.includes('Native Amount')?3:0)},
+  // Degiro
+  {name:'Degiro',score:h=>(h.includes('ISIN')?5:0)+((h.includes('Product')||h.includes('Omschrijving'))?4:0)+(h.includes('Datum')||h.includes('Date')?2:0)},
+  // Bolero
+  {name:'Bolero',score:h=>h.filter(c=>/transactietype|bolero|nettobedrag/i.test(c)).length*4},
+  // Keytrade
+  {name:'Keytrade',score:h=>h.filter(c=>/titre|montant net|keytrade/i.test(c)).length*4},
+  // Lynx/IBKR
+  {name:'Lynx/IBKR',score:h=>(h.includes('Financial Instrument')?5:0)+(h.includes('T. Price')?4:0)+(h.includes('Realized P/L')?4:0)},
+  {name:'IBKR',score:h=>(h.includes('Conid')?6:0)+(h.includes('IBCommission')?5:0)},
+  // eToro
+  {name:'eToro',score:h=>(h.includes('Open Rate')?4:0)+(h.includes('Close Rate')?4:0)+(h.includes('Units')?3:0)+(h.includes('Profit')?2:0)},
+  // Trading212
+  {name:'Trading212',score:h=>h.filter(c=>/currency conversion fee|result \(eur\)|result \(usd\)/i.test(c)).length*5},
+  // Revolut
+  {name:'Revolut',score:h=>(h.includes('Completed Date')?4:0)+(h.includes('Ticker Symbol')?4:0)+(h.includes('Price per share')?3:0)},
+  // Coinbase
+  {name:'Coinbase',score:h=>(h.includes('Quantity Transacted')?5:0)+(h.includes('Spot Price at Transaction')?5:0)},
+  // Kraken
+  {name:'Kraken',score:h=>(h.includes('txid')?4:0)+(h.includes('vol')?3:0)+(h.includes('fee')?2:0)+(h.includes('pair')?2:0)},
+  // OKX
+  {name:'OKX',score:h=>(h.includes('Inst ID')?5:0)+(h.includes('Fill Px')?4:0)+(h.includes('Fill Sz')?3:0)},
+  // KuCoin
+  {name:'KuCoin',score:h=>(h.includes('Deal Price')?4:0)+((h.includes('Order Amount')||h.includes('Deal Amount'))?4:0)},
+  // Bitget
+  {name:'Bitget',score:h=>(h.includes('Open price')?3:0)+(h.includes('Close price')?3:0)+(h.includes('P&L')?3:0)+(h.includes('Realized P&L')?3:0)},
+  // MetaTrader
+  {name:'MetaTrader',score:h=>h.filter(c=>/^s\.l\.$|^t\.p\.$|open time|close time/i.test(c)).length*3},
+  // Bitvavo
+  {name:'Bitvavo',score:h=>h.filter(c=>/bitvavo|fee currency/i.test(c)).length*4},
+  // Gate.io
+  {name:'Gate.io',score:h=>h.filter(c=>/gate\.io/i.test(c)).length*5+(h.includes('Deal Amount')?2:0)+(h.includes('Pair')?1:0)},
+  // MEXC
+  {name:'MEXC',score:h=>h.filter(c=>/mexc/i.test(c)).length*5+(h.includes('Deal Avg Price')?3:0)},
+  // Phemex
+  {name:'Phemex',score:h=>(h.includes('ExecQty')?4:0)+(h.includes('ClosedPnl')?4:0)+(h.includes('AvgEntryPrice')?3:0)},
+  // Deribit
+  {name:'Deribit',score:h=>(h.includes('instrument_name')?4:0)+(h.includes('profit_loss')?4:0)},
+  // Bitmex
+  {name:'Bitmex',score:h=>(h.includes('execComm')?5:0)+(h.includes('realizedPnl')?4:0)+(h.includes('transactTime')?3:0)},
+  // HTX/Huobi
+  {name:'HTX/Huobi',score:h=>h.filter(c=>/huobi|htx/i.test(c)).length*5+(h.includes('Filled Amount')?2:0)},
+  // Saxo
+  {name:'Saxo Bank',score:h=>h.filter(c=>/saxo/i.test(c)).length*5+(h.includes('P/L')?2:0)+(h.includes('Open Price')?1:0)},
+  // Swissquote
+  {name:'Swissquote',score:h=>h.filter(c=>/swissquote/i.test(c)).length*5+(h.includes('Unit Price')?2:0)+(h.includes('Gross Amount')?2:0)},
+  // Flatex
+  {name:'Flatex',score:h=>h.filter(c=>/flatex|wertpapier/i.test(c)).length*4},
+  // Scalable Capital
+  {name:'Scalable Capital',score:h=>(h.includes('Price per Share')?3:0)+(h.includes('Net Amount')?2:0)+(h.includes('Asset')?1:0)+(h.includes('Shares')?1:0)},
+  // Trade Republic
+  {name:'Trade Republic',score:h=>h.filter(c=>/trade republic/i.test(c)).length*6},
+];
+
+function detectBroker(h){
+  let best=null,bestScore=0;
+  PROFILES.forEach(p=>{
+    const s=p.score(h);
+    if(s>bestScore){bestScore=s;best=p;}
+  });
+  return bestScore>=4?best:null; // Minimum score threshold
+}
+
+// ── Load & process file ──────────────────────────────────────────────────────
+function csvLoad(file){
+  if(!file)return;
+  const fr=new FileReader();
+  fr.onload=function(e){
+    const {h,r}=pCSV(e.target.result);
+    _hdrs=h; _rows=r;
+    const prof=detectBroker(h);
+    _broker=prof?prof.name:'';
+    // Build mapping using smart guesser
+    _map={
+      name:guessCol(h,'name'),
+      date:guessCol(h,'date'),
+      buy:guessCol(h,'buy'),
+      sell:guessCol(h,'sell'),
+      qty:guessCol(h,'qty'),
+      net:guessCol(h,'net'),
+    };
+    // Info bar
+    const info=document.getElementById('csv-info');
+    if(prof){
+      info.innerHTML=`✅ <strong style="color:var(--g)">${prof.name}</strong> &nbsp;·&nbsp; ${r.length} rijen gevonden`;
+    } else {
+      info.innerHTML=`⚠️ <span style="color:var(--gold)">Broker niet herkend</span> &nbsp;·&nbsp; ${r.length} rijen &nbsp;&nbsp; <input id="csv-bn" placeholder="Naam exchange..." style="background:transparent;border:none;border-bottom:1px solid rgba(0,255,178,.3);color:var(--text);font-size:11px;outline:none;width:130px">`;
+    }
+    buildMapping(h,r);
+    csvStep(2);
+  };
+  fr.readAsText(file,'UTF-8');
+}
+
+// ── Build mapping UI ─────────────────────────────────────────────────────────
+function buildMapping(h,rows){
+  const fields=['name','date','buy','sell','qty','net'];
+  const labels={name:'📛 Naam/Symbool',date:'📅 Datum',buy:'📈 Aankoopprijs',sell:'📉 Verkoopprijs',qty:'🔢 Hoeveelheid',net:'💰 Netto P&L'};
+  const ex=rows[0]||{};
+  // Options: show "kolomnaam (voorbeeldwaarde)"
+  const makeOpts=selected=>{
+    let o=`<option value="">— niet gebruiken —</option>`;
+    h.forEach(hh=>{
+      const sample=ex[hh]?String(ex[hh]).slice(0,12):'';
+      const label=sample?`${hh}  (${sample})`:hh;
+      o+=`<option value="${hh}"${hh===selected?' selected':''}>${label}</option>`;
+    });
+    return o;
+  };
+  let html=`<div style="font-size:9px;color:var(--muted);margin-bottom:8px">Kolom mapping — de kolomnaam staat links, de voorbeeldwaarde rechts tussen haakjes:</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:14px">`;
+  fields.forEach(f=>{
+    html+=`<div>
+      <div style="font-size:9px;color:var(--g2);margin-bottom:3px">${labels[f]}</div>
+      <select id="cm-${f}" onchange="csvRefreshPreview()" style="width:100%;background:#081409;border:1px solid rgba(0,255,178,.15);color:var(--text);border-radius:6px;padding:4px 5px;font-size:10px">${makeOpts(_map[f])}</select>
+    </div>`;
+  });
+  html+=`</div><div id="csv-prev" style="overflow-x:auto"></div>`;
+  document.getElementById('csv-mapping').innerHTML=html;
+  csvRefreshPreview();
+}
+
+function csvRefreshPreview(){
+  ['name','date','buy','sell','qty','net'].forEach(f=>{
+    const el=document.getElementById('cm-'+f);
+    if(el)_map[f]=el.value;
+  });
+  const labels={name:'Naam',date:'Datum',buy:'Koop',sell:'Verkoop',qty:'Aantal',net:'P&L'};
+  const fields=['name','date','buy','sell','qty','net'];
+  const sample=_rows.slice(0,3);
+  let t=`<div style="font-size:9px;color:var(--muted);margin-bottom:5px">Live preview:</div>
+  <table style="width:100%;font-size:9px;border-collapse:collapse">
+  <thead><tr>${fields.map(f=>`<th style="padding:3px 6px;color:var(--g2);text-align:left;border-bottom:1px solid rgba(0,255,178,.1)">${labels[f]}</th>`).join('')}</tr></thead><tbody>`;
+  sample.forEach(r=>{
+    t+=`<tr>`;
+    fields.forEach(f=>{
+      const col=_map[f];
+      const v=col&&r[col]!==undefined&&r[col]!==''?String(r[col]).slice(0,18):'—';
+      t+=`<td style="padding:3px 6px;color:${v==='—'?'rgba(255,255,255,.2)':'var(--text)'};border-bottom:1px solid rgba(255,255,255,.03)">${v}</td>`;
+    });
+    t+=`</tr>`;
+  });
+  t+=`</tbody></table>`;
+  const el=document.getElementById('csv-prev');
+  if(el)el.innerHTML=t;
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+function csvImport(){
+  const bname=_broker||(document.getElementById('csv-bn')?.value)||'CSV';
+  let ok=0,skip=0;
+  _rows.forEach(r=>{
+    const nm=_map.name&&r[_map.name]?String(r[_map.name]).trim():'';
+    if(!nm||nm==='—'){skip++;return;}
+    const buy=_map.buy?pV(r[_map.buy]):0;
+    const sell=_map.sell?pV(r[_map.sell]):0;
+    const qty=Math.abs(_map.qty?pV(r[_map.qty]):0);
+    const net=_map.net?pV(r[_map.net]):0;
+    const {s:ds,y:yr}=_map.date&&r[_map.date]?pD(r[_map.date]):{s:'—',y:new Date().getFullYear()};
+    const pct=buy&&sell&&buy!==0?((sell-buy)/buy*100):0;
+    trades.push({id:Date.now()+ok,name:nm,buy,sell,shares:qty,gross:net,costs:0,tax:0,net,pct,taxPct:0,year:yr,date:ds,source:bname});
+    ok++;
+  });
+  trades.sort((a,b)=>b.id-a.id);
+  save();renderLog();renderCharts();
+  document.getElementById('csv-r1').textContent=`${ok} trades geïmporteerd`;
+  document.getElementById('csv-r2').textContent=`${bname}${skip?` · ${skip} rijen overgeslagen`:''}`;
+  csvStep(3);
+}
+
+function csvStep(n){[1,2,3].forEach(i=>document.getElementById('cs'+i).style.display=i===n?'block':'none');}
+function csvClose(){
+  document.getElementById('csv-modal').style.display='none';
+  csvStep(1);document.getElementById('csv-fi').value='';
+  _rows=[];_hdrs=[];_broker='';_map={};
+}
+const _dz=document.getElementById('csv-dz');
+_dz.addEventListener('click',()=>document.getElementById('csv-fi').click());
+_dz.addEventListener('dragover',e=>{e.preventDefault();_dz.style.borderColor='rgba(0,255,178,.6)';});
+_dz.addEventListener('dragleave',()=>_dz.style.borderColor='rgba(0,255,178,.2)');
+_dz.addEventListener('drop',e=>{e.preventDefault();_dz.style.borderColor='rgba(0,255,178,.2)';const f=e.dataTransfer.files[0];if(f)csvLoad(f);});
+</script>
+</body>
+</html>
