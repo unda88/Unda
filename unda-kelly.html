@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,6 +18,16 @@
     @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
     .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
     @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    /* ── Language Switcher ── */
+    .lang-sw { position: fixed; top: 14px; right: 18px; z-index: 100; font-size: 11px; font-weight: 500; letter-spacing: .06em; color: var(--g2); cursor: pointer; user-select: none; background: rgba(0,255,178,0.06); border: 1px solid rgba(0,255,178,0.15); border-radius: 8px; padding: 5px 10px; transition: background .2s; }
+    .lang-sw:hover { background: rgba(0,255,178,0.12); }
+    .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #000d07; border: 1px solid rgba(0,255,178,0.18); border-radius: 12px; padding: 6px; min-width: 110px; box-shadow: 0 16px 40px rgba(0,0,0,0.7); flex-direction: column; gap: 2px; }
+    .lang-sw.open .lang-menu { display: flex; }
+    .lang-menu div { padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: 11px; }
+    .lang-menu div:hover { background: rgba(0,255,178,0.1); color: var(--g); }
+    .lang-menu div.active { color: var(--g); background: rgba(0,255,178,0.07); }
+
     .page { position: relative; z-index: 1; padding: 3rem 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; }
     .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; text-decoration: none; transition: color 0.2s; }
     .nav:hover { color: var(--g); }
@@ -38,6 +48,7 @@
     .px { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--g2); margin-right: 11px; min-width: 12px; }
     .iw input, .iw select { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px; width: 100%; }
     .iw input::-webkit-inner-spin-button { opacity: 0.3; }
+    .iw select option { background: #000d07; color: var(--text); }
     .results { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 1.5rem; }
     .ri { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.1); border-radius: 14px; padding: 15px 8px; text-align: center; position: relative; overflow: hidden; }
     .ri::before { content:''; position:absolute; top:0; left:12%; right:12%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent); }
@@ -47,103 +58,254 @@
     .rv.big { font-size: 30px; font-weight: 400; background: linear-gradient(135deg, #00ffb2 0%, #fff 50%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 10px rgba(0,255,178,0.4)); }
     .info-box { margin-top: 12px; background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.15); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: rgba(180,240,220,0.6); line-height: 1.6; }
     .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+    [dir="rtl"] .nav { direction: rtl; }
   </style>
 </head>
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
 <div class="tl"></div>
+
+<!-- Language switcher -->
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
 <div class="page">
-  <a class="nav" href="unda-index.html">← Terug naar suite</a>
+  <a class="nav" id="t-nav" href="unda-index.html">← Back to suite</a>
   <div class="card">
     <div class="card-inner">
       <div class="brand">
-        <div class="brand-wave">Unda · Elliott Wave</div>
+        <div class="brand-wave">Unda</div>
         <div class="brand-title">Kelly Criterion</div>
       </div>
       <div class="hdiv"></div>
 
       <div class="fg">
-        <div class="flr"><span class="fl">Win probability (%)</span></div>
+        <div class="flr"><span class="fl" id="t-winp">Win probability (%)</span></div>
         <div class="iw"><span class="px">%</span><input type="number" id="winp" value="40" min="1" max="99" step="1" oninput="calc()"></div>
       </div>
       <div class="fg">
-        <div class="flr"><span class="fl">Risk / Reward ratio</span></div>
+        <div class="flr"><span class="fl" id="t-rr">Risk / Reward ratio</span></div>
         <div class="iw"><span class="px">R</span><input type="number" id="rr" value="2" min="0.1" step="0.1" oninput="calc()"></div>
       </div>
       <div class="fg">
-        <div class="flr"><span class="fl">Account size ($)</span></div>
+        <div class="flr"><span class="fl" id="t-account">Account size ($)</span></div>
         <div class="iw"><span class="px">$</span><input type="number" id="account" value="10000" min="1" step="100" oninput="calc()"></div>
       </div>
       <div class="fg">
-        <div class="flr"><span class="fl">Kelly adjustment</span></div>
+        <div class="flr"><span class="fl" id="t-adj">Kelly adjustment</span></div>
         <div class="iw"><span class="px">÷</span>
           <select id="adj" oninput="calc()">
-            <option value="1">Full Kelly (aggressive)</option>
-            <option value="2" selected>Half Kelly (recommended)</option>
-            <option value="4">Quarter Kelly (conservative)</option>
+            <option value="1" id="opt-full">Full Kelly (aggressive)</option>
+            <option value="2" selected id="opt-half">Half Kelly (recommended)</option>
+            <option value="4" id="opt-quarter">Quarter Kelly (conservative)</option>
           </select>
         </div>
       </div>
 
       <div class="results">
-        <div class="ri hl">
-          <div class="rl">Kelly % to risk</div>
-          <div class="rv big" id="kelly-pct">—</div>
-        </div>
-        <div class="ri hl">
-          <div class="rl">Bet size ($)</div>
-          <div class="rv big" id="kelly-usd">—</div>
-        </div>
-        <div class="ri">
-          <div class="rl">Full Kelly %</div>
-          <div class="rv" id="full-kelly">—</div>
-        </div>
-        <div class="ri">
-          <div class="rl">Breakeven win rate</div>
-          <div class="rv" id="breakeven">—</div>
-        </div>
+        <div class="ri hl"><div class="rl" id="t-kelly-pct">Kelly % to risk</div><div class="rv big" id="kelly-pct">—</div></div>
+        <div class="ri hl"><div class="rl" id="t-kelly-usd">Bet size ($)</div><div class="rv big" id="kelly-usd">—</div></div>
+        <div class="ri"><div class="rl" id="t-full-kelly">Full Kelly %</div><div class="rv" id="full-kelly">—</div></div>
+        <div class="ri"><div class="rl" id="t-breakeven">Breakeven win rate</div><div class="rv" id="breakeven">—</div></div>
       </div>
 
-      <div class="info-box" id="info-box">Fill in your parameters to calculate optimal position size.</div>
-      <div class="footer">unda · wave your risk</div>
+      <div class="info-box" id="info-box"></div>
+      <div class="footer" id="t-footer">unda · wave your risk</div>
     </div>
   </div>
 </div>
+
 <script>
-function calc() {
-  const w   = parseFloat(document.getElementById('winp').value) / 100;
-  const rr  = parseFloat(document.getElementById('rr').value);
-  const acc = parseFloat(document.getElementById('account').value);
-  const adj = parseFloat(document.getElementById('adj').value);
-  if ([w, rr, acc].some(isNaN) || w <= 0 || rr <= 0) return;
+  const LANGS = {
+    en: {
+      dir: 'ltr', nav: '← Back to suite',
+      winp: 'Win probability (%)', rr: 'Risk / Reward ratio', account: 'Account size ($)', adj: 'Kelly adjustment',
+      optFull: 'Full Kelly (aggressive)', optHalf: 'Half Kelly (recommended)', optQuarter: 'Quarter Kelly (conservative)',
+      kellyPct: 'Kelly % to risk', kellyUsd: 'Bet size ($)', fullKelly: 'Full Kelly %', breakeven: 'Breakeven win rate',
+      footer: 'unda · wave your risk',
+      infoNeg:  () => 'Negative Kelly — your edge is not sufficient with these parameters. You have no mathematical edge. Increase your win rate or R:R ratio.',
+      infoHigh: (k) => `Kelly suggests ${k}% risk per trade. This is relatively high — make sure your win rate is based on real tracked data, not estimates.`,
+      infoOk:   (w, rr, k, usd) => `With a ${w}% win rate and ${rr}R setup, the optimal risk per trade is ${k}% of your account ($${usd}). Half-Kelly is recommended for real trading.`,
+    },
+    nl: {
+      dir: 'ltr', nav: '← Terug naar suite',
+      winp: 'Winstkans (%)', rr: 'Risico / Rendement verhouding', account: 'Accountgrootte ($)', adj: 'Kelly aanpassing',
+      optFull: 'Volledig Kelly (agressief)', optHalf: 'Half Kelly (aanbevolen)', optQuarter: 'Kwart Kelly (conservatief)',
+      kellyPct: 'Kelly % te riskeren', kellyUsd: 'Inzetgrootte ($)', fullKelly: 'Volledig Kelly %', breakeven: 'Break-even winstrate',
+      footer: 'unda · beheers je risico',
+      infoNeg:  () => 'Negatieve Kelly — je edge is onvoldoende met deze parameters. Je hebt geen wiskundige voorsprong. Verhoog je winstrate of R:R verhouding.',
+      infoHigh: (k) => `Kelly suggereert ${k}% risico per trade. Dit is relatief hoog — zorg dat je winstrate gebaseerd is op echte data, niet op schattingen.`,
+      infoOk:   (w, rr, k, usd) => `Met een winstrate van ${w}% en ${rr}R setup is het optimale risico per trade ${k}% van je account ($${usd}). Half-Kelly is aanbevolen voor echt handelen.`,
+    },
+    fr: {
+      dir: 'ltr', nav: '← Retour à la suite',
+      winp: 'Probabilité de gain (%)', rr: 'Ratio Risque / Rendement', account: 'Taille du compte ($)', adj: 'Ajustement Kelly',
+      optFull: 'Kelly complet (agressif)', optHalf: 'Demi Kelly (recommandé)', optQuarter: 'Quart Kelly (conservateur)',
+      kellyPct: 'Kelly % à risquer', kellyUsd: 'Taille de mise ($)', fullKelly: 'Kelly complet %', breakeven: 'Taux de gain seuil',
+      footer: 'unda · maîtrisez votre risque',
+      infoNeg:  () => 'Kelly négatif — votre avantage est insuffisant avec ces paramètres. Augmentez votre taux de gain ou votre ratio R:R.',
+      infoHigh: (k) => `Kelly suggère ${k}% de risque par trade. C'est relativement élevé — assurez-vous que votre taux de gain est basé sur des données réelles.`,
+      infoOk:   (w, rr, k, usd) => `Avec un taux de gain de ${w}% et un setup ${rr}R, le risque optimal par trade est de ${k}% de votre compte ($${usd}). Le demi-Kelly est recommandé.`,
+    },
+    es: {
+      dir: 'ltr', nav: '← Volver a la suite',
+      winp: 'Probabilidad de ganancia (%)', rr: 'Ratio Riesgo / Recompensa', account: 'Tamaño de cuenta ($)', adj: 'Ajuste Kelly',
+      optFull: 'Kelly completo (agresivo)', optHalf: 'Medio Kelly (recomendado)', optQuarter: 'Cuarto Kelly (conservador)',
+      kellyPct: 'Kelly % a arriesgar', kellyUsd: 'Tamaño de apuesta ($)', fullKelly: 'Kelly completo %', breakeven: 'Tasa de acierto umbral',
+      footer: 'unda · domina tu riesgo',
+      infoNeg:  () => 'Kelly negativo — tu ventaja es insuficiente con estos parámetros. Aumenta tu tasa de acierto o tu ratio R:R.',
+      infoHigh: (k) => `Kelly sugiere un ${k}% de riesgo por trade. Es relativamente alto — asegúrate de que tu tasa de acierto se basa en datos reales.`,
+      infoOk:   (w, rr, k, usd) => `Con una tasa de acierto del ${w}% y setup ${rr}R, el riesgo óptimo por trade es del ${k}% de tu cuenta ($${usd}). Se recomienda el medio Kelly.`,
+    },
+    de: {
+      dir: 'ltr', nav: '← Zurück zur Suite',
+      winp: 'Gewinnwahrscheinlichkeit (%)', rr: 'Risiko / Rendite-Verhältnis', account: 'Kontogröße ($)', adj: 'Kelly-Anpassung',
+      optFull: 'Volles Kelly (aggressiv)', optHalf: 'Halbes Kelly (empfohlen)', optQuarter: 'Viertel Kelly (konservativ)',
+      kellyPct: 'Kelly % zu riskieren', kellyUsd: 'Einsatzgröße ($)', fullKelly: 'Volles Kelly %', breakeven: 'Break-even Gewinnrate',
+      footer: 'unda · steuere dein Risiko',
+      infoNeg:  () => 'Negatives Kelly — dein Edge reicht mit diesen Parametern nicht aus. Erhöhe deine Gewinnrate oder dein R:R-Verhältnis.',
+      infoHigh: (k) => `Kelly schlägt ${k}% Risiko pro Trade vor. Das ist relativ hoch — stelle sicher, dass deine Gewinnrate auf echten Daten basiert.`,
+      infoOk:   (w, rr, k, usd) => `Mit einer Gewinnrate von ${w}% und ${rr}R-Setup beträgt das optimale Risiko pro Trade ${k}% deines Kontos ($${usd}). Halbes Kelly wird empfohlen.`,
+    },
+    it: {
+      dir: 'ltr', nav: '← Torna alla suite',
+      winp: 'Probabilità di vincita (%)', rr: 'Rapporto Rischio / Rendimento', account: 'Dimensione conto ($)', adj: 'Aggiustamento Kelly',
+      optFull: 'Kelly completo (aggressivo)', optHalf: 'Mezzo Kelly (consigliato)', optQuarter: 'Quarto Kelly (conservativo)',
+      kellyPct: 'Kelly % da rischiare', kellyUsd: 'Dimensione puntata ($)', fullKelly: 'Kelly completo %', breakeven: 'Tasso di pareggio',
+      footer: 'unda · gestisci il tuo rischio',
+      infoNeg:  () => 'Kelly negativo — il tuo vantaggio è insufficiente con questi parametri. Aumenta il tasso di vincita o il rapporto R:R.',
+      infoHigh: (k) => `Kelly suggerisce un ${k}% di rischio per trade. È relativamente alto — assicurati che il tasso di vincita sia basato su dati reali.`,
+      infoOk:   (w, rr, k, usd) => `Con un tasso di vincita del ${w}% e setup ${rr}R, il rischio ottimale per trade è del ${k}% del conto ($${usd}). Mezzo Kelly è consigliato.`,
+    },
+    pt: {
+      dir: 'ltr', nav: '← Voltar à suite',
+      winp: 'Probabilidade de ganho (%)', rr: 'Razão Risco / Recompensa', account: 'Tamanho da conta ($)', adj: 'Ajuste Kelly',
+      optFull: 'Kelly completo (agressivo)', optHalf: 'Meio Kelly (recomendado)', optQuarter: 'Quarto Kelly (conservador)',
+      kellyPct: 'Kelly % a arriscar', kellyUsd: 'Tamanho da aposta ($)', fullKelly: 'Kelly completo %', breakeven: 'Taxa de empate',
+      footer: 'unda · controle seu risco',
+      infoNeg:  () => 'Kelly negativo — sua vantagem é insuficiente com estes parâmetros. Aumente sua taxa de acerto ou razão R:R.',
+      infoHigh: (k) => `Kelly sugere ${k}% de risco por trade. É relativamente alto — certifique-se de que sua taxa de acerto é baseada em dados reais.`,
+      infoOk:   (w, rr, k, usd) => `Com uma taxa de acerto de ${w}% e setup ${rr}R, o risco ótimo por trade é ${k}% da conta ($${usd}). Meio Kelly é recomendado.`,
+    },
+    tr: {
+      dir: 'ltr', nav: '← Suite\'e dön',
+      winp: 'Kazanma olasılığı (%)', rr: 'Risk / Getiri oranı', account: 'Hesap büyüklüğü ($)', adj: 'Kelly ayarı',
+      optFull: 'Tam Kelly (agresif)', optHalf: 'Yarım Kelly (önerilen)', optQuarter: 'Çeyrek Kelly (muhafazakâr)',
+      kellyPct: 'Riske edilecek Kelly %', kellyUsd: 'Bahis büyüklüğü ($)', fullKelly: 'Tam Kelly %', breakeven: 'Başabaş kazanma oranı',
+      footer: 'unda · riskinizi yönetin',
+      infoNeg:  () => 'Negatif Kelly — bu parametrelerle kenar yeterli değil. Kazanma oranınızı veya R:R oranınızı artırın.',
+      infoHigh: (k) => `Kelly, trade başına %${k} risk öneriyor. Bu görece yüksek — kazanma oranınızın gerçek verilere dayandığından emin olun.`,
+      infoOk:   (w, rr, k, usd) => `%${w} kazanma oranı ve ${rr}R setup ile trade başına optimal risk hesabınızın %${k}'sidir ($${usd}). Gerçek işlemler için yarım Kelly önerilir.`,
+    },
+    ar: {
+      dir: 'rtl', nav: 'العودة إلى القائمة →',
+      winp: 'احتمال الفوز (%)', rr: 'نسبة المخاطرة / العائد', account: 'حجم الحساب ($)', adj: 'ضبط كيلي',
+      optFull: 'كيلي كامل (عدواني)', optHalf: 'نصف كيلي (موصى به)', optQuarter: 'ربع كيلي (محافظ)',
+      kellyPct: 'نسبة كيلي للمخاطرة', kellyUsd: 'حجم الرهان ($)', fullKelly: 'كيلي كامل %', breakeven: 'معدل التعادل',
+      footer: 'unda · تحكم في مخاطرك',
+      infoNeg:  () => 'كيلي سلبي — ميزتك غير كافية بهذه المعاملات. ارفع معدل الفوز أو نسبة المخاطرة/العائد.',
+      infoHigh: (k) => `كيلي يقترح ${k}% مخاطرة لكل صفقة. هذا مرتفع نسبياً — تأكد أن معدل فوزك مبني على بيانات حقيقية.`,
+      infoOk:   (w, rr, k, usd) => `بمعدل فوز ${w}% وإعداد ${rr}R، المخاطرة المثلى لكل صفقة هي ${k}% من حسابك ($${usd}). يُوصى بنصف كيلي للتداول الحقيقي.`,
+    },
+    ru: {
+      dir: 'ltr', nav: '← Назад к набору',
+      winp: 'Вероятность выигрыша (%)', rr: 'Соотношение риск / доходность', account: 'Размер счёта ($)', adj: 'Коррекция Келли',
+      optFull: 'Полный Келли (агрессивный)', optHalf: 'Половина Келли (рекомендуется)', optQuarter: 'Четверть Келли (консервативный)',
+      kellyPct: '% риска по Келли', kellyUsd: 'Размер ставки ($)', fullKelly: 'Полный Келли %', breakeven: 'Пороговый % побед',
+      footer: 'unda · управляй своим риском',
+      infoNeg:  () => 'Отрицательный Келли — вашего преимущества недостаточно с этими параметрами. Увеличьте процент побед или соотношение R:R.',
+      infoHigh: (k) => `Келли предлагает ${k}% риска на сделку. Это относительно высоко — убедитесь, что ваш процент побед основан на реальных данных.`,
+      infoOk:   (w, rr, k, usd) => `При проценте побед ${w}% и соотношении ${rr}R оптимальный риск на сделку составляет ${k}% счёта ($${usd}). Половина Келли рекомендуется для реальной торговли.`,
+    },
+  };
 
-  const l = 1 - w;
-  const fullKelly = (w * rr - l) / rr;
-  const adjKelly  = fullKelly / adj;
-  const betUsd    = adjKelly * acc;
-  const be        = 1 / (1 + rr) * 100;
+  let currentLang = 'en';
 
-  document.getElementById('full-kelly').textContent   = (fullKelly * 100).toFixed(2) + '%';
-  document.getElementById('kelly-pct').textContent    = fullKelly <= 0 ? '0%' : (adjKelly * 100).toFixed(2) + '%';
-  document.getElementById('kelly-usd').textContent    = fullKelly <= 0 ? '$0' : '$' + Math.round(betUsd).toLocaleString();
-  document.getElementById('breakeven').textContent    = be.toFixed(1) + '%';
+  function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+  document.addEventListener('click', e => {
+    if (!document.getElementById('lang-sw').contains(e.target))
+      document.getElementById('lang-sw').classList.remove('open');
+  });
 
-  const info = document.getElementById('info-box');
-  if (fullKelly <= 0) {
-    info.textContent = 'Negative Kelly — your edge is not sufficient with these parameters. You have no mathematical edge. Increase your win rate or R:R ratio.';
-    info.style.borderColor = 'rgba(255,68,68,0.3)';
-    info.style.color = 'rgba(255,150,150,0.8)';
-  } else if (adjKelly > 0.1) {
-    info.textContent = 'Kelly suggests ' + (adjKelly*100).toFixed(1) + '% risk per trade. This is relatively high — make sure your win rate is based on real tracked data, not estimates.';
-    info.style.borderColor = 'rgba(255,200,0,0.3)';
-    info.style.color = 'rgba(255,220,130,0.8)';
-  } else {
-    info.textContent = 'With a ' + (w*100).toFixed(0) + '% win rate and ' + rr + 'R setup, the optimal risk per trade is ' + (adjKelly*100).toFixed(2) + '% of your account ($' + Math.round(betUsd) + '). Half-Kelly is recommended for real trading.';
-    info.style.borderColor = 'rgba(0,255,178,0.15)';
-    info.style.color = 'rgba(180,240,220,0.6)';
+  function setLang(code, label) {
+    currentLang = code;
+    const T = LANGS[code];
+    document.documentElement.setAttribute('lang', code);
+    document.documentElement.setAttribute('dir', T.dir);
+    if (label) document.getElementById('cur-lang').textContent = label;
+    document.querySelectorAll('.lang-menu div').forEach(d => {
+      d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()));
+    });
+    document.getElementById('t-nav').textContent       = T.nav;
+    document.getElementById('t-winp').textContent      = T.winp;
+    document.getElementById('t-rr').textContent        = T.rr;
+    document.getElementById('t-account').textContent   = T.account;
+    document.getElementById('t-adj').textContent       = T.adj;
+    document.getElementById('opt-full').textContent    = T.optFull;
+    document.getElementById('opt-half').textContent    = T.optHalf;
+    document.getElementById('opt-quarter').textContent = T.optQuarter;
+    document.getElementById('t-kelly-pct').textContent = T.kellyPct;
+    document.getElementById('t-kelly-usd').textContent = T.kellyUsd;
+    document.getElementById('t-full-kelly').textContent= T.fullKelly;
+    document.getElementById('t-breakeven').textContent = T.breakeven;
+    document.getElementById('t-footer').textContent    = T.footer;
+    document.getElementById('lang-sw').classList.remove('open');
+    calc();
   }
-}
-calc();
+
+  function calc() {
+    const T   = LANGS[currentLang];
+    const w   = parseFloat(document.getElementById('winp').value) / 100;
+    const rr  = parseFloat(document.getElementById('rr').value);
+    const acc = parseFloat(document.getElementById('account').value);
+    const adj = parseFloat(document.getElementById('adj').value);
+    if ([w, rr, acc].some(isNaN) || w <= 0 || rr <= 0) return;
+
+    const l = 1 - w;
+    const fullKelly = (w * rr - l) / rr;
+    const adjKelly  = fullKelly / adj;
+    const betUsd    = adjKelly * acc;
+    const be        = 1 / (1 + rr) * 100;
+
+    document.getElementById('full-kelly').textContent = (fullKelly * 100).toFixed(2) + '%';
+    document.getElementById('kelly-pct').textContent  = fullKelly <= 0 ? '0%' : (adjKelly * 100).toFixed(2) + '%';
+    document.getElementById('kelly-usd').textContent  = fullKelly <= 0 ? '$0' : '$' + Math.round(betUsd).toLocaleString();
+    document.getElementById('breakeven').textContent  = be.toFixed(1) + '%';
+
+    const info = document.getElementById('info-box');
+    if (fullKelly <= 0) {
+      info.textContent = T.infoNeg();
+      info.style.borderColor = 'rgba(255,68,68,0.3)';
+      info.style.color = 'rgba(255,150,150,0.8)';
+    } else if (adjKelly > 0.1) {
+      info.textContent = T.infoHigh((adjKelly*100).toFixed(1));
+      info.style.borderColor = 'rgba(255,200,0,0.3)';
+      info.style.color = 'rgba(255,220,130,0.8)';
+    } else {
+      info.textContent = T.infoOk((w*100).toFixed(0), rr, (adjKelly*100).toFixed(2), Math.round(betUsd).toLocaleString());
+      info.style.borderColor = 'rgba(0,255,178,0.15)';
+      info.style.color = 'rgba(180,240,220,0.6)';
+    }
+  }
+
+  /* ── Init ── */
+  const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+  const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+  const initLang = LANGS[browserLang] ? browserLang : 'en';
+  setLang(initLang, flagMap[initLang]);
 </script>
 </body>
 </html>
