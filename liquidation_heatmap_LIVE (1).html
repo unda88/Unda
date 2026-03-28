@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquidation Heatmap — Live Binance</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #090a0f;
+  color: #c8cad4;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 14px;
+  min-height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+select, button {
+  background: #12131c;
+  color: #9fa3b4;
+  border: 1px solid #252736;
+  border-radius: 4px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+select:hover, button:hover { border-color: #3a3d52; background: #181924; }
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #444;
+  display: inline-block;
+  margin-right: 5px;
+  transition: background .3s;
+}
+.status-dot.connecting { background: #f59e0b; animation: pulse 1s infinite; }
+.status-dot.live       { background: #4ade80; }
+.status-dot.error      { background: #f87171; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.status-text { font-size: 11px; color: #555a70; }
+
+.stats-row {
+  display: flex; gap: 18px; align-items: center;
+  flex: 1; justify-content: flex-end; flex-wrap: wrap;
+}
+.stat { font-size: 12px; color: #555a70; }
+.stat span { font-weight: bold; font-family: monospace; }
+.long-val  { color: #f59e0b; }
+.short-val { color: #f87171; }
+.price-val { color: #4ade80; font-size: 14px; }
+.pct-val   { font-size: 11px; }
+
+.chart-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.legend-col {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  min-width: 30px;
+}
+.legend-col span { font-size: 10px; color: #555a70; }
+#legendBar { border-radius: 3px; flex: 1; width: 14px; }
+
+.canvas-outer {
+  flex: 1;
+  background: #0a0b11;
+  border-radius: 8px;
+  border: 1px solid #1c1e2c;
+  overflow: hidden;
+  line-height: 0;
+  position: relative;
+}
+#heatCanvas { display: block; width: 100%; height: auto; }
+
+.tf-badge {
+  position: absolute; top: 8px; left: 10px;
+  font-size: 11px; color: rgba(255,255,255,.18);
+  pointer-events: none; font-family: monospace;
+}
+.pair-badge {
+  position: absolute; top: 8px; right: 10px;
+  font-size: 11px; color: rgba(255,255,255,.18);
+  pointer-events: none; font-family: monospace;
+}
+
+.footer {
+  display: flex; gap: 16px; margin-top: 8px;
+  font-size: 10px; color: #383c50; align-items: center;
+  flex-wrap: wrap; font-family: monospace;
+}
+.liq-counter { color: #555a70; }
+.liq-counter span { color: #9fa3b4; font-weight: bold; }
+
+.warming-overlay {
+  position: absolute; inset: 0;
+  background: rgba(9,10,15,.82);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; z-index: 10;
+  border-radius: 8px;
+}
+.warming-overlay h3 { color: #4ade80; font-size: 14px; }
+.warming-overlay p  { color: #555a70; font-size: 11px; text-align: center; line-height: 1.6; max-width: 280px; }
+.progress-bar-wrap  { width: 200px; height: 4px; background: #1c1e2c; border-radius: 2px; overflow: hidden; }
+.progress-bar       { height: 100%; background: #4ade80; border-radius: 2px; width: 0%; transition: width .5s; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <select id="pairSel">
+    <option value="BTCUSDT">BTC/USDT</option>
+    <option value="ETHUSDT">ETH/USDT</option>
+    <option value="SOLUSDT">SOL/USDT</option>
+    <option value="BNBUSDT">BNB/USDT</option>
+  </select>
+  <select id="tfSel">
+    <option value="1m">1m</option>
+    <option value="5m" selected>5m</option>
+    <option value="15m">15m</option>
+    <option value="1h">1h</option>
+    <option value="4h">4h</option>
+  </select>
+  <select id="minSizeSel">
+    <option value="0">Alle liquidaties</option>
+    <option value="10000">Min $10K</option>
+    <option value="50000">Min $50K</option>
+    <option value="100000">Min $100K</option>
+  </select>
+
+  <div>
+    <span class="status-dot connecting" id="statusDot"></span>
+    <span class="status-text" id="statusText">Verbinden...</span>
+  </div>
+
+  <div class="stats-row">
+    <span class="stat">Longs geliq: <span class="long-val" id="longTotal">$0</span></span>
+    <span class="stat">Shorts geliq: <span class="short-val" id="shortTotal">$0</span></span>
+    <span class="stat price-val" id="priceDisplay">—</span>
+    <span class="stat pct-val" id="pctDisplay"></span>
+    <button id="pauseBtn">⏸ Pauze</button>
+    <button id="resetBtn">↺ Reset</button>
+  </div>
+</div>
+
+<div class="chart-wrap">
+  <div class="legend-col">
+    <span id="legMax">—</span>
+    <canvas id="legendBar" height="200"></canvas>
+    <span>0</span>
+  </div>
+  <div class="canvas-outer" id="canvasOuter">
+    <canvas id="heatCanvas"></canvas>
+    <div class="tf-badge" id="tfBadge">5M</div>
+    <div class="pair-badge" id="pairBadge">BTC/USDT</div>
+    <div class="warming-overlay" id="warmingOverlay">
+      <h3>⚡ Live feed actief</h3>
+      <p>Verbonden met Binance.<br>Wachten op liquidatie-events...<br>Bij rustige markt duurt dit 2–15 min.</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <p id="liqCountMsg" style="color:#4ade80;font-size:12px;">0 events ontvangen</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span class="liq-counter">Totaal events: <span id="totalEvents">0</span></span>
+  <span class="liq-counter">Laatste liq: <span id="lastLiq">—</span></span>
+  <div style="flex:1;"></div>
+  <span style="opacity:.4;">Echte data — Binance Futures liquidation stream</span>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const LEVELS    = 120;
+const CANDLES   = 80;
+const CELL_W    = 11;
+const CELL_H    = 5;
+const AXIS_W    = 70;
+const AXIS_H    = 24;
+const RANGE_PCT = 0.06; // ±6% van huidige prijs zichtbaar
+const MIN_LIQ_TO_SHOW = 30; // minimaal X events voor overlay te verbergen
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let pair     = 'BTCUSDT';
+let tf       = '5m';
+let minSize  = 0;
+let paused   = false;
+let candles  = [];
+let liqEvents= []; // [{price, qty, side, ts}]
+let totalLong = 0, totalShort = 0;
+let totalEventCount = 0;
+let wsLiq = null, wsKline = null;
+let currentPrice = 0, openPrice = 0;
+let rafId = null;
+let dirty = true;
+
+// ── HEAT GRID ────────────────────────────────────────────────────────────────
+// Store aggregated liquidation volume per price bucket
+// buckets relative to candle index × price level
+const heatMap = new Map(); // key: `${candleIdx}:${level}` → {long, short}
+
+function getBucket(candleIdx, level) {
+  const k = `${candleIdx}:${level}`;
+  if (!heatMap.has(k)) heatMap.set(k, {long:0, short:0});
+  return heatMap.get(k);
+}
+
+// ── PRICE → LEVEL ────────────────────────────────────────────────────────────
+function priceToLevel(price, pMin, pMax) {
+  const ratio = (price - pMin) / (pMax - pMin);
+  return Math.floor(ratio * LEVELS);
+}
+
+// ── ADD LIQUIDATION EVENT ─────────────────────────────────────────────────────
+function addLiqEvent(ev) {
+  if (paused) return;
+  liqEvents.push(ev);
+
+  // Map to current candle index
+  const candleIdx = candles.length > 0 ? candles.length - 1 : 0;
+  if (!currentPrice) return;
+
+  const rng   = currentPrice * RANGE_PCT;
+  const pMin  = currentPrice - rng;
+  const pMax  = currentPrice + rng;
+  const level = priceToLevel(ev.price, pMin, pMax);
+  if (level < 0 || level >= LEVELS) return;
+
+  const bucket = getBucket(candleIdx, level);
+  const vol    = ev.price * ev.qty;
+
+  if (ev.side === 'SELL') { // long liquidation
+    bucket.long  += vol;
+    totalLong    += vol;
+  } else {
+    bucket.short += vol;
+    totalShort   += vol;
+  }
+
+  totalEventCount++;
+  dirty = true;
+
+  // Update last liq display
+  document.getElementById('lastLiq').textContent =
+    (ev.side === 'SELL' ? '🔴 Long' : '🔵 Short') +
+    ' $' + fmtMoney(ev.price * ev.qty) +
+    ' @ ' + ev.price.toFixed(priceDecimals());
+  document.getElementById('totalEvents').textContent = totalEventCount;
+
+  // Warming overlay
+  updateWarmingOverlay();
+}
+
+// ── WARMING OVERLAY ───────────────────────────────────────────────────────────
+function updateWarmingOverlay() {
+  const overlay = document.getElementById('warmingOverlay');
+  if (!overlay) return;
+  const pct = Math.min(100, (totalEventCount / MIN_LIQ_TO_SHOW) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('liqCountMsg').textContent = totalEventCount + ' events ontvangen';
+  if (totalEventCount >= MIN_LIQ_TO_SHOW) {
+    overlay.style.display = 'none';
+  }
+}
+
+// ── COLOR RAMP (CoinAnk stijl) ────────────────────────────────────────────────
+function heatColor(t) {
+  const i = Math.min(1, Math.max(0, t));
+  if (i < .001) return [10, 8, 20, 0];
+  if (i < .12)  { const s=i/.12;   return [Math.round(20+30*s), Math.round(8+20*s),  Math.round(40+80*s),  Math.round(160*s)]; }
+  if (i < .32)  { const s=(i-.12)/.2; return [Math.round(50-10*s), Math.round(28+80*s), Math.round(120+80*s), 220]; }
+  if (i < .58)  { const s=(i-.32)/.26; return [Math.round(40+100*s), Math.round(108+112*s), Math.round(200-80*s), 240]; }
+  if (i < .80)  { const s=(i-.58)/.22; return [Math.round(140+90*s), Math.round(220+20*s), Math.round(120-80*s), 255]; }
+  const s=(i-.80)/.20; return [Math.round(230+25*s), Math.round(240+10*s), Math.round(40-30*s), 255];
+}
+
+function drawLegend() {
+  const c = document.getElementById('legendBar');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const h = c.height;
+  for (let i = 0; i < h; i++) {
+    const t = 1 - i/h;
+    const [r,g,b,a] = heatColor(t);
+    ctx.fillStyle = `rgba(${r},${g},${b},${a/255})`;
+    ctx.fillRect(0, i, 14, 1);
+  }
+}
+
+// ── GAUSSIAN BLUR KERNEL ──────────────────────────────────────────────────────
+const KERNEL = [.05,.1,.2,.3,.2,.1,.05];
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  rafId = requestAnimationFrame(render);
+  if (!dirty || !candles.length) return;
+  dirty = false;
+
+  const canvas = document.getElementById('heatCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const n   = candles.length;
+  const W   = AXIS_W + n * CELL_W;
+  const lH  = LEVELS * CELL_H;
+  const H   = lH + AXIS_H;
+  canvas.width  = W;
+  canvas.height = H;
+
+  ctx.fillStyle = '#0a0b11';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!currentPrice) return;
+
+  const rng  = currentPrice * RANGE_PCT;
+  const pMin = currentPrice - rng;
+  const pMax = currentPrice + rng;
+  const pRng = pMax - pMin;
+  const dec  = priceDecimals();
+
+  // Build raw density grid
+  let maxV = 0.001;
+  const raw = [];
+  for (let t = 0; t < n; t++) {
+    const row = new Float32Array(LEVELS);
+    for (let p = 0; p < LEVELS; p++) {
+      const b = heatMap.get(`${t}:${p}`);
+      if (b) {
+        row[p] = b.long + b.short;
+        if (row[p] > maxV) maxV = row[p];
+      }
+    }
+    raw.push(row);
+  }
+
+  // Temporal smoothing (trailing glow: past events fade)
+  const tSmooth = [];
+  for (let t = 0; t < n; t++) {
+    const s = new Float32Array(LEVELS);
+    for (let p = 0; p < LEVELS; p++) {
+      let acc = 0, wt = 0;
+      for (let dt = -6; dt <= 0; dt++) {
+        const ti = t + dt;
+        if (ti < 0) continue;
+        const w = Math.exp(dt * 0.35);
+        acc += raw[ti][p] * w;
+        wt  += w;
+      }
+      s[p] = acc / wt;
+    }
+    tSmooth.push(s);
+  }
+
+  // Spatial blur (gaussian over price levels)
+  const blurred = [];
+  for (let t = 0; t < n; t++) {
+    const b = new Float32Array(LEVELS);
+    for (let p = 0; p < LEVELS; p++) {
+      let acc = 0;
+      for (let k = 0; k < 7; k++) {
+        const pi = p + (k-3);
+        if (pi >= 0 && pi < LEVELS) acc += tSmooth[t][pi] * KERNEL[k];
+      }
+      b[p] = acc;
+    }
+    blurred.push(b);
+  }
+
+  // Draw cells
+  for (let t = 0; t < n; t++) {
+    const x = AXIS_W + t * CELL_W;
+    for (let p = 0; p < LEVELS; p++) {
+      const y   = (LEVELS - 1 - p) * CELL_H;
+      const val = blurred[t][p] / maxV;
+      if (val < .015) continue;
+      const [r,g,b,a] = heatColor(val);
+      ctx.fillStyle = `rgba(${r},${g},${b},${a/255})`;
+      ctx.fillRect(x, y, CELL_W + .5, CELL_H + .5);
+    }
+  }
+
+  // Horizontal grid + price axis
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 6; i++) {
+    const ratio = i / 6;
+    const price = pMin + ratio * pRng;
+    const y     = lH * (1 - ratio);
+    ctx.strokeStyle = 'rgba(255,255,255,.035)';
+    ctx.lineWidth   = .5;
+    ctx.beginPath(); ctx.moveTo(AXIS_W, y); ctx.lineTo(W, y); ctx.stroke();
+    if (y > 12 && y < lH - 6) {
+      ctx.fillStyle = 'rgba(74,222,128,.6)';
+      ctx.fillText(price.toFixed(dec), AXIS_W - 3, y + 4);
+    }
+  }
+
+  // Vertical separator
+  ctx.strokeStyle = 'rgba(255,255,255,.07)';
+  ctx.lineWidth   = .5;
+  ctx.beginPath(); ctx.moveTo(AXIS_W, 0); ctx.lineTo(AXIS_W, lH); ctx.stroke();
+
+  // Draw candlesticks
+  const bodyW = Math.max(2, CELL_W - 3);
+  for (let t = 0; t < n; t++) {
+    const cd = candles[t];
+    const x  = AXIS_W + t * CELL_W + CELL_W / 2;
+    const bull = cd.c >= cd.o;
+    const col  = bull ? '#26a641' : '#d93535';
+    const colD = bull ? 'rgba(38,166,65,.55)' : 'rgba(217,53,53,.55)';
+
+    const yH = lH * (1 - (cd.h - pMin) / pRng);
+    const yL = lH * (1 - (cd.l - pMin) / pRng);
+    const yO = lH * (1 - (cd.o - pMin) / pRng);
+    const yC = lH * (1 - (cd.c - pMin) / pRng);
+
+    ctx.strokeStyle = colD; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+
+    const bTop = Math.min(yO, yC);
+    const bH   = Math.max(1, Math.abs(yC - yO));
+    ctx.fillStyle = col;
+    ctx.fillRect(x - bodyW/2, bTop, bodyW, bH);
+  }
+
+  // Current price dashed line
+  if (currentPrice >= pMin && currentPrice <= pMax) {
+    const y = lH * (1 - (currentPrice - pMin) / pRng);
+    ctx.strokeStyle = 'rgba(74,222,128,.4)';
+    ctx.lineWidth   = .5;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(AXIS_W, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.setLineDash([]);
+    // Price tag
+    ctx.fillStyle = 'rgba(74,222,128,.13)';
+    ctx.fillRect(1, y - 9, AXIS_W - 3, 18);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillStyle = '#4ade80';
+    ctx.textAlign = 'right';
+    ctx.fillText(currentPrice.toFixed(dec), AXIS_W - 4, y + 4);
+  }
+
+  // Time axis
+  ctx.font = '9px monospace';
+  ctx.fillStyle = 'rgba(90,110,90,.5)';
+  ctx.textAlign = 'center';
+  const step = Math.max(1, Math.floor(n / 6));
+  for (let t = step; t < n; t += step) {
+    ctx.fillText('T-' + (n-t), AXIS_W + t * CELL_W + CELL_W/2, lH + 16);
+  }
+
+  // Stats
+  document.getElementById('priceDisplay').textContent =
+    currentPrice.toFixed(dec) + ' USDT';
+
+  if (openPrice) {
+    const pct = ((currentPrice - openPrice) / openPrice * 100);
+    const el  = document.getElementById('pctDisplay');
+    el.textContent  = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    el.style.color  = pct >= 0 ? '#4ade80' : '#f87171';
+  }
+
+  document.getElementById('longTotal').textContent  = '$' + fmtMoney(totalLong);
+  document.getElementById('shortTotal').textContent = '$' + fmtMoney(totalShort);
+
+  // Legend max label
+  const maxDollar = maxV;
+  document.getElementById('legMax').textContent = fmtMoney(maxDollar);
+
+  drawLegend();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function priceDecimals() {
+  if (pair.startsWith('BTC')) return 0;
+  if (pair.startsWith('ETH')) return 1;
+  if (pair.startsWith('BNB')) return 1;
+  return 2;
+}
+
+function fmtMoney(v) {
+  if (v >= 1e9) return (v/1e9).toFixed(2) + 'B';
+  if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return (v/1e3).toFixed(0) + 'K';
+  return v.toFixed(0);
+}
+
+// ── FETCH HISTORICAL CANDLES ──────────────────────────────────────────────────
+async function fetchCandles() {
+  try {
+    const url = `https://fapi.binance.com/fapi/v1/klines?symbol=${pair}&interval=${tf}&limit=${CANDLES}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    candles = data.map(d => ({
+      o: parseFloat(d[1]),
+      h: parseFloat(d[2]),
+      l: parseFloat(d[3]),
+      c: parseFloat(d[4]),
+      ts: d[0],
+    }));
+    currentPrice = candles[candles.length - 1].c;
+    openPrice    = candles[0].o;
+    dirty = true;
+  } catch(e) {
+    console.error('Candle fetch error:', e);
+  }
+}
+
+// ── WEBSOCKET: KLINES ─────────────────────────────────────────────────────────
+function connectKline() {
+  if (wsKline) wsKline.close();
+  const symbol = pair.toLowerCase();
+  wsKline = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@kline_${tf}`);
+
+  wsKline.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    const k   = msg.k;
+    if (!k) return;
+
+    const updated = {
+      o:  parseFloat(k.o),
+      h:  parseFloat(k.h),
+      l:  parseFloat(k.l),
+      c:  parseFloat(k.c),
+      ts: k.t,
+    };
+
+    currentPrice = updated.c;
+
+    // Update last candle or push new one
+    if (candles.length && candles[candles.length-1].ts === k.t) {
+      candles[candles.length-1] = updated;
+    } else if (k.x) {
+      // Candle closed — push new one, shift old
+      candles.push(updated);
+      if (candles.length > CANDLES) candles.shift();
+      // Remap heatmap keys — shift all down by 1
+      const newMap = new Map();
+      heatMap.forEach((v, key) => {
+        const [ci, lv] = key.split(':').map(Number);
+        if (ci > 0) newMap.set(`${ci-1}:${lv}`, v);
+      });
+      heatMap.clear();
+      newMap.forEach((v,k) => heatMap.set(k,v));
+    } else {
+      candles[candles.length-1] = updated;
+    }
+    dirty = true;
+  };
+
+  wsKline.onerror = () => setStatus('error', 'Kline WS fout');
+}
+
+// ── WEBSOCKET: LIQUIDATIONS ───────────────────────────────────────────────────
+function connectLiq() {
+  if (wsLiq) wsLiq.close();
+
+  // Use combined stream for specific pair liquidations
+  const symbol = pair.toLowerCase();
+  wsLiq = new WebSocket(`wss://fstream.binance.com/ws/${symbol}@forceOrder`);
+
+  wsLiq.onopen  = () => setStatus('live', 'Live — Binance Futures');
+  wsLiq.onerror = () => setStatus('error', 'Verbinding mislukt');
+  wsLiq.onclose = () => {
+    setStatus('connecting', 'Herverbinden...');
+    setTimeout(connectLiq, 3000);
+  };
+
+  wsLiq.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    const o   = msg.o;
+    if (!o) return;
+
+    const price = parseFloat(o.ap || o.p); // average price or order price
+    const qty   = parseFloat(o.q);
+    const side  = o.S; // SELL = long liq, BUY = short liq
+    const usdVal = price * qty;
+
+    if (usdVal < minSize) return;
+
+    addLiqEvent({ price, qty, side, ts: msg.E });
+  };
+}
+
+function setStatus(type, text) {
+  const dot  = document.getElementById('statusDot');
+  const txt  = document.getElementById('statusText');
+  dot.className  = 'status-dot ' + type;
+  txt.textContent = text;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  heatMap.clear();
+  liqEvents   = [];
+  totalLong   = 0;
+  totalShort  = 0;
+  totalEventCount = 0;
+  currentPrice = 0;
+  openPrice    = 0;
+
+  // Reset warming overlay
+  const overlay = document.getElementById('warmingOverlay');
+  if (overlay) overlay.style.display = 'flex';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('liqCountMsg').textContent = '0 events ontvangen';
+  document.getElementById('totalEvents').textContent = '0';
+  document.getElementById('lastLiq').textContent = '—';
+
+  setStatus('connecting', 'Verbinden...');
+
+  document.getElementById('tfBadge').textContent   = tf.toUpperCase();
+  document.getElementById('pairBadge').textContent = pair.replace('USDT','/USDT');
+
+  await fetchCandles();
+  connectKline();
+  connectLiq();
+
+  dirty = true;
+}
+
+// ── CONTROLS ──────────────────────────────────────────────────────────────────
+document.getElementById('pairSel').onchange = e => { pair = e.target.value; init(); };
+document.getElementById('tfSel').onchange   = e => { tf   = e.target.value; init(); };
+document.getElementById('minSizeSel').onchange = e => { minSize = parseInt(e.target.value); };
+document.getElementById('pauseBtn').onclick = () => {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '▶ Hervat' : '⏸ Pauze';
+};
+document.getElementById('resetBtn').onclick = () => init();
+
+// ── START ─────────────────────────────────────────────────────────────────────
+drawLegend();
+init();
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
