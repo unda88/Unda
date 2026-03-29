@@ -138,13 +138,19 @@
           </div>
         </div>
         <div class="fg"><span class="fl" id="t-f-risk">Risk ($)</span>
-          <div class="iw"><span class="px">$</span><input type="number" id="f-risk" placeholder="100" min="0" step="0.01"></div>
+          <div class="iw"><span class="px">$</span><input type="number" id="f-risk" placeholder="100" min="0" step="0.01" oninput="calcActualRR()"></div>
         </div>
         <div class="fg"><span class="fl" id="t-f-pnl">Profit / Loss ($)</span>
-          <div class="iw"><span class="px">$</span><input type="number" id="f-pnl" placeholder="200" step="0.01"></div>
+          <div class="iw"><span class="px">$</span><input type="number" id="f-pnl" placeholder="200" step="0.01" oninput="calcActualRR()"></div>
         </div>
-        <div class="fg"><span class="fl" id="t-f-rr">R:R ratio</span>
-          <div class="iw"><span class="px">R</span><input type="number" id="f-rr" placeholder="2" min="0" step="0.1"></div>
+        <div class="fg"><span class="fl" id="t-f-rr">Planned R:R</span>
+          <div class="iw"><span class="px">R</span><input type="number" id="f-rr" placeholder="3" min="0" step="0.1"></div>
+        </div>
+        <div class="fg"><span class="fl" id="t-f-rr-actual">Actual R:R</span>
+          <div class="iw" style="background:rgba(0,255,178,0.03);border-color:rgba(0,255,178,0.07)">
+            <span class="px">R</span>
+            <input type="text" id="f-rr-actual" readonly placeholder="—" style="color:rgba(0,255,178,0.5);cursor:default">
+          </div>
         </div>
         <div class="fg"><span class="fl" id="t-f-notes">Notes</span>
           <div class="iw"><input type="text" id="f-notes" placeholder="Optional..."></div>
@@ -161,7 +167,8 @@
       <div class="stats-grid">
         <div class="stat"><div class="stat-label" id="t-st-total">Total trades</div><div class="stat-val c-white" id="st-total">0</div></div>
         <div class="stat"><div class="stat-label" id="t-st-wr">Win rate</div><div class="stat-val c-green" id="st-wr">—</div></div>
-        <div class="stat"><div class="stat-label" id="t-st-rr">Avg R:R</div><div class="stat-val c-gold" id="st-rr">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-rr">Planned R:R</div><div class="stat-val c-gold" id="st-rr">—</div></div>
+        <div class="stat"><div class="stat-label" id="t-st-rr-actual">Actual R:R</div><div class="stat-val" id="st-rr-actual">—</div></div>
         <div class="stat"><div class="stat-label" id="t-st-pf">Profit factor</div><div class="stat-val c-blue" id="st-pf">—</div></div>
         <div class="stat"><div class="stat-label" id="t-st-pnl">Net P&amp;L</div><div class="stat-val" id="st-pnl">—</div></div>
         <div class="stat"><div class="stat-label" id="t-st-wins">Wins</div><div class="stat-val c-green" id="st-wins">0</div></div>
@@ -173,7 +180,35 @@
     </div>
   </div>
 
-  <!-- Log table -->
+  <!-- Risk metrics -->
+  <div class="card" id="risk-card" style="display:none">
+    <div class="card-inner">
+      <div class="sec" id="t-sec-risk">Risk metrics</div>
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat">
+          <div class="stat-label" id="t-st-sharpe">Sharpe ratio</div>
+          <div class="stat-val" id="st-sharpe">—</div>
+          <div style="font-size:9px;color:rgba(0,255,178,0.3);margin-top:4px" id="st-sharpe-hint">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label" id="t-st-sortino">Sortino ratio</div>
+          <div class="stat-val" id="st-sortino">—</div>
+          <div style="font-size:9px;color:rgba(0,255,178,0.3);margin-top:4px" id="st-sortino-hint">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label" id="t-st-maxdd">Max drawdown</div>
+          <div class="stat-val c-red" id="st-maxdd">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label" id="t-st-consistency">Consistency</div>
+          <div class="stat-val" id="st-consistency">—</div>
+          <div style="font-size:9px;color:rgba(0,255,178,0.3);margin-top:4px" id="st-consistency-hint">—</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(0,255,178,0.04);border-radius:10px;border:1px solid rgba(0,255,178,0.1);font-size:11px;color:rgba(180,240,220,0.5);line-height:1.6" id="risk-explain"></div>
+      <div style="margin-top:8px;font-size:10px;color:rgba(0,255,178,0.2);font-style:italic" id="t-risk-note">Minimum 10 trades recommended for meaningful results.</div>
+    </div>
+  </div>
   <div class="card">
     <div class="card-inner">
       <div class="log-header">
@@ -191,7 +226,8 @@
               <th id="th-result">Result</th>
               <th id="th-risk">Risk $</th>
               <th id="th-pnl">P&amp;L $</th>
-              <th id="th-rr">R:R</th>
+              <th id="th-rr">Planned R:R</th>
+              <th id="th-rr-actual">Actual R:R</th>
               <th id="th-notes">Notes</th>
               <th></th>
             </tr>
@@ -208,16 +244,26 @@
 
 <script>
   const LANGS = {
-    en: { dir:'ltr', nav:'← Back to suite', title:'Trade Logbook', secLog:'Log a trade', fDate:'Date', fPair:'Pair / Asset', fDir:'Direction', fResult:'Result', fRisk:'Risk ($)', fPnl:'Profit / Loss ($)', fRr:'R:R ratio', fNotes:'Notes', addBtn:'+ Add trade to log', secStats:'Statistics', stTotal:'Total trades', stWr:'Win rate', stRr:'Avg R:R', stPf:'Profit factor', stPnl:'Net P&L', stWins:'Wins', stLosses:'Losses', stBe:'Break even', stAvgwin:'Avg win $', stAvgloss:'Avg loss $', secHistory:'Trade history', clearBtn:'Clear all', thDate:'Date', thPair:'Pair', thDir:'Dir', thResult:'Result', thRisk:'Risk $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notes', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Loss', optBe:'Break even', emptyMsg:'No trades logged yet. Add your first trade above.', confirmClear:'Clear all trades?', footer:'unda · wave your risk' },
-    nl: { dir:'ltr', nav:'← Terug naar suite', title:'Trade Logboek', secLog:'Trade toevoegen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richting', fResult:'Resultaat', fRisk:'Risico ($)', fPnl:'Winst / Verlies ($)', fRr:'R:R verhouding', fNotes:'Notities', addBtn:'+ Trade toevoegen aan logboek', secStats:'Statistieken', stTotal:'Totaal trades', stWr:'Winstrate', stRr:'Gem. R:R', stPf:'Winstfactor', stPnl:'Netto W/V', stWins:'Winsten', stLosses:'Verliezen', stBe:'Break even', stAvgwin:'Gem. winst $', stAvgloss:'Gem. verlies $', secHistory:'Trade geschiedenis', clearBtn:'Alles wissen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Resultaat', thRisk:'Risico $', thPnl:'W/V $', thRr:'R:R', thNotes:'Notities', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Verlies', optBe:'Break even', emptyMsg:'Nog geen trades. Voeg je eerste trade toe.', confirmClear:'Alle trades wissen?', footer:'unda · beheers je risico' },
-    fr: { dir:'ltr', nav:'← Retour à la suite', title:'Journal de Trading', secLog:'Enregistrer un trade', fDate:'Date', fPair:'Paire / Actif', fDir:'Direction', fResult:'Résultat', fRisk:'Risque ($)', fPnl:'Profit / Perte ($)', fRr:'Ratio R:R', fNotes:'Notes', addBtn:'+ Ajouter au journal', secStats:'Statistiques', stTotal:'Total trades', stWr:'Taux de gain', stRr:'R:R moyen', stPf:'Facteur de profit', stPnl:'P&L net', stWins:'Gains', stLosses:'Pertes', stBe:'Sans résultat', stAvgwin:'Gain moy. $', stAvgloss:'Perte moy. $', secHistory:'Historique des trades', clearBtn:'Tout effacer', thDate:'Date', thPair:'Paire', thDir:'Dir.', thResult:'Résultat', thRisk:'Risque $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notes', optLong:'Long', optShort:'Short', optWin:'Gain', optLoss:'Perte', optBe:'Sans résultat', emptyMsg:'Aucun trade enregistré. Ajoutez votre premier trade ci-dessus.', confirmClear:'Effacer tous les trades ?', footer:'unda · maîtrisez votre risque' },
-    es: { dir:'ltr', nav:'← Volver a la suite', title:'Diario de Trading', secLog:'Registrar un trade', fDate:'Fecha', fPair:'Par / Activo', fDir:'Dirección', fResult:'Resultado', fRisk:'Riesgo ($)', fPnl:'Ganancia / Pérdida ($)', fRr:'Ratio R:R', fNotes:'Notas', addBtn:'+ Añadir al diario', secStats:'Estadísticas', stTotal:'Total trades', stWr:'Tasa de acierto', stRr:'R:R promedio', stPf:'Factor de beneficio', stPnl:'P&L neto', stWins:'Ganancias', stLosses:'Pérdidas', stBe:'Empate', stAvgwin:'Ganancia prom. $', stAvgloss:'Pérdida prom. $', secHistory:'Historial de trades', clearBtn:'Borrar todo', thDate:'Fecha', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Riesgo $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notas', optLong:'Long', optShort:'Short', optWin:'Ganancia', optLoss:'Pérdida', optBe:'Empate', emptyMsg:'Sin trades registrados. Añade tu primer trade arriba.', confirmClear:'¿Borrar todos los trades?', footer:'unda · domina tu riesgo' },
-    de: { dir:'ltr', nav:'← Zurück zur Suite', title:'Trade-Tagebuch', secLog:'Trade erfassen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richtung', fResult:'Ergebnis', fRisk:'Risiko ($)', fPnl:'Gewinn / Verlust ($)', fRr:'R:R-Verhältnis', fNotes:'Notizen', addBtn:'+ Trade hinzufügen', secStats:'Statistiken', stTotal:'Gesamt Trades', stWr:'Gewinnrate', stRr:'Ø R:R', stPf:'Gewinnfaktor', stPnl:'Netto G/V', stWins:'Gewinne', stLosses:'Verluste', stBe:'Break-even', stAvgwin:'Ø Gewinn $', stAvgloss:'Ø Verlust $', secHistory:'Trade-Verlauf', clearBtn:'Alles löschen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Ergebnis', thRisk:'Risiko $', thPnl:'G/V $', thRr:'R:R', thNotes:'Notizen', optLong:'Long', optShort:'Short', optWin:'Gewinn', optLoss:'Verlust', optBe:'Break-even', emptyMsg:'Noch keine Trades. Füge deinen ersten Trade oben hinzu.', confirmClear:'Alle Trades löschen?', footer:'unda · steuere dein Risiko' },
-    it: { dir:'ltr', nav:'← Torna alla suite', title:'Diario di Trading', secLog:'Registra un trade', fDate:'Data', fPair:'Coppia / Asset', fDir:'Direzione', fResult:'Risultato', fRisk:'Rischio ($)', fPnl:'Profitto / Perdita ($)', fRr:'Rapporto R:R', fNotes:'Note', addBtn:'+ Aggiungi al diario', secStats:'Statistiche', stTotal:'Totale trade', stWr:'Tasso vincita', stRr:'R:R medio', stPf:'Fattore profitto', stPnl:'P&L netto', stWins:'Vincite', stLosses:'Perdite', stBe:'Pareggio', stAvgwin:'Vincita media $', stAvgloss:'Perdita media $', secHistory:'Storico trade', clearBtn:'Cancella tutto', thDate:'Data', thPair:'Coppia', thDir:'Dir.', thResult:'Risultato', thRisk:'Rischio $', thPnl:'P&L $', thRr:'R:R', thNotes:'Note', optLong:'Long', optShort:'Short', optWin:'Vincita', optLoss:'Perdita', optBe:'Pareggio', emptyMsg:'Nessun trade registrato. Aggiungi il tuo primo trade sopra.', confirmClear:'Cancellare tutti i trade?', footer:'unda · gestisci il tuo rischio' },
-    pt: { dir:'ltr', nav:'← Voltar à suite', title:'Diário de Trading', secLog:'Registar um trade', fDate:'Data', fPair:'Par / Ativo', fDir:'Direção', fResult:'Resultado', fRisk:'Risco ($)', fPnl:'Lucro / Perda ($)', fRr:'Razão R:R', fNotes:'Notas', addBtn:'+ Adicionar ao diário', secStats:'Estatísticas', stTotal:'Total trades', stWr:'Taxa de acerto', stRr:'R:R médio', stPf:'Fator de lucro', stPnl:'P&L líquido', stWins:'Vitórias', stLosses:'Derrotas', stBe:'Empate', stAvgwin:'Vitória média $', stAvgloss:'Derrota média $', secHistory:'Histórico de trades', clearBtn:'Limpar tudo', thDate:'Data', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Risco $', thPnl:'P&L $', thRr:'R:R', thNotes:'Notas', optLong:'Long', optShort:'Short', optWin:'Vitória', optLoss:'Derrota', optBe:'Empate', emptyMsg:'Sem trades registados. Adicione o seu primeiro trade acima.', confirmClear:'Limpar todos os trades?', footer:'unda · controle seu risco' },
-    tr: { dir:'ltr', nav:'← Suite\'e dön', title:'İşlem Defteri', secLog:'İşlem ekle', fDate:'Tarih', fPair:'Parite / Varlık', fDir:'Yön', fResult:'Sonuç', fRisk:'Risk ($)', fPnl:'Kâr / Zarar ($)', fRr:'R:R oranı', fNotes:'Notlar', addBtn:'+ Deftere ekle', secStats:'İstatistikler', stTotal:'Toplam işlem', stWr:'Kazanma oranı', stRr:'Ort. R:R', stPf:'Kâr faktörü', stPnl:'Net K/Z', stWins:'Kazançlar', stLosses:'Kayıplar', stBe:'Başabaş', stAvgwin:'Ort. kazanç $', stAvgloss:'Ort. kayıp $', secHistory:'İşlem geçmişi', clearBtn:'Tümünü sil', thDate:'Tarih', thPair:'Parite', thDir:'Yön', thResult:'Sonuç', thRisk:'Risk $', thPnl:'K/Z $', thRr:'R:R', thNotes:'Notlar', optLong:'Long', optShort:'Short', optWin:'Kazanç', optLoss:'Kayıp', optBe:'Başabaş', emptyMsg:'Henüz işlem yok. İlk işleminizi yukarıdan ekleyin.', confirmClear:'Tüm işlemler silinsin mi?', footer:'unda · riskinizi yönetin' },
-    ar: { dir:'rtl', nav:'العودة إلى القائمة →', title:'سجل التداول', secLog:'تسجيل صفقة', fDate:'التاريخ', fPair:'الزوج / الأصل', fDir:'الاتجاه', fResult:'النتيجة', fRisk:'المخاطرة ($)', fPnl:'الربح / الخسارة ($)', fRr:'نسبة R:R', fNotes:'ملاحظات', addBtn:'+ إضافة إلى السجل', secStats:'الإحصائيات', stTotal:'إجمالي الصفقات', stWr:'معدل الفوز', stRr:'متوسط R:R', stPf:'عامل الربح', stPnl:'صافي الربح/الخسارة', stWins:'الفوز', stLosses:'الخسارة', stBe:'تعادل', stAvgwin:'متوسط الربح $', stAvgloss:'متوسط الخسارة $', secHistory:'سجل الصفقات', clearBtn:'مسح الكل', thDate:'التاريخ', thPair:'الزوج', thDir:'الاتجاه', thResult:'النتيجة', thRisk:'المخاطرة $', thPnl:'ر/خ $', thRr:'R:R', thNotes:'ملاحظات', optLong:'شراء', optShort:'بيع', optWin:'ربح', optLoss:'خسارة', optBe:'تعادل', emptyMsg:'لا توجد صفقات مسجلة بعد. أضف صفقتك الأولى أعلاه.', confirmClear:'هل تريد مسح جميع الصفقات؟', footer:'unda · تحكم في مخاطرك' },
-    ru: { dir:'ltr', nav:'← Назад к набору', title:'Торговый журнал', secLog:'Добавить сделку', fDate:'Дата', fPair:'Пара / Актив', fDir:'Направление', fResult:'Результат', fRisk:'Риск ($)', fPnl:'Прибыль / Убыток ($)', fRr:'Соотношение R:R', fNotes:'Заметки', addBtn:'+ Добавить в журнал', secStats:'Статистика', stTotal:'Всего сделок', stWr:'% побед', stRr:'Ср. R:R', stPf:'Профит-фактор', stPnl:'Чистая П/У', stWins:'Прибыльные', stLosses:'Убыточные', stBe:'Безубыток', stAvgwin:'Ср. прибыль $', stAvgloss:'Ср. убыток $', secHistory:'История сделок', clearBtn:'Очистить всё', thDate:'Дата', thPair:'Пара', thDir:'Напр.', thResult:'Результат', thRisk:'Риск $', thPnl:'П/У $', thRr:'R:R', thNotes:'Заметки', optLong:'Лонг', optShort:'Шорт', optWin:'Победа', optLoss:'Убыток', optBe:'Безубыток', emptyMsg:'Сделок пока нет. Добавьте первую сделку выше.', confirmClear:'Очистить все сделки?', footer:'unda · управляй своим риском' },
+    en: { dir:'ltr', nav:'← Back to suite', title:'Trade Logbook', secLog:'Log a trade', fDate:'Date', fPair:'Pair / Asset', fDir:'Direction', fResult:'Result', fRisk:'Risk ($)', fPnl:'Profit / Loss ($)', fRr:'Planned R:R', fRrActual:'Actual R:R', fNotes:'Notes', addBtn:'+ Add trade to log', secStats:'Statistics', stTotal:'Total trades', stWr:'Win rate', stRr:'Planned R:R', stRrActual:'Actual R:R', stPf:'Profit factor', stPnl:'Net P&L', stWins:'Wins', stLosses:'Losses', stBe:'Break even', stAvgwin:'Avg win $', stAvgloss:'Avg loss $', secRisk:'Risk metrics', stSharpe:'Sharpe ratio', stSortino:'Sortino ratio', stMaxdd:'Max drawdown', stConsistency:'Consistency', riskNote:'Minimum 10 trades recommended for meaningful results.', secHistory:'Trade history', clearBtn:'Clear all', thDate:'Date', thPair:'Pair', thDir:'Dir', thResult:'Result', thRisk:'Risk $', thPnl:'P&L $', thRr:'Planned R:R', thRrActual:'Actual R:R', thNotes:'Notes', fRrActual:'Actual R:R', stRrActual:'Actual R:R', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Loss', optBe:'Break even', emptyMsg:'No trades logged yet. Add your first trade above.', confirmClear:'Clear all trades?', footer:'unda · wave your risk',
+      sharpeHint: r => r >= 2 ? '🟢 Excellent' : r >= 1 ? '🟡 Good' : r >= 0 ? '🔴 Below average' : '🔴 Negative',
+      sortinoHint: r => r >= 2 ? '🟢 Excellent' : r >= 1 ? '🟡 Good' : r >= 0 ? '🔴 Below average' : '🔴 Negative',
+      consistencyHint: r => r >= 70 ? '🟢 Consistent' : r >= 50 ? '🟡 Moderate' : '🔴 Inconsistent',
+      riskExplain: (sharpe, sortino, dd, cons, n) => `Based on ${n} trades: Sharpe ${sharpe} measures return per unit of total risk (above 1 = good, above 2 = excellent). Sortino ${sortino} only penalises downside volatility — a higher Sortino vs Sharpe means your losses are more controlled than your wins. Max drawdown ${dd} is your worst loss streak. Consistency ${cons}% is how often your P&L direction matches your win/loss result.`
+    },
+    nl: { dir:'ltr', nav:'← Terug naar suite', title:'Trade Logboek', secLog:'Trade toevoegen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richting', fResult:'Resultaat', fRisk:'Risico ($)', fPnl:'Winst / Verlies ($)', fRr:'Beoogde R:R', fRrActual:'Werkelijke R:R', fNotes:'Notities', addBtn:'+ Trade toevoegen aan logboek', secStats:'Statistieken', stTotal:'Totaal trades', stWr:'Winstrate', stRr:'Beoogde R:R', stRrActual:'Werkelijke R:R', stPf:'Winstfactor', stPnl:'Netto W/V', stWins:'Winsten', stLosses:'Verliezen', stBe:'Break even', stAvgwin:'Gem. winst $', stAvgloss:'Gem. verlies $', secRisk:'Risicometrics', stSharpe:'Sharpe ratio', stSortino:'Sortino ratio', stMaxdd:'Max drawdown', stConsistency:'Consistentie', riskNote:'Minimum 10 trades aanbevolen voor betekenisvolle resultaten.', secHistory:'Trade geschiedenis', clearBtn:'Alles wissen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Resultaat', thRisk:'Risico $', thPnl:'W/V $', thRr:'Planned R:R', thRrActual:'Werkelijke R:R', thNotes:'Notities', fRrActual:'Werkelijke R:R', stRrActual:'Werkelijke R:R', optLong:'Long', optShort:'Short', optWin:'Win', optLoss:'Verlies', optBe:'Break even', emptyMsg:'Nog geen trades. Voeg je eerste trade toe.', confirmClear:'Alle trades wissen?', footer:'unda · beheers je risico',
+      sharpeHint: r => r >= 2 ? '🟢 Uitstekend' : r >= 1 ? '🟡 Goed' : r >= 0 ? '🔴 Onder gemiddelde' : '🔴 Negatief',
+      sortinoHint: r => r >= 2 ? '🟢 Uitstekend' : r >= 1 ? '🟡 Goed' : r >= 0 ? '🔴 Onder gemiddelde' : '🔴 Negatief',
+      consistencyHint: r => r >= 70 ? '🟢 Consistent' : r >= 50 ? '🟡 Matig' : '🔴 Inconsistent',
+      riskExplain: (sharpe, sortino, dd, cons, n) => `Op basis van ${n} trades: Sharpe ${sharpe} meet rendement per eenheid totaal risico (boven 1 = goed, boven 2 = uitstekend). Sortino ${sortino} bestraft enkel neerwaartse volatiliteit — een hogere Sortino vs Sharpe betekent dat je verliezen gecontroleerder zijn dan je winsten. Max drawdown ${dd} is je slechtste verliesreeks. Consistentie ${cons}% toont hoe vaak je W/V richting overeenkomt met je win/verlies resultaat.`
+    },
+    fr: { dir:'ltr', nav:'← Retour à la suite', title:'Journal de Trading', secLog:'Enregistrer un trade', fDate:'Date', fPair:'Paire / Actif', fDir:'Direction', fResult:'Résultat', fRisk:'Risque ($)', fPnl:'Profit / Perte ($)', fRr:'Ratio R:R', fNotes:'Notes', addBtn:'+ Ajouter au journal', secStats:'Statistiques', stTotal:'Total trades', stWr:'Taux de gain', stRr:'R:R moyen', stPf:'Facteur de profit', stPnl:'P&L net', stWins:'Gains', stLosses:'Pertes', stBe:'Sans résultat', stAvgwin:'Gain moy. $', stAvgloss:'Perte moy. $', secHistory:'Historique des trades', clearBtn:'Tout effacer', thDate:'Date', thPair:'Paire', thDir:'Dir.', thResult:'Résultat', thRisk:'Risque $', thPnl:'P&L $', thRr:'R:R prévu', thRrActual:'R:R réel', thNotes:'Notes', fRrActual:'R:R réel', stRrActual:'R:R réel', optLong:'Long', optShort:'Short', optWin:'Gain', optLoss:'Perte', optBe:'Sans résultat', emptyMsg:'Aucun trade enregistré. Ajoutez votre premier trade ci-dessus.', confirmClear:'Effacer tous les trades ?', secRisk:'Métriques de risque', stSharpe:'Ratio Sharpe', stSortino:'Ratio Sortino', stMaxdd:'Drawdown max', stConsistency:'Cohérence', riskNote:'Minimum 10 trades recommandé.', sharpeHint:r=>r>=2?'🟢 Excellent':r>=1?'🟡 Bien':r>=0?'🔴 Sous la moyenne':'🔴 Négatif', sortinoHint:r=>r>=2?'🟢 Excellent':r>=1?'🟡 Bien':r>=0?'🔴 Sous la moyenne':'🔴 Négatif', consistencyHint:r=>r>=70?'🟢 Cohérent':r>=50?'🟡 Modéré':'🔴 Incohérent', riskExplain:(s,so,d,c,n)=>`Sur ${n} trades: Sharpe ${s}, Sortino ${so}, Drawdown max ${d}, Cohérence ${c}%.`, footer:'unda · maîtrisez votre risque' },
+    es: { dir:'ltr', nav:'← Volver a la suite', title:'Diario de Trading', secLog:'Registrar un trade', fDate:'Fecha', fPair:'Par / Activo', fDir:'Dirección', fResult:'Resultado', fRisk:'Riesgo ($)', fPnl:'Ganancia / Pérdida ($)', fRr:'Ratio R:R', fNotes:'Notas', addBtn:'+ Añadir al diario', secStats:'Estadísticas', stTotal:'Total trades', stWr:'Tasa de acierto', stRr:'R:R promedio', stPf:'Factor de beneficio', stPnl:'P&L neto', stWins:'Ganancias', stLosses:'Pérdidas', stBe:'Empate', stAvgwin:'Ganancia prom. $', stAvgloss:'Pérdida prom. $', secHistory:'Historial de trades', clearBtn:'Borrar todo', thDate:'Fecha', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Riesgo $', thPnl:'P&L $', thRr:'R:R previsto', thRrActual:'R:R real', thNotes:'Notas', fRrActual:'R:R real', stRrActual:'R:R real', optLong:'Long', optShort:'Short', optWin:'Ganancia', optLoss:'Pérdida', optBe:'Empate', emptyMsg:'Sin trades registrados. Añade tu primer trade arriba.', confirmClear:'¿Borrar todos los trades?', secRisk:'Métricas de riesgo', stSharpe:'Ratio Sharpe', stSortino:'Ratio Sortino', stMaxdd:'Drawdown máx.', stConsistency:'Consistencia', riskNote:'Mínimo 10 trades recomendado.', sharpeHint:r=>r>=2?'🟢 Excelente':r>=1?'🟡 Bien':r>=0?'🔴 Bajo promedio':'🔴 Negativo', sortinoHint:r=>r>=2?'🟢 Excelente':r>=1?'🟡 Bien':r>=0?'🔴 Bajo promedio':'🔴 Negativo', consistencyHint:r=>r>=70?'🟢 Consistente':r>=50?'🟡 Moderado':'🔴 Inconsistente', riskExplain:(s,so,d,c,n)=>`En ${n} trades: Sharpe ${s}, Sortino ${so}, Drawdown máx ${d}, Consistencia ${c}%.`, footer:'unda · domina tu riesgo' },
+    de: { dir:'ltr', nav:'← Zurück zur Suite', title:'Trade-Tagebuch', secLog:'Trade erfassen', fDate:'Datum', fPair:'Paar / Asset', fDir:'Richtung', fResult:'Ergebnis', fRisk:'Risiko ($)', fPnl:'Gewinn / Verlust ($)', fRr:'R:R-Verhältnis', fNotes:'Notizen', addBtn:'+ Trade hinzufügen', secStats:'Statistiken', stTotal:'Gesamt Trades', stWr:'Gewinnrate', stRr:'Ø R:R', stPf:'Gewinnfaktor', stPnl:'Netto G/V', stWins:'Gewinne', stLosses:'Verluste', stBe:'Break-even', stAvgwin:'Ø Gewinn $', stAvgloss:'Ø Verlust $', secHistory:'Trade-Verlauf', clearBtn:'Alles löschen', thDate:'Datum', thPair:'Paar', thDir:'Richt.', thResult:'Ergebnis', thRisk:'Risiko $', thPnl:'G/V $', thRr:'Geplantes R:R', thRrActual:'Reales R:R', thNotes:'Notizen', fRrActual:'Reales R:R', stRrActual:'Reales R:R', optLong:'Long', optShort:'Short', optWin:'Gewinn', optLoss:'Verlust', optBe:'Break-even', emptyMsg:'Noch keine Trades. Füge deinen ersten Trade oben hinzu.', confirmClear:'Alle Trades löschen?', secRisk:'Risikometriken', stSharpe:'Sharpe-Ratio', stSortino:'Sortino-Ratio', stMaxdd:'Max. Drawdown', stConsistency:'Konsistenz', riskNote:'Mindestens 10 Trades empfohlen.', sharpeHint:r=>r>=2?'🟢 Ausgezeichnet':r>=1?'🟡 Gut':r>=0?'🔴 Unterdurchschnittlich':'🔴 Negativ', sortinoHint:r=>r>=2?'🟢 Ausgezeichnet':r>=1?'🟡 Gut':r>=0?'🔴 Unterdurchschnittlich':'🔴 Negativ', consistencyHint:r=>r>=70?'🟢 Konsistent':r>=50?'🟡 Mäßig':'🔴 Inkonsistent', riskExplain:(s,so,d,c,n)=>`Basierend auf ${n} Trades: Sharpe ${s}, Sortino ${so}, Max. Drawdown ${d}, Konsistenz ${c}%.`, footer:'unda · steuere dein Risiko' },
+    it: { dir:'ltr', nav:'← Torna alla suite', title:'Diario di Trading', secLog:'Registra un trade', fDate:'Data', fPair:'Coppia / Asset', fDir:'Direzione', fResult:'Risultato', fRisk:'Rischio ($)', fPnl:'Profitto / Perdita ($)', fRr:'Rapporto R:R', fNotes:'Note', addBtn:'+ Aggiungi al diario', secStats:'Statistiche', stTotal:'Totale trade', stWr:'Tasso vincita', stRr:'R:R medio', stPf:'Fattore profitto', stPnl:'P&L netto', stWins:'Vincite', stLosses:'Perdite', stBe:'Pareggio', stAvgwin:'Vincita media $', stAvgloss:'Perdita media $', secHistory:'Storico trade', clearBtn:'Cancella tutto', thDate:'Data', thPair:'Coppia', thDir:'Dir.', thResult:'Risultato', thRisk:'Rischio $', thPnl:'P&L $', thRr:'R:R previsto', thRrActual:'R:R reale', thNotes:'Note', fRrActual:'R:R reale', stRrActual:'R:R reale', optLong:'Long', optShort:'Short', optWin:'Vincita', optLoss:'Perdita', optBe:'Pareggio', emptyMsg:'Nessun trade registrato. Aggiungi il tuo primo trade sopra.', confirmClear:'Cancellare tutti i trade?', secRisk:'Metriche di rischio', stSharpe:'Indice Sharpe', stSortino:'Indice Sortino', stMaxdd:'Drawdown max', stConsistency:'Consistenza', riskNote:'Minimo 10 trade raccomandati.', sharpeHint:r=>r>=2?'🟢 Eccellente':r>=1?'🟡 Buono':r>=0?'🔴 Sotto la media':'🔴 Negativo', sortinoHint:r=>r>=2?'🟢 Eccellente':r>=1?'🟡 Buono':r>=0?'🔴 Sotto la media':'🔴 Negativo', consistencyHint:r=>r>=70?'🟢 Consistente':r>=50?'🟡 Moderato':'🔴 Inconsistente', riskExplain:(s,so,d,c,n)=>`Su ${n} trade: Sharpe ${s}, Sortino ${so}, Drawdown max ${d}, Consistenza ${c}%.`, footer:'unda · gestisci il tuo rischio' },
+    pt: { dir:'ltr', nav:'← Voltar à suite', title:'Diário de Trading', secLog:'Registar um trade', fDate:'Data', fPair:'Par / Ativo', fDir:'Direção', fResult:'Resultado', fRisk:'Risco ($)', fPnl:'Lucro / Perda ($)', fRr:'Razão R:R', fNotes:'Notas', addBtn:'+ Adicionar ao diário', secStats:'Estatísticas', stTotal:'Total trades', stWr:'Taxa de acerto', stRr:'R:R médio', stPf:'Fator de lucro', stPnl:'P&L líquido', stWins:'Vitórias', stLosses:'Derrotas', stBe:'Empate', stAvgwin:'Vitória média $', stAvgloss:'Derrota média $', secHistory:'Histórico de trades', clearBtn:'Limpar tudo', thDate:'Data', thPair:'Par', thDir:'Dir.', thResult:'Resultado', thRisk:'Risco $', thPnl:'P&L $', thRr:'R:R previsto', thRrActual:'R:R real', thNotes:'Notas', fRrActual:'R:R real', stRrActual:'R:R real', optLong:'Long', optShort:'Short', optWin:'Vitória', optLoss:'Derrota', optBe:'Empate', emptyMsg:'Sem trades registados. Adicione o seu primeiro trade acima.', confirmClear:'Limpar todos os trades?', secRisk:'Métricas de risco', stSharpe:'Rácio Sharpe', stSortino:'Rácio Sortino', stMaxdd:'Drawdown máx.', stConsistency:'Consistência', riskNote:'Mínimo 10 trades recomendado.', sharpeHint:r=>r>=2?'🟢 Excelente':r>=1?'🟡 Bom':r>=0?'🔴 Abaixo da média':'🔴 Negativo', sortinoHint:r=>r>=2?'🟢 Excelente':r>=1?'🟡 Bom':r>=0?'🔴 Abaixo da média':'🔴 Negativo', consistencyHint:r=>r>=70?'🟢 Consistente':r>=50?'🟡 Moderado':'🔴 Inconsistente', riskExplain:(s,so,d,c,n)=>`Com ${n} trades: Sharpe ${s}, Sortino ${so}, Drawdown máx ${d}, Consistência ${c}%.`, footer:'unda · controle seu risco' },
+    tr: { dir:'ltr', nav:'← Suite\'e dön', title:'İşlem Defteri', secLog:'İşlem ekle', fDate:'Tarih', fPair:'Parite / Varlık', fDir:'Yön', fResult:'Sonuç', fRisk:'Risk ($)', fPnl:'Kâr / Zarar ($)', fRr:'R:R oranı', fNotes:'Notlar', addBtn:'+ Deftere ekle', secStats:'İstatistikler', stTotal:'Toplam işlem', stWr:'Kazanma oranı', stRr:'Ort. R:R', stPf:'Kâr faktörü', stPnl:'Net K/Z', stWins:'Kazançlar', stLosses:'Kayıplar', stBe:'Başabaş', stAvgwin:'Ort. kazanç $', stAvgloss:'Ort. kayıp $', secHistory:'İşlem geçmişi', clearBtn:'Tümünü sil', thDate:'Tarih', thPair:'Parite', thDir:'Yön', thResult:'Sonuç', thRisk:'Risk $', thPnl:'K/Z $', thRr:'Planlanan R:R', thRrActual:'Gerçek R:R', thNotes:'Notlar', fRrActual:'Gerçek R:R', stRrActual:'Gerçek R:R', optLong:'Long', optShort:'Short', optWin:'Kazanç', optLoss:'Kayıp', optBe:'Başabaş', emptyMsg:'Henüz işlem yok. İlk işleminizi yukarıdan ekleyin.', confirmClear:'Tüm işlemler silinsin mi?', secRisk:'Risk metrikleri', stSharpe:'Sharpe oranı', stSortino:'Sortino oranı', stMaxdd:'Maks. drawdown', stConsistency:'Tutarlılık', riskNote:'Anlamlı sonuçlar için minimum 10 işlem önerilir.', sharpeHint:r=>r>=2?'🟢 Mükemmel':r>=1?'🟡 İyi':r>=0?'🔴 Ortalamanın altı':'🔴 Negatif', sortinoHint:r=>r>=2?'🟢 Mükemmel':r>=1?'🟡 İyi':r>=0?'🔴 Ortalamanın altı':'🔴 Negatif', consistencyHint:r=>r>=70?'🟢 Tutarlı':r>=50?'🟡 Orta':'🔴 Tutarsız', riskExplain:(s,so,d,c,n)=>`${n} işlem: Sharpe ${s}, Sortino ${so}, Maks. drawdown ${d}, Tutarlılık %${c}.`, footer:'unda · riskinizi yönetin' },
+    ar: { dir:'rtl', nav:'العودة إلى القائمة →', title:'سجل التداول', secLog:'تسجيل صفقة', fDate:'التاريخ', fPair:'الزوج / الأصل', fDir:'الاتجاه', fResult:'النتيجة', fRisk:'المخاطرة ($)', fPnl:'الربح / الخسارة ($)', fRr:'نسبة R:R', fNotes:'ملاحظات', addBtn:'+ إضافة إلى السجل', secStats:'الإحصائيات', stTotal:'إجمالي الصفقات', stWr:'معدل الفوز', stRr:'متوسط R:R', stPf:'عامل الربح', stPnl:'صافي الربح/الخسارة', stWins:'الفوز', stLosses:'الخسارة', stBe:'تعادل', stAvgwin:'متوسط الربح $', stAvgloss:'متوسط الخسارة $', secHistory:'سجل الصفقات', clearBtn:'مسح الكل', thDate:'التاريخ', thPair:'الزوج', thDir:'الاتجاه', thResult:'النتيجة', thRisk:'المخاطرة $', thPnl:'ر/خ $', thRr:'R:R المخطط', thRrActual:'R:R الفعلي', thNotes:'ملاحظات', fRrActual:'R:R الفعلي', stRrActual:'R:R الفعلي', optLong:'شراء', optShort:'بيع', optWin:'ربح', optLoss:'خسارة', optBe:'تعادل', emptyMsg:'لا توجد صفقات مسجلة بعد. أضف صفقتك الأولى أعلاه.', confirmClear:'هل تريد مسح جميع الصفقات؟', secRisk:'مقاييس المخاطر', stSharpe:'نسبة شارب', stSortino:'نسبة سورتينو', stMaxdd:'أقصى تراجع', stConsistency:'الاتساق', riskNote:'يُنصح بـ 10 صفقات كحد أدنى.', sharpeHint:r=>r>=2?'🟢 ممتاز':r>=1?'🟡 جيد':r>=0?'🔴 دون المتوسط':'🔴 سلبي', sortinoHint:r=>r>=2?'🟢 ممتاز':r>=1?'🟡 جيد':r>=0?'🔴 دون المتوسط':'🔴 سلبي', consistencyHint:r=>r>=70?'🟢 متسق':r>=50?'🟡 متوسط':'🔴 غير متسق', riskExplain:(s,so,d,c,n)=>`بناءً على ${n} صفقة: شارب ${s}، سورتينو ${so}، أقصى تراجع ${d}، اتساق ${c}%.`, footer:'unda · تحكم في مخاطرك' },
+    ru: { dir:'ltr', nav:'← Назад к набору', title:'Торговый журнал', secLog:'Добавить сделку', fDate:'Дата', fPair:'Пара / Актив', fDir:'Направление', fResult:'Результат', fRisk:'Риск ($)', fPnl:'Прибыль / Убыток ($)', fRr:'Соотношение R:R', fNotes:'Заметки', addBtn:'+ Добавить в журнал', secStats:'Статистика', stTotal:'Всего сделок', stWr:'% побед', stRr:'Ср. R:R', stPf:'Профит-фактор', stPnl:'Чистая П/У', stWins:'Прибыльные', stLosses:'Убыточные', stBe:'Безубыток', stAvgwin:'Ср. прибыль $', stAvgloss:'Ср. убыток $', secHistory:'История сделок', clearBtn:'Очистить всё', thDate:'Дата', thPair:'Пара', thDir:'Напр.', thResult:'Результат', thRisk:'Риск $', thPnl:'П/У $', thRr:'План. R:R', thRrActual:'Факт. R:R', thNotes:'Заметки', fRrActual:'Факт. R:R', stRrActual:'Факт. R:R', optLong:'Лонг', optShort:'Шорт', optWin:'Победа', optLoss:'Убыток', optBe:'Безубыток', emptyMsg:'Сделок пока нет. Добавьте первую сделку выше.', confirmClear:'Очистить все сделки?', secRisk:'Метрики риска', stSharpe:'Коэффициент Шарпа', stSortino:'Коэффициент Сортино', stMaxdd:'Макс. просадка', stConsistency:'Консистентность', riskNote:'Рекомендуется минимум 10 сделок.', sharpeHint:r=>r>=2?'🟢 Отлично':r>=1?'🟡 Хорошо':r>=0?'🔴 Ниже среднего':'🔴 Отрицательный', sortinoHint:r=>r>=2?'🟢 Отлично':r>=1?'🟡 Хорошо':r>=0?'🔴 Ниже среднего':'🔴 Отрицательный', consistencyHint:r=>r>=70?'🟢 Консистентно':r>=50?'🟡 Умеренно':'🔴 Непоследовательно', riskExplain:(s,so,d,c,n)=>`На основе ${n} сделок: Шарп ${s}, Сортино ${so}, Макс. просадка ${d}, Консистентность ${c}%.`, footer:'unda · управляй своим риском' },
   };
 
   let currentLang = 'en';
@@ -250,6 +296,14 @@
     document.getElementById('t-f-notes').textContent    = T.fNotes;
     document.getElementById('t-add-btn').textContent    = T.addBtn;
     document.getElementById('t-sec-stats').textContent  = T.secStats;
+    if (T.secRisk) {
+      document.getElementById('t-sec-risk').textContent   = T.secRisk;
+      document.getElementById('t-st-sharpe').textContent  = T.stSharpe;
+      document.getElementById('t-st-sortino').textContent = T.stSortino;
+      document.getElementById('t-st-maxdd').textContent   = T.stMaxdd;
+      document.getElementById('t-st-consistency').textContent = T.stConsistency;
+      document.getElementById('t-risk-note').textContent  = T.riskNote;
+    }
     document.getElementById('t-st-total').textContent   = T.stTotal;
     document.getElementById('t-st-wr').textContent      = T.stWr;
     document.getElementById('t-st-rr').textContent      = T.stRr;
@@ -269,6 +323,10 @@
     document.getElementById('th-risk').textContent      = T.thRisk;
     document.getElementById('th-pnl').textContent       = T.thPnl;
     document.getElementById('th-rr').textContent        = T.thRr;
+    document.getElementById('th-rr-actual').textContent = T.thRrActual || 'Actual R:R';
+    document.getElementById('t-f-rr').textContent       = T.fRr;
+    document.getElementById('t-f-rr-actual').textContent= T.fRrActual || 'Actual R:R';
+    if(document.getElementById('t-st-rr-actual')) document.getElementById('t-st-rr-actual').textContent = T.stRrActual || 'Actual R:R';
     document.getElementById('th-notes').textContent     = T.thNotes;
     document.getElementById('opt-long').textContent     = T.optLong;
     document.getElementById('opt-short').textContent    = T.optShort;
@@ -288,24 +346,43 @@
 
   function save() { try { localStorage.setItem('unda-logbook', JSON.stringify(trades)); } catch(e) {} }
 
+  function calcActualRR() {
+    const risk = parseFloat(document.getElementById('f-risk').value);
+    const pnl  = parseFloat(document.getElementById('f-pnl').value);
+    const el   = document.getElementById('f-rr-actual');
+    if (risk > 0 && !isNaN(pnl)) {
+      if (pnl === 0) {
+        el.value = 'BE';
+        el.style.color = 'rgba(255,217,122,0.7)';
+      } else {
+        const actual = (pnl / risk).toFixed(2);
+        el.value = actual;
+        el.style.color = parseFloat(actual) >= 0 ? 'rgba(0,255,178,0.7)' : 'rgba(255,68,68,0.7)';
+      }
+    } else {
+      el.value = '';
+    }
+  }
+
   function addTrade() {
-    const T      = LANGS[currentLang];
-    const date   = document.getElementById('f-date').value;
-    const pair   = document.getElementById('f-pair').value || '—';
-    const dirVal = document.getElementById('f-dir').value;
-    const resVal = document.getElementById('f-result').value;
-    const risk   = parseFloat(document.getElementById('f-risk').value) || 0;
-    const pnl    = parseFloat(document.getElementById('f-pnl').value) || 0;
-    const rr     = parseFloat(document.getElementById('f-rr').value) || 0;
-    const notes  = document.getElementById('f-notes').value || '';
-    // Store raw English keys for badge logic, display label from current lang
-    trades.unshift({ id: Date.now(), date, pair, dir: dirVal, result: resVal, risk, pnl, rr, notes });
+    const T       = LANGS[currentLang];
+    const date    = document.getElementById('f-date').value;
+    const pair    = document.getElementById('f-pair').value || '—';
+    const dirVal  = document.getElementById('f-dir').value;
+    const resVal  = document.getElementById('f-result').value;
+    const risk    = parseFloat(document.getElementById('f-risk').value) || 0;
+    const pnl     = parseFloat(document.getElementById('f-pnl').value) || 0;
+    const rrPlan  = parseFloat(document.getElementById('f-rr').value) || 0;
+    const rrAct   = risk > 0 ? parseFloat((pnl / risk).toFixed(2)) : 0;
+    const notes   = document.getElementById('f-notes').value || '';
+    trades.unshift({ id: Date.now(), date, pair, dir: dirVal, result: resVal, risk, pnl, rr: rrPlan, rrActual: rrAct, notes });
     save(); render();
-    document.getElementById('f-pair').value  = '';
-    document.getElementById('f-pnl').value   = '';
-    document.getElementById('f-rr').value    = '';
-    document.getElementById('f-notes').value = '';
-    document.getElementById('f-date').value  = new Date().toISOString().split('T')[0];
+    document.getElementById('f-pair').value     = '';
+    document.getElementById('f-pnl').value      = '';
+    document.getElementById('f-rr').value       = '';
+    document.getElementById('f-rr-actual').value= '';
+    document.getElementById('f-notes').value    = '';
+    document.getElementById('f-date').value     = new Date().toISOString().split('T')[0];
   }
 
   function deleteTrade(id) { trades = trades.filter(t => t.id !== id); save(); render(); }
@@ -341,7 +418,10 @@
           <td><span class="badge ${badgeClass}">${resultLabel[t.result] || t.result}</span></td>
           <td>$${t.risk.toFixed(2)}</td>
           <td class="${pnlCol}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}</td>
-          <td>${t.rr > 0 ? t.rr.toFixed(2) : '—'}</td>
+          <td>${t.rr > 0 ? '1:'+t.rr.toFixed(1) : '—'}</td>
+          <td style="color:${t.rrActual > 0 ? 'rgba(0,255,178,0.7)' : t.rrActual < 0 ? 'rgba(255,68,68,0.7)' : 'rgba(180,240,220,0.35)'}">
+            ${t.result === 'Break even' ? '<span style="color:rgba(255,217,122,0.6);font-size:10px">BE</span>' : (t.rrActual !== undefined && t.risk > 0 ? '1:'+t.rrActual.toFixed(2) : '—')}
+          </td>
           <td style="color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:11px">${t.notes}</td>
           <td><button class="del-btn" onclick="deleteTrade(${t.id})">×</button></td>
         </tr>`;
@@ -354,8 +434,10 @@
     const losses    = trades.filter(t => t.result === 'Loss');
     const bes       = trades.filter(t => t.result === 'Break even');
     const wr        = total > 0 ? (wins.length / total * 100).toFixed(1) + '%' : '—';
-    const validRR   = trades.filter(t => t.rr > 0);
-    const avgRR     = validRR.length ? (validRR.reduce((a,b) => a+b.rr, 0) / validRR.length).toFixed(2) : '—';
+    const validRR    = trades.filter(t => t.rr > 0);
+    const avgRRPlan  = validRR.length ? (validRR.reduce((a,b) => a+b.rr, 0) / validRR.length).toFixed(2) : '—';
+    const validRRAct = trades.filter(t => t.rrActual !== undefined && t.risk > 0 && t.result !== 'Break even');
+    const avgRRAct   = validRRAct.length ? (validRRAct.reduce((a,b) => a+(b.rrActual||0), 0) / validRRAct.length).toFixed(2) : '—';
     const totalWin  = wins.reduce((a,b) => a + b.pnl, 0);
     const totalLoss = Math.abs(losses.reduce((a,b) => a + b.pnl, 0));
     const pf        = totalLoss > 0 ? (totalWin / totalLoss).toFixed(2) : wins.length > 0 ? '∞' : '—';
@@ -365,7 +447,16 @@
 
     document.getElementById('st-total').textContent   = total;
     document.getElementById('st-wr').textContent      = wr;
-    document.getElementById('st-rr').textContent      = avgRR !== '—' ? '1:' + avgRR : '—';
+    document.getElementById('st-rr').textContent      = avgRRPlan !== '—' ? '1:' + avgRRPlan : '—';
+    const actEl = document.getElementById('st-rr-actual');
+    if (avgRRAct !== '—') {
+      actEl.textContent  = '1:' + avgRRAct;
+      const diff = parseFloat(avgRRAct) - parseFloat(avgRRPlan);
+      actEl.className    = 'stat-val ' + (Math.abs(diff) < 0.2 ? 'c-green' : diff < 0 ? 'c-red' : 'c-gold');
+    } else {
+      actEl.textContent = '—';
+      actEl.className   = 'stat-val';
+    }
     document.getElementById('st-pf').textContent      = pf;
     const pnlEl = document.getElementById('st-pnl');
     pnlEl.textContent = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
@@ -375,7 +466,53 @@
     document.getElementById('st-be').textContent      = bes.length;
     document.getElementById('st-avgwin').textContent  = avgWin;
     document.getElementById('st-avgloss').textContent = avgLoss;
-  }
+
+    // ── Risk metrics (Sharpe / Sortino) ──
+    const riskCard = document.getElementById('risk-card');
+    if (trades.length >= 3) {
+      riskCard.style.display = '';
+      const pnls    = trades.map(t => t.pnl);
+      const n       = pnls.length;
+      const mean    = pnls.reduce((a,b) => a+b, 0) / n;
+      const stdAll  = Math.sqrt(pnls.reduce((a,b) => a + Math.pow(b - mean, 2), 0) / n);
+      const downDev = Math.sqrt(pnls.filter(p => p < 0).reduce((a,b) => a + b*b, 0) / Math.max(1, pnls.filter(p=>p<0).length));
+
+      const sharpe  = stdAll > 0 ? (mean / stdAll).toFixed(2) : '—';
+      const sortino = downDev > 0 ? (mean / downDev).toFixed(2) : mean > 0 ? '∞' : '—';
+
+      // Max drawdown
+      let peak = 0, cumPnl = 0, maxDD = 0;
+      pnls.slice().reverse().forEach(p => { cumPnl += p; if (cumPnl > peak) peak = cumPnl; const dd = peak - cumPnl; if (dd > maxDD) maxDD = dd; });
+      const maxDDstr = maxDD > 0 ? '-$' + maxDD.toFixed(2) : '$0';
+
+      // Consistency: % of trades where pnl direction matches result
+      const consistent = trades.filter(t => (t.result==='Win' && t.pnl>0) || (t.result==='Loss' && t.pnl<0) || t.result==='Break even').length;
+      const consScore  = Math.round(consistent / n * 100);
+
+      const sharpeNum  = parseFloat(sharpe);
+      const sortinoNum = parseFloat(sortino);
+
+      const sharpeEl  = document.getElementById('st-sharpe');
+      const sortinoEl = document.getElementById('st-sortino');
+      sharpeEl.textContent  = sharpe;
+      sharpeEl.className    = 'stat-val ' + (sharpeNum >= 1 ? 'c-green' : sharpeNum >= 0 ? 'c-gold' : 'c-red');
+      sortinoEl.textContent = sortino;
+      sortinoEl.className   = 'stat-val ' + (sortinoNum >= 1 ? 'c-green' : sortinoNum >= 0 ? 'c-gold' : 'c-red');
+      document.getElementById('st-maxdd').textContent        = maxDDstr;
+      document.getElementById('st-consistency').textContent  = consScore + '%';
+      document.getElementById('st-consistency').className    = 'stat-val ' + (consScore >= 70 ? 'c-green' : consScore >= 50 ? 'c-gold' : 'c-red');
+
+      const TT = LANGS[currentLang];
+      if (TT.sharpeHint) {
+        document.getElementById('st-sharpe-hint').textContent     = TT.sharpeHint(sharpeNum);
+        document.getElementById('st-sortino-hint').textContent    = TT.sortinoHint(sortinoNum);
+        document.getElementById('st-consistency-hint').textContent= TT.consistencyHint(consScore);
+        document.getElementById('risk-explain').textContent       = TT.riskExplain(sharpe, sortino, maxDDstr, consScore, n);
+      }
+    } else {
+      riskCard.style.display = 'none';
+    }
+  } // end render()
 
   /* ── Init ── */
   const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
