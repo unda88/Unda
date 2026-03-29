@@ -2,6 +2,9 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Unda · DCA Simulator</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -119,6 +122,10 @@
     .info-box { background: rgba(0,255,178,0.05); border: 1px solid rgba(0,255,178,0.15); border-radius: 12px; padding: 12px 16px; font-size: 12px; color: rgba(180,240,220,0.65); line-height: 1.65; }
     .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
   </style>
+<script>
+  if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload(true);});
+</script>
 </head>
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
@@ -141,6 +148,8 @@
 </div>
 
 <div class="page">
+  <a class="nav" id="t-nav" href="index.html">← Back to suite</a>
+
   <div class="header">
     <div class="header-brand">Unda</div>
     <div class="header-title" id="t-title">DCA Simulator</div>
@@ -275,7 +284,7 @@
 
 <script>
 const LANGS = {
-  en: { dir:'ltr',
+  en: { nav:'← Back to suite', dir:'ltr',
     title:'DCA Simulator', secParams:'Parameters', lblAmount:'Monthly budget', lblAmountDaily:'Monthly budget', lblAmountWeekly:'Monthly budget', lblAmountMonthly:'Monthly budget', lblMonths:'Duration (months)', lblStartprice:'Current asset price',
     secMarket:'Weekly price change', scBull:'📈 Bullish', scSide:'➡️ Sideways', scBear:'📉 Bearish',
     lblWeekpct:'Custom weekly change (%)',
@@ -301,7 +310,7 @@ const LANGS = {
       `Lump sum: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA wins — spreading your buys paid off.' : winner === 'lump' ? '📊 Lump sum wins — investing all at once was better here.' : '🤝 Both strategies performed equally.'}`,
   },
-  nl: { dir:'ltr',
+  nl: { nav:'← Terug naar suite', dir:'ltr',
     title:'DCA Simulator', secParams:'Parameters', lblAmount:'Maandelijks budget', lblAmountDaily:'Maandelijks budget', lblAmountWeekly:'Maandelijks budget', lblAmountMonthly:'Maandelijks budget', lblMonths:'Looptijd (maanden)', lblStartprice:'Huidige prijs van het asset',
     secMarket:'Wekelijkse prijsverandering', scBull:'📈 Bullish', scSide:'➡️ Zijwaarts', scBear:'📉 Bearish',
     lblWeekpct:'Eigen wekelijkse verandering (%)',
@@ -327,7 +336,7 @@ const LANGS = {
       `In één keer: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA wint — gespreid kopen loonde.' : winner === 'lump' ? '📊 In één keer wint — alles tegelijk investeren was hier beter.' : '🤝 Beide strategieën presteerden gelijk.'}`,
   },
-  fr: { dir:'ltr',
+  fr: { nav:'← Retour à la suite', dir:'ltr',
     title:'Simulateur DCA', secParams:'Paramètres', lblAmount:'Budget mensuel', lblAmountDaily:'Budget mensuel', lblAmountWeekly:'Budget mensuel', lblAmountMonthly:'Budget mensuel', lblMonths:'Durée (mois)', lblStartprice:'Prix actuel du marché',
     secMarket:'Variation hebdomadaire du prix', scBull:'📈 Haussier', scSide:'➡️ Latéral', scBear:'📉 Baissier',
     lblWeekpct:'Variation hebdo. personnalisée (%)',
@@ -353,7 +362,7 @@ const LANGS = {
       `Investissement unique : €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA gagne — répartir les achats a payé.' : winner === 'lump' ? "📊 Investissement unique gagne — tout investir d'un coup était meilleur ici." : '🤝 Les deux stratégies ont performé de manière égale.'}`,
   },
-  es: { dir:'ltr',
+  es: { nav:'← Volver a la suite', dir:'ltr',
     title:'Simulador DCA', secParams:'Parámetros', lblAmount:'Presupuesto mensual', lblAmountDaily:'Presupuesto mensual', lblAmountWeekly:'Presupuesto mensual', lblAmountMonthly:'Presupuesto mensual', lblMonths:'Duración (meses)', lblStartprice:'Precio actual del activo',
     secMarket:'Cambio semanal del precio', scBull:'📈 Alcista', scSide:'➡️ Lateral', scBear:'📉 Bajista',
     lblWeekpct:'Cambio semanal personalizado (%)',
@@ -379,7 +388,7 @@ const LANGS = {
       `Suma global: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA gana — distribuir las compras valió la pena.' : winner === 'lump' ? '📊 Suma global gana — invertir todo de una vez fue mejor aquí.' : '🤝 Ambas estrategias tuvieron el mismo rendimiento.'}`,
   },
-  de: { dir:'ltr',
+  de: { nav:'← Zurück zur Suite', dir:'ltr',
     title:'DCA-Simulator', secParams:'Parameter', lblAmount:'Monatliches Budget', lblAmountDaily:'Monatliches Budget', lblAmountWeekly:'Monatliches Budget', lblAmountMonthly:'Monatliches Budget', lblMonths:'Laufzeit (Monate)', lblStartprice:'Aktueller Asset-Preis',
     secMarket:'Wöchentliche Preisänderung', scBull:'📈 Bullisch', scSide:'➡️ Seitwärts', scBear:'📉 Bärisch',
     lblWeekpct:'Eigene wöchentliche Änderung (%)',
@@ -405,7 +414,7 @@ const LANGS = {
       `Einmalinvestition: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA gewinnt — die Verteilung der Käufe hat sich gelohnt.' : winner === 'lump' ? '📊 Einmalinvestition gewinnt — alles auf einmal war hier besser.' : '🤝 Beide Strategien haben gleich abgeschnitten.'}`,
   },
-  it: { dir:'ltr',
+  it: { nav:'← Torna alla suite', dir:'ltr',
     title:'Simulatore DCA', secParams:'Parametri', lblAmount:'Budget mensile', lblAmountDaily:'Budget mensile', lblAmountWeekly:'Budget mensile', lblAmountMonthly:'Budget mensile', lblMonths:'Durata (mesi)', lblStartprice:'Prezzo attuale di mercato',
     secMarket:'Variazione settimanale del prezzo', scBull:'📈 Rialzista', scSide:'➡️ Laterale', scBear:'📉 Ribassista',
     lblWeekpct:'Variazione settim. personalizzata (%)',
@@ -431,7 +440,7 @@ const LANGS = {
       `Investimento unico: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA vince — distribuire gli acquisti ha pagato.' : winner === 'lump' ? '📊 Investimento unico vince — investire tutto in una volta era meglio qui.' : '🤝 Entrambe le strategie hanno avuto le stesse performance.'}`,
   },
-  pt: { dir:'ltr',
+  pt: { nav:'← Voltar à suite', dir:'ltr',
     title:'Simulador DCA', secParams:'Parâmetros', lblAmount:'Orçamento mensal', lblAmountDaily:'Orçamento mensal', lblAmountWeekly:'Orçamento mensal', lblAmountMonthly:'Orçamento mensal', lblMonths:'Duração (meses)', lblStartprice:'Preço atual do ativo',
     secMarket:'Variação semanal do preço', scBull:'📈 Alta', scSide:'➡️ Lateral', scBear:'📉 Baixa',
     lblWeekpct:'Variação semanal personalizada (%)',
@@ -457,7 +466,7 @@ const LANGS = {
       `Investimento único: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA vence — distribuir as compras valeu a pena.' : winner === 'lump' ? '📊 Investimento único vence — investir tudo de uma vez foi melhor aqui.' : '🤝 Ambas as estratégias tiveram o mesmo desempenho.'}`,
   },
-  tr: { dir:'ltr',
+  tr: { nav:'← Suite'e dön', dir:'ltr',
     title:'DCA Simülatörü', secParams:'Parametreler', lblAmount:'Aylık bütçe', lblAmountDaily:'Aylık bütçe', lblAmountWeekly:'Aylık bütçe', lblAmountMonthly:'Aylık bütçe', lblMonths:'Süre (ay)', lblStartprice:'Varlığın mevcut fiyatı',
     secMarket:'Haftalık fiyat değişimi', scBull:'📈 Yükseliş', scSide:'➡️ Yatay', scBear:'📉 Düşüş',
     lblWeekpct:'Özel haftalık değişim (%)',
@@ -483,7 +492,7 @@ const LANGS = {
       `Tek seferlik: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, %${lumpGainPct}). ` +
       `${winner === 'dca' ? '✅ DCA kazanıyor — alımları yaymak işe yaradı.' : winner === 'lump' ? '📊 Tek seferlik kazanıyor — hepsini bir anda yatırmak burada daha iyiydi.' : '🤝 Her iki strateji de aynı performansı gösterdi.'}`,
   },
-  ar: { dir:'rtl',
+  ar: { nav:'العودة إلى القائمة →', dir:'rtl',
     title:'محاكي DCA', secParams:'المعاملات', lblAmount:'الميزانية الشهرية', lblAmountDaily:'الميزانية الشهرية', lblAmountWeekly:'الميزانية الشهرية', lblAmountMonthly:'الميزانية الشهرية', lblMonths:'المدة (أشهر)', lblStartprice:'السعر الحالي للأصل',
     secMarket:'التغير الأسبوعي في السعر', scBull:'📈 صاعد', scSide:'➡️ جانبي', scBear:'📉 هابط',
     lblWeekpct:'تغير أسبوعي مخصص (%)',
@@ -509,7 +518,7 @@ const LANGS = {
       `مبلغ واحد: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA يفوز — توزيع المشتريات أتى بنتيجة.' : winner === 'lump' ? '📊 المبلغ الواحد يفوز — الاستثمار دفعة واحدة كان أفضل هنا.' : '🤝 كلتا الاستراتيجيتين أدّتا نفس الأداء.'}`,
   },
-  ru: { dir:'ltr',
+  ru: { nav:'← Назад к набору', dir:'ltr',
     title:'Симулятор DCA', secParams:'Параметры', lblAmount:'Ежемесячный бюджет', lblAmountDaily:'Ежемесячный бюджет', lblAmountWeekly:'Ежемесячный бюджет', lblAmountMonthly:'Ежемесячный бюджет', lblMonths:'Срок (месяцев)', lblStartprice:'Текущая цена актива',
     secMarket:'Еженедельное изменение цены', scBull:'📈 Бычий', scSide:'➡️ Боковой', scBear:'📉 Медвежий',
     lblWeekpct:'Своё еженедельное изменение (%)',
@@ -552,6 +561,7 @@ function setLang(code, label) {
   currentLang = code;
   const T = LANGS[code];
   document.documentElement.setAttribute('lang', code);
+  const navEl=document.getElementById('t-nav'); if(navEl&&T.nav)navEl.textContent=T.nav;
   document.documentElement.setAttribute('dir', T.dir);
   if (label) document.getElementById('cur-lang').textContent = label;
   document.querySelectorAll('.lang-menu div').forEach(d =>
