@@ -84,6 +84,10 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
   .nav{flex-direction:column;align-items:center}
 }
 </style>
+<script>
+  if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload(true);});
+</script>
 </head>
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb1"></div><div class="orb orb2"></div></div>
