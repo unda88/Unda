@@ -2,6 +2,9 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Unda · Position Calculator</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -175,6 +178,10 @@
     .footer { text-align:center; margin-top:1.5rem; font-size:10px;
       color:rgba(0,255,178,0.18); letter-spacing:.12em; text-transform:uppercase; }
   </style>
+<script>
+  if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload(true);});
+</script>
 </head>
 <body>
 <div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
@@ -198,6 +205,8 @@
 </div>
 
 <div class="page">
+  <a class="nav" id="t-nav" href="index.html">← Back to suite</a>
+
   <div class="card">
     <div class="card-inner">
 
@@ -273,7 +282,7 @@
 <script>
   /* ── Translations ── */
   const LANGS = {
-    en: {
+    en: { nav:'← Back to suite',
       dir: 'ltr',
       title:        'Position Calculator',
       portfolioLbl: 'Portfolio size',
@@ -297,7 +306,7 @@
       wRedT:    'Very high leverage — danger zone',
       wRedB:    (l, s) => `At ${l}x with a ${s}% stop loss, you risk being liquidated before your stop triggers. Widen your stop or reduce risk %.`,
     },
-    nl: {
+    nl: { nav:'← Terug naar suite',
       dir: 'ltr',
       title:        'Positie Calculator',
       portfolioLbl: 'Portfoliogrootte',
@@ -321,7 +330,7 @@
       wRedT:    'Zeer hoge hefboom — gevarenzone',
       wRedB:    (l, s) => `Bij ${l}x met een ${s}% stop-loss riskeer je geliquideerd te worden voor je stop triggert. Vergroot je stop of verklein je risico %.`,
     },
-    fr: {
+    fr: { nav:'← Retour à la suite',
       dir: 'ltr',
       title:        'Calculateur de Position',
       portfolioLbl: 'Taille du portefeuille',
@@ -345,7 +354,7 @@
       wRedT:    'Levier très élevé — zone dangereuse',
       wRedB:    (l, s) => `À ${l}x avec un stop de ${s}%, vous risquez la liquidation avant votre stop. Élargissez le stop ou réduisez le risque %.`,
     },
-    es: {
+    es: { nav:'← Volver a la suite',
       dir: 'ltr',
       title:        'Calculadora de Posición',
       portfolioLbl: 'Tamaño del portafolio',
@@ -369,7 +378,7 @@
       wRedT:    'Apalancamiento muy alto — zona de peligro',
       wRedB:    (l, s) => `Con ${l}x y un stop de ${s}%, arriesgas ser liquidado antes de que se active tu stop. Amplía el stop o reduce el % de riesgo.`,
     },
-    de: {
+    de: { nav:'← Zurück zur Suite',
       dir: 'ltr',
       title:        'Positions Rechner',
       portfolioLbl: 'Portfoliogröße',
@@ -393,7 +402,7 @@
       wRedT:    'Sehr hoher Hebel — Gefahrenzone',
       wRedB:    (l, s) => `Bei ${l}x mit einem ${s}% Stop-Loss riskierst du Liquidierung vor Auslösung des Stops. Erweitere den Stop oder reduziere das Risiko %.`,
     },
-    it: {
+    it: { nav:'← Torna alla suite',
       dir: 'ltr',
       title:        'Calcolatore di Posizione',
       portfolioLbl: 'Dimensione portafoglio',
@@ -417,7 +426,7 @@
       wRedT:    'Leva molto alta — zona di pericolo',
       wRedB:    (l, s) => `A ${l}x con uno stop del ${s}%, rischi la liquidazione prima che si attivi lo stop. Allarga lo stop o riduci il % di rischio.`,
     },
-    pt: {
+    pt: { nav:'← Voltar à suite',
       dir: 'ltr',
       title:        'Calculadora de Posição',
       portfolioLbl: 'Tamanho do portfólio',
@@ -441,7 +450,7 @@
       wRedT:    'Alavancagem muito alta — zona de perigo',
       wRedB:    (l, s) => `Com ${l}x e stop de ${s}%, você arrisca ser liquidado antes do stop disparar. Amplie o stop ou reduza o % de risco.`,
     },
-    tr: {
+    tr: { nav:'← Suite'e dön',
       dir: 'ltr',
       title:        'Pozisyon Hesaplayıcısı',
       portfolioLbl: 'Portföy büyüklüğü',
@@ -465,7 +474,7 @@
       wRedT:    'Çok yüksek kaldıraç — tehlike bölgesi',
       wRedB:    (l, s) => `${l}x kaldıraç ve %${s} stop-loss ile stopunuz tetiklenmeden tasfiye edilme riskiniz var. Stopunuzu genişletin veya risk %\'sini azaltın.`,
     },
-    ar: {
+    ar: { nav:'العودة إلى القائمة →',
       dir: 'rtl',
       title:        'حاسبة الصفقة',
       portfolioLbl: 'حجم المحفظة',
@@ -489,7 +498,7 @@
       wRedT:    'رافعة عالية جداً — منطقة خطر',
       wRedB:    (l, s) => `عند ${l}x مع وقف خسارة ${s}%، تخاطر بالتصفية قبل تفعيل وقف الخسارة. وسّع الوقف أو قلل نسبة المخاطرة.`,
     },
-    ru: {
+    ru: { nav:'← Назад к набору',
       dir: 'ltr',
       title:        'Калькулятор позиции',
       portfolioLbl: 'Размер портфеля',
@@ -533,7 +542,8 @@
 
     // Direction
     document.documentElement.setAttribute('lang', code);
-    document.documentElement.setAttribute('dir', T.dir);
+    const navEl=document.getElementById('t-nav'); if(navEl&&T.nav)navEl.textContent=T.nav;
+  document.documentElement.setAttribute('dir', T.dir);
 
     // Update label
     if (label) document.getElementById('cur-lang').textContent = label;
