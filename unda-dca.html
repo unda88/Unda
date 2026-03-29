@@ -16,6 +16,8 @@
       --text: #e0fff5; --text-muted: rgba(0,255,178,0.45);
       --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05);
     }
+    .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
+    .nav:hover { color: var(--g); }
     html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
     .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
     .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
@@ -466,7 +468,7 @@ const LANGS = {
       `Investimento único: €${lumpVal} (${lumpGain >= 0 ? '+' : ''}€${Math.abs(lumpGain)}, ${lumpGainPct}%). ` +
       `${winner === 'dca' ? '✅ DCA vence — distribuir as compras valeu a pena.' : winner === 'lump' ? '📊 Investimento único vence — investir tudo de uma vez foi melhor aqui.' : '🤝 Ambas as estratégias tiveram o mesmo desempenho.'}`,
   },
-  tr: { nav:'← Suite'e dön', dir:'ltr',
+  tr: { nav:'← Suiteye dön', dir:'ltr',
     title:'DCA Simülatörü', secParams:'Parametreler', lblAmount:'Aylık bütçe', lblAmountDaily:'Aylık bütçe', lblAmountWeekly:'Aylık bütçe', lblAmountMonthly:'Aylık bütçe', lblMonths:'Süre (ay)', lblStartprice:'Varlığın mevcut fiyatı',
     secMarket:'Haftalık fiyat değişimi', scBull:'📈 Yükseliş', scSide:'➡️ Yatay', scBear:'📉 Düşüş',
     lblWeekpct:'Özel haftalık değişim (%)',
