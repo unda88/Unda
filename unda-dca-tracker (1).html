@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · DCA Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --g:#00ffb2; --g2:rgba(0,255,178,0.55); --gold:#ffd97a; --red:#ff4444; --text:#e0fff5; --text-muted:rgba(0,255,178,0.45); --border:rgba(0,255,178,0.18); --card:rgba(255,255,255,0.035); --inp:rgba(255,255,255,0.05); }
+    html,body { min-height:100vh; font-family:'Outfit',sans-serif; background:#000b08; color:var(--text); overflow-x:hidden; }
+    .bg { position:fixed; inset:0; z-index:0; background:radial-gradient(ellipse at 15% 15%,#001a0e 0%,#000c18 45%,#000508 100%); }
+    .bg-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(0,255,178,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,178,0.025) 1px,transparent 1px); background-size:40px 40px; mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%); }
+    .orb { position:absolute; border-radius:50%; pointer-events:none; }
+    .orb-1 { width:500px; height:500px; top:-100px; left:-100px; background:radial-gradient(circle,rgba(0,255,178,0.08) 0%,transparent 65%); animation:drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width:400px; height:400px; bottom:-80px; right:-80px; background:radial-gradient(circle,rgba(255,217,122,0.07) 0%,transparent 65%); animation:drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1{from{transform:translate(0,0)}to{transform:translate(30px,20px)}}
+    @keyframes drift2{from{transform:translate(0,0)}to{transform:translate(-20px,-30px)}}
+    .tl { position:fixed; top:0; left:0; right:0; height:2px; z-index:10; background:linear-gradient(90deg,transparent 5%,var(--g) 30%,#fff 50%,var(--g) 70%,transparent 95%); box-shadow:0 0 6px 2px var(--g),0 0 30px 10px rgba(0,255,178,0.3); animation:flicker 9s ease-in-out infinite; }
+    @keyframes flicker{0%,100%{opacity:1}93%{opacity:.7}94%{opacity:1}96%{opacity:.85}97%{opacity:1}}
+
+    /* Language */
+    .lang-sw { position:fixed; top:14px; right:18px; z-index:100; font-size:11px; color:var(--g2); cursor:pointer; user-select:none; background:rgba(0,255,178,0.06); border:1px solid rgba(0,255,178,0.15); border-radius:8px; padding:5px 10px; transition:background .2s; }
+    .lang-sw:hover { background:rgba(0,255,178,0.12); }
+    .lang-menu { display:none; position:absolute; top:calc(100% + 6px); right:0; background:#000d07; border:1px solid rgba(0,255,178,0.18); border-radius:12px; padding:6px; min-width:110px; box-shadow:0 16px 40px rgba(0,0,0,0.7); flex-direction:column; gap:2px; }
+    .lang-sw.open .lang-menu { display:flex; }
+    .lang-menu div { padding:7px 12px; border-radius:8px; cursor:pointer; color:var(--text-muted); transition:all .15s; font-size:11px; }
+    .lang-menu div:hover { background:rgba(0,255,178,0.1); color:var(--g); }
+    .lang-menu div.active { color:var(--g); background:rgba(0,255,178,0.07); }
+
+    .page { position:relative; z-index:1; padding:3rem 1.5rem 4rem; max-width:900px; margin:0 auto; }
+    .header { text-align:center; margin-bottom:2rem; animation:fadeUp .6s both; }
+    .header-brand { font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--g2); margin-bottom:4px; }
+    .header-title { font-size:30px; font-weight:500; background:linear-gradient(130deg,#9effd9 0%,#fff 45%,var(--gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+    .card { background:var(--card); backdrop-filter:blur(32px); border-radius:22px; border:1px solid var(--border); overflow:visible; position:relative; box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.12),0 20px 60px rgba(0,0,0,0.7); margin-bottom:16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); border-radius:22px 22px 0 0; }
+    .card-inner { padding:1.75rem 2rem; }
+    .sec { font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:rgba(0,255,178,0.35); margin-bottom:1rem; display:flex; align-items:center; gap:8px; }
+    .sec::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent); }
+
+    .fl { font-size:10px; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px; display:block; }
+    .iw { display:flex; align-items:center; background:var(--inp); border-radius:10px; border:1px solid rgba(0,255,178,0.12); padding:0 13px; height:46px; transition:border-color .2s; margin-bottom:10px; }
+    .iw:focus-within { border-color:rgba(0,255,178,0.5); background:rgba(0,255,178,0.04); }
+    .iw:last-child { margin-bottom:0; }
+    .px { font-family:'DM Mono',monospace; font-size:12px; color:var(--g2); margin-right:9px; }
+    .iw input { background:transparent; border:none; outline:none; color:var(--text); font-family:'DM Mono',monospace; font-size:15px; width:100%; }
+    .iw input::-webkit-inner-spin-button { opacity:.3; }
+
+    /* Ticker setup grid */
+    .setup-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1rem; }
+    @media(max-width:600px){.setup-grid{grid-template-columns:1fr 1fr;}}
+    .freq-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:1rem; }
+    .freq-btn { background:var(--inp); border:1px solid rgba(0,255,178,0.12); border-radius:10px; padding:9px; text-align:center; font-size:12px; color:var(--text-muted); cursor:pointer; transition:all .2s; font-family:'Outfit',sans-serif; }
+    .freq-btn.active { background:rgba(0,255,178,0.1); border-color:rgba(0,255,178,0.4); color:var(--g); font-weight:500; }
+    .add-ticker-btn { width:100%; padding:12px; background:rgba(0,255,178,0.08); border:1px solid rgba(0,255,178,0.25); border-radius:12px; color:var(--g2); font-family:'Outfit',sans-serif; font-size:13px; cursor:pointer; transition:all .2s; margin-top:4px; }
+    .add-ticker-btn:hover { background:rgba(0,255,178,0.14); color:var(--g); }
+
+    /* Tracker tabs */
+    .tracker-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem; }
+    .tracker-tab { padding:7px 16px; border-radius:20px; font-size:12px; font-family:'DM Mono',monospace; cursor:pointer; border:1px solid rgba(0,255,178,0.2); background:rgba(0,255,178,0.05); color:var(--text-muted); transition:all .2s; display:flex; align-items:center; gap:6px; }
+    .tracker-tab.active { background:rgba(0,255,178,0.12); border-color:rgba(0,255,178,0.45); color:var(--g); }
+    .tracker-tab .tab-close { font-size:11px; color:rgba(255,80,80,0.4); transition:color .2s; cursor:pointer; padding:0 2px; }
+    .tracker-tab .tab-close:hover { color:rgba(255,80,80,0.8); }
+    .add-tab-btn { padding:7px 14px; border-radius:20px; font-size:12px; cursor:pointer; border:1px dashed rgba(0,255,178,0.2); background:transparent; color:var(--text-muted); font-family:'Outfit',sans-serif; transition:all .2s; }
+    .add-tab-btn:hover { border-color:rgba(0,255,178,0.4); color:var(--g2); }
+
+    /* Live ticker bar */
+    .ticker-bar { display:flex; align-items:center; gap:12px; background:rgba(0,255,178,0.04); border:1px solid rgba(0,255,178,0.12); border-radius:12px; padding:12px 16px; margin-bottom:1rem; flex-wrap:wrap; }
+    .ticker-name { font-family:'DM Mono',monospace; font-size:16px; font-weight:500; color:var(--g); }
+    .ticker-price { font-family:'DM Mono',monospace; font-size:22px; font-weight:500; }
+    .ticker-price.up{color:#00ff88;} .ticker-price.down{color:var(--red);} .ticker-price.neutral{color:var(--text);}
+    .ticker-change { font-size:11px; padding:2px 8px; border-radius:6px; font-family:'DM Mono',monospace; }
+    .ticker-change.up{background:rgba(0,255,136,0.12);color:#00ff88;} .ticker-change.down{background:rgba(255,68,68,0.12);color:var(--red);}
+    .refresh-btn { margin-left:auto; background:rgba(0,255,178,0.08); border:1px solid rgba(0,255,178,0.2); border-radius:8px; padding:6px 12px; color:var(--g2); font-size:11px; cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; }
+    .refresh-btn:hover { background:rgba(0,255,178,0.15); color:var(--g); }
+    .ticker-status { font-size:10px; color:var(--text-muted); }
+
+    /* Stop loss alert */
+    .sl-alert { display:none; background:rgba(255,68,68,0.1); border:1px solid rgba(255,68,68,0.4); border-radius:12px; padding:12px 16px; margin-bottom:1rem; }
+    .sl-dot { width:8px; height:8px; border-radius:50%; background:var(--red); box-shadow:0 0 8px var(--red); animation:pulse 1.5s infinite; display:inline-block; margin-right:8px; }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .sl-text { font-size:13px; color:rgba(255,150,150,0.9); font-weight:500; }
+
+    /* Stats */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:1rem; }
+    @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+    .stat { background:rgba(0,255,178,0.04); border:1px solid rgba(0,255,178,0.1); border-radius:12px; padding:13px 8px; text-align:center; position:relative; }
+    .stat::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent); }
+    .stat-label { font-size:9px; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:6px; line-height:1.3; }
+    .stat-val { font-family:'DM Mono',monospace; font-size:15px; font-weight:500; }
+    .c-green{color:#00ff88;} .c-gold{color:var(--gold);} .c-red{color:var(--red);} .c-white{color:var(--text);}
+
+    /* Chart */
+    .chart-wrap { position:relative; height:260px; margin-bottom:1rem; }
+
+    /* Log */
+    .log-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:.75rem; }
+    @media(max-width:600px){.log-grid{grid-template-columns:1fr 1fr;}}
+    .buy-btn { width:100%; padding:12px; background:rgba(0,255,178,0.1); border:1px solid rgba(0,255,178,0.35); border-radius:12px; color:var(--g); font-family:'Outfit',sans-serif; font-size:13px; font-weight:500; cursor:pointer; transition:all .2s; }
+    .buy-btn:hover { background:rgba(0,255,178,0.18); }
+
+    /* Calendar */
+    .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+    .cal-header { font-size:9px; color:var(--text-muted); text-align:center; padding:4px 0; text-transform:uppercase; letter-spacing:.04em; }
+    .cal-day { aspect-ratio:1; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; font-family:'DM Mono',monospace; }
+    .cal-day.empty{background:transparent;}
+    .cal-day.normal{background:rgba(255,255,255,0.03);color:var(--text-muted);}
+    .cal-day.bought{background:rgba(0,255,178,0.15);color:var(--g);border:1px solid rgba(0,255,178,0.3);}
+    .cal-day.today{background:rgba(255,217,122,0.1);color:var(--gold);border:1px solid rgba(255,217,122,0.3);}
+
+    /* History */
+    .table-wrap { max-height:260px; overflow-y:auto; border-radius:10px; border:1px solid rgba(0,255,178,0.1); }
+    .table-wrap::-webkit-scrollbar{width:4px;}
+    .table-wrap::-webkit-scrollbar-thumb{background:rgba(0,255,178,0.2);border-radius:2px;}
+    table { width:100%; border-collapse:collapse; font-family:'DM Mono',monospace; font-size:12px; }
+    thead tr { background:rgba(0,255,178,0.08); position:sticky; top:0; z-index:1; }
+    th { padding:10px 12px; text-align:right; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); font-weight:500; }
+    th:first-child { text-align:left; }
+    td { padding:8px 12px; text-align:right; border-bottom:1px solid rgba(0,255,178,0.05); }
+    td:first-child { text-align:left; color:var(--text-muted); }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(0,255,178,0.03); }
+    .del-btn { background:transparent; border:none; color:rgba(255,80,80,0.3); cursor:pointer; font-size:14px; transition:color .2s; }
+    .del-btn:hover { color:rgba(255,80,80,0.7); }
+    .empty-msg { text-align:center; padding:2rem; font-size:12px; color:rgba(0,255,178,0.25); font-family:'Outfit',sans-serif; }
+
+    /* Reset modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#000d07; border:1px solid rgba(255,68,68,0.3); border-radius:18px; padding:2rem; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.8); animation:modalIn .2s ease; }
+    @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+    .modal-icon { font-size:32px; text-align:center; margin-bottom:12px; }
+    .modal-title { font-size:16px; font-weight:600; color:rgba(255,150,150,0.9); text-align:center; margin-bottom:8px; }
+    .modal-sub { font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:1.25rem; line-height:1.6; }
+    .modal-word { font-family:'DM Mono',monospace; color:var(--red); font-weight:600; }
+    .modal-input { width:100%; background:var(--inp); border:1px solid rgba(255,68,68,0.2); border-radius:10px; padding:10px 14px; color:var(--text); font-family:'DM Mono',monospace; font-size:14px; outline:none; margin-bottom:1rem; transition:border-color .2s; }
+    .modal-input:focus { border-color:rgba(255,68,68,0.5); }
+    .modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .modal-cancel { background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px; color:var(--text-muted); font-family:'Outfit',sans-serif; font-size:13px; cursor:pointer; }
+    .modal-confirm { background:rgba(255,68,68,0.12); border:1px solid rgba(255,68,68,0.3); border-radius:10px; padding:10px; color:var(--red); font-family:'Outfit',sans-serif; font-size:13px; cursor:pointer; opacity:.4; pointer-events:none; transition:all .2s; }
+    .modal-confirm.ready { opacity:1; pointer-events:all; }
+    .modal-confirm.ready:hover { background:rgba(255,68,68,0.22); }
+
+    .row-actions { display:flex; justify-content:flex-end; margin-bottom:1rem; gap:8px; }
+    .reset-btn { background:transparent; border:1px solid rgba(255,80,80,0.2); border-radius:7px; padding:5px 12px; font-size:11px; color:rgba(255,120,120,0.5); cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; }
+    .reset-btn:hover { border-color:rgba(255,80,80,0.45); color:rgba(255,120,120,0.85); }
+    .nav { font-size: 12px; color: var(--text-muted); margin-bottom: 1.5rem; display: inline-block; text-decoration: none; transition: color 0.2s; }
+    .nav:hover { color: var(--g); }
+    .footer { text-align:center; margin-top:1.5rem; font-size:10px; color:rgba(0,255,178,0.18); letter-spacing:.12em; text-transform:uppercase; }
+  </style>
+<script>
+  if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload(true);});
+</script>
+</head>
+<body>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+
+<!-- Reset modal -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title" id="modal-title">Delete tracker?</div>
+    <div class="modal-sub" id="modal-sub">Type <span class="modal-word">RESET</span> to confirm.</div>
+    <input class="modal-input" id="modal-input" placeholder="Type RESET" oninput="checkModalInput()">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()" id="modal-cancel-btn">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmReset()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
+<div class="page">
+  <a class="nav" id="t-nav" href="index.html">← Back to suite</a>
+
+  <div class="header">
+    <div class="header-brand">Unda</div>
+    <div class="header-title" id="t-title">DCA Tracker</div>
+  </div>
+
+  <!-- Tracker tabs -->
+  <div class="tracker-tabs" id="tracker-tabs"></div>
+
+  <!-- Active tracker view -->
+  <div id="tracker-view"></div>
+
+  <div class="footer" id="t-footer">unda · wave your risk</div>
+</div>
+
+<script>
+/* ── Translations ── */
+const T = {
+  en:{ nav:'← Back to suite', dir:'ltr', title:'DCA Tracker', addTicker:'+ Add ticker', setupTitle:'New DCA tracker', lblTicker:'Ticker (e.g. AAPL, BTC-USD)', lblBudget:'Budget / period', lblStoploss:'Stop loss (optional)', lblFreq:'DCA frequency', daily:'Daily', weekly:'Weekly', monthly:'Monthly', startBtn:'🚀 Start tracking', refresh:'↻ Refresh', secStats:'Portfolio', stInvested:'Invested', stUnits:'Units', stAvgprice:'Avg price', stValue:'Value', stPnl:'P&L', stPnlpct:'Return', stBuys:'Buys', stNextbuy:'Next buy', secChart:'Evolution', secLog:'Log a purchase', lblDate:'Date', lblPrice:'Buy price', lblAmount:'Amount (€)', addBtn:'+ Add purchase', secCalendar:'Calendar', secHistory:'History', resetBtn:'Delete tracker', thDate:'Date', thPrice:'Price', thAmount:'Amount', thUnits:'Units', emptyMsg:'No purchases yet.', slAlert:'⚠️ Stop loss reached!', modalTitle:'Delete tracker?', modalSub:'This deletes all purchases and history for', modalWord:'RESET', modalCancel:'Cancel', modalConfirm:'Delete', footer:'unda · wave your risk',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('en-GB'); }
+  },
+  nl:{ nav:'← Terug naar suite', dir:'ltr', title:'DCA Tracker', addTicker:'+ Ticker toevoegen', setupTitle:'Nieuwe DCA tracker', lblTicker:'Ticker (bv. AAPL, BTC-USD)', lblBudget:'Budget / periode', lblStoploss:'Stop loss (optioneel)', lblFreq:'DCA frequentie', daily:'Dagelijks', weekly:'Wekelijks', monthly:'Maandelijks', startBtn:'🚀 Start tracking', refresh:'↻ Verversen', secStats:'Portfolio', stInvested:'Geïnvesteerd', stUnits:'Eenheden', stAvgprice:'Gem. prijs', stValue:'Waarde', stPnl:'W/V', stPnlpct:'Rendement', stBuys:'Aankopen', stNextbuy:'Volgende', secChart:'Evolutie', secLog:'Aankoop registreren', lblDate:'Datum', lblPrice:'Aankoopprijs', lblAmount:'Bedrag (€)', addBtn:'+ Aankoop toevoegen', secCalendar:'Kalender', secHistory:'Geschiedenis', resetBtn:'Tracker verwijderen', thDate:'Datum', thPrice:'Prijs', thAmount:'Bedrag', thUnits:'Eenheden', emptyMsg:'Nog geen aankopen.', slAlert:'⚠️ Stop loss bereikt!', modalTitle:'Tracker verwijderen?', modalSub:'Dit verwijdert alle aankopen voor', modalWord:'RESET', modalCancel:'Annuleren', modalConfirm:'Verwijderen', footer:'unda · beheers je risico',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('nl-BE'); }
+  },
+  fr:{ nav:'← Retour à la suite', dir:'ltr', title:'Suivi DCA', addTicker:'+ Ajouter un ticker', setupTitle:'Nouveau suivi DCA', lblTicker:'Ticker (ex. AAPL, BTC-USD)', lblBudget:'Budget / période', lblStoploss:'Stop loss (optionnel)', lblFreq:'Fréquence DCA', daily:'Quotidien', weekly:'Hebdomadaire', monthly:'Mensuel', startBtn:'🚀 Démarrer', refresh:'↻ Actualiser', secStats:'Portefeuille', stInvested:'Investi', stUnits:'Unités', stAvgprice:'Prix moy.', stValue:'Valeur', stPnl:'P&P', stPnlpct:'Rendement', stBuys:'Achats', stNextbuy:'Prochain', secChart:'Évolution', secLog:'Enregistrer un achat', lblDate:'Date', lblPrice:"Prix d'achat", lblAmount:'Montant (€)', addBtn:'+ Ajouter', secCalendar:'Calendrier', secHistory:'Historique', resetBtn:'Supprimer le suivi', thDate:'Date', thPrice:'Prix', thAmount:'Montant', thUnits:'Unités', emptyMsg:'Aucun achat.', slAlert:'⚠️ Stop loss atteint!', modalTitle:'Supprimer le suivi?', modalSub:'Ceci supprime tous les achats pour', modalWord:'RESET', modalCancel:'Annuler', modalConfirm:'Supprimer', footer:'unda · maîtrisez votre risque',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('fr-FR'); }
+  },
+  es:{ nav:'← Volver a la suite', dir:'ltr', title:'Seguimiento DCA', addTicker:'+ Añadir ticker', setupTitle:'Nuevo seguimiento DCA', lblTicker:'Ticker (ej. AAPL, BTC-USD)', lblBudget:'Presupuesto / período', lblStoploss:'Stop loss (opcional)', lblFreq:'Frecuencia DCA', daily:'Diario', weekly:'Semanal', monthly:'Mensual', startBtn:'🚀 Iniciar', refresh:'↻ Actualizar', secStats:'Portafolio', stInvested:'Invertido', stUnits:'Unidades', stAvgprice:'Precio prom.', stValue:'Valor', stPnl:'P&G', stPnlpct:'Rentabilidad', stBuys:'Compras', stNextbuy:'Próxima', secChart:'Evolución', secLog:'Registrar compra', lblDate:'Fecha', lblPrice:'Precio compra', lblAmount:'Monto (€)', addBtn:'+ Añadir', secCalendar:'Calendario', secHistory:'Historial', resetBtn:'Eliminar tracker', thDate:'Fecha', thPrice:'Precio', thAmount:'Monto', thUnits:'Unidades', emptyMsg:'Sin compras.', slAlert:'⚠️ Stop loss alcanzado!', modalTitle:'¿Eliminar tracker?', modalSub:'Esto eliminará todas las compras de', modalWord:'RESET', modalCancel:'Cancelar', modalConfirm:'Eliminar', footer:'unda · domina tu riesgo',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('es-ES'); }
+  },
+  de:{ nav:'← Zurück zur Suite', dir:'ltr', title:'DCA-Tracker', addTicker:'+ Ticker hinzufügen', setupTitle:'Neuer DCA-Tracker', lblTicker:'Ticker (z.B. AAPL, BTC-USD)', lblBudget:'Budget / Periode', lblStoploss:'Stop-Loss (optional)', lblFreq:'DCA-Frequenz', daily:'Täglich', weekly:'Wöchentlich', monthly:'Monatlich', startBtn:'🚀 Starten', refresh:'↻ Aktualisieren', secStats:'Portfolio', stInvested:'Investiert', stUnits:'Einheiten', stAvgprice:'Ø Preis', stValue:'Wert', stPnl:'G/V', stPnlpct:'Rendite', stBuys:'Käufe', stNextbuy:'Nächster', secChart:'Entwicklung', secLog:'Kauf erfassen', lblDate:'Datum', lblPrice:'Kaufpreis', lblAmount:'Betrag (€)', addBtn:'+ Hinzufügen', secCalendar:'Kalender', secHistory:'Verlauf', resetBtn:'Tracker löschen', thDate:'Datum', thPrice:'Preis', thAmount:'Betrag', thUnits:'Einheiten', emptyMsg:'Noch keine Käufe.', slAlert:'⚠️ Stop-Loss erreicht!', modalTitle:'Tracker löschen?', modalSub:'Dies löscht alle Käufe für', modalWord:'RESET', modalCancel:'Abbrechen', modalConfirm:'Löschen', footer:'unda · steuere dein Risiko',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('de-DE'); }
+  },
+  it:{ nav:'← Torna alla suite', dir:'ltr', title:'Tracker DCA', addTicker:'+ Aggiungi ticker', setupTitle:'Nuovo tracker DCA', lblTicker:'Ticker (es. AAPL, BTC-USD)', lblBudget:'Budget / periodo', lblStoploss:'Stop loss (opzionale)', lblFreq:'Frequenza DCA', daily:'Giornaliero', weekly:'Settimanale', monthly:'Mensile', startBtn:'🚀 Avvia', refresh:'↻ Aggiorna', secStats:'Portafoglio', stInvested:'Investito', stUnits:'Unità', stAvgprice:'Prezzo med.', stValue:'Valore', stPnl:'P&P', stPnlpct:'Rendimento', stBuys:'Acquisti', stNextbuy:'Prossimo', secChart:'Evoluzione', secLog:'Registra acquisto', lblDate:'Data', lblPrice:'Prezzo acquisto', lblAmount:'Importo (€)', addBtn:'+ Aggiungi', secCalendar:'Calendario', secHistory:'Storico', resetBtn:'Elimina tracker', thDate:'Data', thPrice:'Prezzo', thAmount:'Importo', thUnits:'Unità', emptyMsg:'Nessun acquisto.', slAlert:'⚠️ Stop loss raggiunto!', modalTitle:'Eliminare il tracker?', modalSub:'Questo eliminerà tutti gli acquisti per', modalWord:'RESET', modalCancel:'Annulla', modalConfirm:'Elimina', footer:'unda · gestisci il tuo rischio',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('it-IT'); }
+  },
+  pt:{ nav:'← Voltar à suite', dir:'ltr', title:'Rastreador DCA', addTicker:'+ Adicionar ticker', setupTitle:'Novo rastreador DCA', lblTicker:'Ticker (ex. AAPL, BTC-USD)', lblBudget:'Orçamento / período', lblStoploss:'Stop loss (opcional)', lblFreq:'Frequência DCA', daily:'Diário', weekly:'Semanal', monthly:'Mensal', startBtn:'🚀 Iniciar', refresh:'↻ Atualizar', secStats:'Portfólio', stInvested:'Investido', stUnits:'Unidades', stAvgprice:'Preço med.', stValue:'Valor', stPnl:'L&P', stPnlpct:'Retorno', stBuys:'Compras', stNextbuy:'Próxima', secChart:'Evolução', secLog:'Registar compra', lblDate:'Data', lblPrice:'Preço compra', lblAmount:'Valor (€)', addBtn:'+ Adicionar', secCalendar:'Calendário', secHistory:'Histórico', resetBtn:'Eliminar rastreador', thDate:'Data', thPrice:'Preço', thAmount:'Valor', thUnits:'Unidades', emptyMsg:'Sem compras.', slAlert:'⚠️ Stop loss atingido!', modalTitle:'Eliminar rastreador?', modalSub:'Isto eliminará todas as compras de', modalWord:'RESET', modalCancel:'Cancelar', modalConfirm:'Eliminar', footer:'unda · controle seu risco',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('pt-PT'); }
+  },
+  tr:{ nav:'← Suiteye dön', dir:'ltr', title:'DCA Takipçisi', addTicker:'+ Ticker ekle', setupTitle:'Yeni DCA takipçisi', lblTicker:'Ticker (örn. AAPL, BTC-USD)', lblBudget:'Bütçe / dönem', lblStoploss:'Stop loss (isteğe bağlı)', lblFreq:'DCA sıklığı', daily:'Günlük', weekly:'Haftalık', monthly:'Aylık', startBtn:'🚀 Başlat', refresh:'↻ Yenile', secStats:'Portföy', stInvested:'Yatırılan', stUnits:'Birim', stAvgprice:'Ort. fiyat', stValue:'Değer', stPnl:'K/Z', stPnlpct:'Getiri', stBuys:'Alımlar', stNextbuy:'Sonraki', secChart:'Gelişim', secLog:'Alım kaydet', lblDate:'Tarih', lblPrice:'Alım fiyatı', lblAmount:'Tutar (€)', addBtn:'+ Ekle', secCalendar:'Takvim', secHistory:'Geçmiş', resetBtn:'Takipçiyi sil', thDate:'Tarih', thPrice:'Fiyat', thAmount:'Tutar', thUnits:'Birim', emptyMsg:'Henüz alım yok.', slAlert:'⚠️ Stop loss seviyesine ulaşıldı!', modalTitle:'Takipçiyi sil?', modalSub:'Bu işlem şu kişinin tüm alımlarını siler:', modalWord:'RESET', modalCancel:'İptal', modalConfirm:'Sil', footer:'unda · riskinizi yönetin',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('tr-TR'); }
+  },
+  ar:{ nav:'العودة إلى القائمة →', dir:'rtl', title:'متتبع DCA', addTicker:'+ إضافة رمز', setupTitle:'متتبع DCA جديد', lblTicker:'الرمز (مثال: AAPL, BTC-USD)', lblBudget:'الميزانية / الفترة', lblStoploss:'وقف الخسارة (اختياري)', lblFreq:'تكرار DCA', daily:'يومي', weekly:'أسبوعي', monthly:'شهري', startBtn:'🚀 ابدأ التتبع', refresh:'↻ تحديث', secStats:'المحفظة', stInvested:'مستثمر', stUnits:'وحدات', stAvgprice:'متوسط السعر', stValue:'القيمة', stPnl:'ر/خ', stPnlpct:'العائد', stBuys:'مشتريات', stNextbuy:'التالي', secChart:'التطور', secLog:'تسجيل شراء', lblDate:'التاريخ', lblPrice:'سعر الشراء', lblAmount:'المبلغ (€)', addBtn:'+ إضافة', secCalendar:'التقويم', secHistory:'السجل', resetBtn:'حذف المتتبع', thDate:'التاريخ', thPrice:'السعر', thAmount:'المبلغ', thUnits:'الوحدات', emptyMsg:'لا توجد مشتريات بعد.', slAlert:'⚠️ تم الوصول لوقف الخسارة!', modalTitle:'حذف المتتبع?', modalSub:'سيحذف هذا جميع المشتريات لـ', modalWord:'RESET', modalCancel:'إلغاء', modalConfirm:'حذف', footer:'unda · تحكم في مخاطرك',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('ar-SA'); }
+  },
+  ru:{ nav:'← Назад к набору', dir:'ltr', title:'DCA Трекер', addTicker:'+ Добавить тикер', setupTitle:'Новый DCA трекер', lblTicker:'Тикер (напр. AAPL, BTC-USD)', lblBudget:'Бюджет / период', lblStoploss:'Стоп-лосс (необязательно)', lblFreq:'Частота DCA', daily:'Ежедневно', weekly:'Еженедельно', monthly:'Ежемесячно', startBtn:'🚀 Начать', refresh:'↻ Обновить', secStats:'Портфель', stInvested:'Вложено', stUnits:'Единиц', stAvgprice:'Ср. цена', stValue:'Стоимость', stPnl:'П/У', stPnlpct:'Доходность', stBuys:'Покупок', stNextbuy:'Следующая', secChart:'Динамика', secLog:'Записать покупку', lblDate:'Дата', lblPrice:'Цена покупки', lblAmount:'Сумма (€)', addBtn:'+ Добавить', secCalendar:'Календарь', secHistory:'История', resetBtn:'Удалить трекер', thDate:'Дата', thPrice:'Цена', thAmount:'Сумма', thUnits:'Единиц', emptyMsg:'Покупок пока нет.', slAlert:'⚠️ Достигнут стоп-лосс!', modalTitle:'Удалить трекер?', modalSub:'Это удалит все покупки для', modalWord:'RESET', modalCancel:'Отмена', modalConfirm:'Удалить', footer:'unda · управляй своим риском',
+    nextBuyFn:(f,d)=>{ const x=new Date(d); if(f==='daily')x.setDate(x.getDate()+1); else if(f==='weekly')x.setDate(x.getDate()+7); else x.setMonth(x.getMonth()+1); return x.toLocaleDateString('ru-RU'); }
+  },
+};
+
+/* ── State ── */
+let lang      = 'en';
+let activeId  = null;
+let charts    = {};
+let prices    = {};
+let resetTarget = null;
+
+function getTrackers() { try { return JSON.parse(localStorage.getItem('unda-trackers') || '[]'); } catch(e) { return []; } }
+function saveTrackers(arr) { try { localStorage.setItem('unda-trackers', JSON.stringify(arr)); } catch(e) {} }
+
+/* ── Lang ── */
+function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  if (!document.getElementById('lang-sw').contains(e.target))
+    document.getElementById('lang-sw').classList.remove('open');
+});
+
+function setLang(code, label) {
+  lang = code;
+  const tl = T[code];
+  document.documentElement.setAttribute('lang', code);
+  const navEl=document.getElementById('t-nav'); if(navEl&&tl.nav)navEl.textContent=tl.nav;
+  document.documentElement.setAttribute('dir', tl.dir);
+  if (label) document.getElementById('cur-lang').textContent = label;
+  document.querySelectorAll('.lang-menu div').forEach(d =>
+    d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()))
+  );
+  document.getElementById('t-title').textContent  = tl.title;
+  document.getElementById('t-footer').textContent = tl.footer;
+  document.getElementById('lang-sw').classList.remove('open');
+  renderAll();
+}
+
+/* ── Render all ── */
+function renderAll() {
+  renderTabs();
+  renderView();
+}
+
+/* ── Tabs ── */
+function renderTabs() {
+  const tl       = T[lang];
+  const trackers = getTrackers();
+  const tabs     = document.getElementById('tracker-tabs');
+
+  let html = trackers.map(tr => `
+    <div class="tracker-tab ${tr.id === activeId ? 'active' : ''}" onclick="setActive(${tr.id})">
+      ${tr.ticker}
+      <span class="tab-close" onclick="event.stopPropagation();openResetModal(${tr.id})">×</span>
+    </div>`).join('');
+
+  html += `<button class="add-tab-btn" onclick="setActive(null)">${tl.addTicker}</button>`;
+  tabs.innerHTML = html;
+}
+
+/* ── Set active tracker ── */
+function setActive(id) {
+  activeId = id;
+  renderTabs();
+  renderView();
+}
+
+/* ── Main view ── */
+function renderView() {
+  const tl   = T[lang];
+  const view = document.getElementById('tracker-view');
+
+  if (activeId === null) {
+    // Setup form
+    view.innerHTML = `
+      <div class="card">
+        <div class="card-inner">
+          <div class="sec">${tl.setupTitle}</div>
+          <div class="setup-grid">
+            <div>
+              <span class="fl">${tl.lblTicker}</span>
+              <div class="iw"><input type="text" id="new-ticker" placeholder="AAPL / BTC-USD" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+            </div>
+            <div>
+              <span class="fl">${tl.lblBudget}</span>
+              <div class="iw"><span class="px">€</span><input type="number" id="new-budget" value="500" min="1"></div>
+            </div>
+            <div>
+              <span class="fl">${tl.lblStoploss}</span>
+              <div class="iw"><span class="px">€</span><input type="number" id="new-stoploss" placeholder="—" min="0" step="any"></div>
+            </div>
+          </div>
+          <div class="sec">${tl.lblFreq}</div>
+          <div class="freq-row">
+            <button class="freq-btn" id="nf-daily" onclick="selectNewFreq('daily')">📅 ${tl.daily}</button>
+            <button class="freq-btn active" id="nf-weekly" onclick="selectNewFreq('weekly')">📆 ${tl.weekly}</button>
+            <button class="freq-btn" id="nf-monthly" onclick="selectNewFreq('monthly')">🗓️ ${tl.monthly}</button>
+          </div>
+          <button class="buy-btn" onclick="createTracker()">${tl.startBtn}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const trackers = getTrackers();
+  const tr       = trackers.find(t => t.id === activeId);
+  if (!tr) { setActive(null); return; }
+
+  const livePrice  = prices[tr.id] || null;
+  const purchases  = tr.purchases || [];
+  const totInv     = purchases.reduce((s,p) => s+p.amount, 0);
+  const totUnits   = purchases.reduce((s,p) => s+p.units, 0);
+  const avgPrice   = totUnits > 0 ? totInv/totUnits : 0;
+  const curVal     = livePrice && totUnits > 0 ? totUnits*livePrice : null;
+  const pnl        = curVal ? curVal-totInv : null;
+  const pnlPct     = pnl !== null ? (pnl/totInv*100).toFixed(1) : null;
+  const lastDate   = purchases.length ? purchases[purchases.length-1].date : null;
+  const nextBuy    = lastDate ? tl.nextBuyFn(tr.freq, lastDate) : '—';
+  const slHit      = livePrice && tr.stoploss && livePrice <= tr.stoploss;
+
+  const prc = (n, d=2) => n < 1 ? n.toFixed(6) : n.toFixed(d);
+
+  // Calendar
+  const today      = new Date();
+  const year       = today.getFullYear();
+  const month      = today.getMonth();
+  const bought     = new Set(purchases.map(p => p.date));
+  const firstDay   = new Date(year, month, 1).getDay();
+  const daysInMo   = new Date(year, month+1, 0).getDate();
+  const dayNames   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let calHtml = `<div style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:8px;letter-spacing:.08em">${today.toLocaleString(lang,{month:'long',year:'numeric'})}</div>`;
+  calHtml += '<div class="calendar">';
+  dayNames.forEach(d => calHtml += `<div class="cal-header">${d}</div>`);
+  for (let i=0;i<firstDay;i++) calHtml += '<div class="cal-day empty"></div>';
+  for (let d=1;d<=daysInMo;d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT = d===today.getDate(); const isB = bought.has(ds);
+    calHtml += `<div class="cal-day ${isB?'bought':isT?'today':'normal'}">${d}</div>`;
+  }
+  calHtml += '</div>';
+
+  // History rows
+  const histRows = [...purchases].reverse().map(p => `
+    <tr>
+      <td>${p.date}</td>
+      <td>€${prc(p.price)}</td>
+      <td>€${p.amount.toFixed(2)}</td>
+      <td>${prc(p.units, 4)}</td>
+      <td><button class="del-btn" onclick="deletePurchase(${tr.id},${p.id})">×</button></td>
+    </tr>`).join('');
+
+  view.innerHTML = `
+    <!-- Live ticker bar -->
+    <div class="ticker-bar">
+      <div>
+        <div class="ticker-name">${tr.ticker}</div>
+        <div class="ticker-status" id="live-status-${tr.id}">—</div>
+      </div>
+      <div class="ticker-price ${livePrice?'neutral':''}" id="live-price-${tr.id}">${livePrice?'€'+prc(livePrice):' —'}</div>
+      <div class="ticker-change" id="live-change-${tr.id}"></div>
+      <button class="refresh-btn" onclick="fetchPrice(${tr.id})">${tl.refresh}</button>
+    </div>
+
+    <!-- Stop loss alert -->
+    <div class="sl-alert" id="sl-alert-${tr.id}" style="${slHit?'display:block':'display:none'}">
+      <span class="sl-dot"></span><span class="sl-text">${tl.slAlert} (€${tr.stoploss})</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec">${tl.secStats}</div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-label">${tl.stInvested}</div><div class="stat-val c-white">${purchases.length?'€'+Math.round(totInv).toLocaleString():'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stUnits}</div><div class="stat-val c-gold">${purchases.length?prc(totUnits,4):'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stAvgprice}</div><div class="stat-val c-white">${purchases.length?'€'+prc(avgPrice):'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stValue}</div><div class="stat-val ${curVal?(pnl>=0?'c-green':'c-red'):'c-white'}">${curVal?'€'+Math.round(curVal).toLocaleString():'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stPnl}</div><div class="stat-val ${pnl!==null?(pnl>=0?'c-green':'c-red'):'c-white'}">${pnl!==null?(pnl>=0?'+':'')+'€'+Math.round(Math.abs(pnl)).toLocaleString():'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stPnlpct}</div><div class="stat-val ${pnlPct!==null?(parseFloat(pnlPct)>=0?'c-green':'c-red'):'c-white'}">${pnlPct!==null?(parseFloat(pnlPct)>=0?'+':'')+pnlPct+'%':'—'}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stBuys}</div><div class="stat-val c-white">${purchases.length}</div></div>
+          <div class="stat"><div class="stat-label">${tl.stNextbuy}</div><div class="stat-val c-gold" style="font-size:11px">${nextBuy}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec">${tl.secChart}</div>
+        <div class="chart-wrap"><canvas id="chart-${tr.id}"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Log purchase -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec">${tl.secLog}</div>
+        <div class="log-grid">
+          <div>
+            <span class="fl">${tl.lblDate}</span>
+            <div class="iw"><input type="date" id="inp-date-${tr.id}" value="${new Date().toISOString().split('T')[0]}"></div>
+          </div>
+          <div>
+            <span class="fl">${tl.lblPrice}</span>
+            <div class="iw"><span class="px">€</span><input type="number" id="inp-price-${tr.id}" placeholder="100" step="any" min="0"></div>
+          </div>
+          <div>
+            <span class="fl">${tl.lblAmount}</span>
+            <div class="iw"><span class="px">€</span><input type="number" id="inp-amount-${tr.id}" value="${tr.budget}" min="1"></div>
+          </div>
+        </div>
+        <button class="buy-btn" onclick="addPurchase(${tr.id})">${tl.addBtn}</button>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec">${tl.secCalendar}</div>
+        ${calHtml}
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="row-actions">
+          <div class="sec" style="margin:0;flex:1">${tl.secHistory}</div>
+          <button class="reset-btn" onclick="openResetModal(${tr.id})">${tl.resetBtn}</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>${tl.thDate}</th><th>${tl.thPrice}</th><th>${tl.thAmount}</th><th>${tl.thUnits}</th><th></th>
+            </tr></thead>
+            <tbody>${histRows || `<tr><td colspan="5"><div class="empty-msg">${tl.emptyMsg}</div></td></tr>`}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  // Render chart after DOM
+  setTimeout(() => renderChart(tr.id, livePrice), 0);
+}
+
+/* ── Create tracker ── */
+let newFreq = 'weekly';
+function selectNewFreq(f) {
+  newFreq = f;
+  ['daily','weekly','monthly'].forEach(x => { const el = document.getElementById('nf-'+x); if(el) el.classList.toggle('active', x===f); });
+}
+
+function createTracker() {
+  const ticker   = (document.getElementById('new-ticker')?.value || '').trim().toUpperCase();
+  const budget   = parseFloat(document.getElementById('new-budget')?.value) || 500;
+  const stoploss = parseFloat(document.getElementById('new-stoploss')?.value) || null;
+  if (!ticker) return;
+
+  const trackers = getTrackers();
+  const id = Date.now();
+  trackers.push({ id, ticker, budget, stoploss, freq: newFreq, purchases: [] });
+  saveTrackers(trackers);
+  activeId = id;
+  renderAll();
+  fetchPrice(id);
+}
+
+/* ── Fetch price ── */
+async function fetchPrice(id) {
+  const trackers = getTrackers();
+  const tr = trackers.find(t => t.id === id);
+  if (!tr) return;
+
+  const statusEl = document.getElementById(`live-status-${id}`);
+  if (statusEl) statusEl.textContent = '⟳ Loading...';
+
+  const PROXIES = [
+    t => `https://query1.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=5d`,
+    t => `https://query2.finance.yahoo.com/v8/finance/chart/${t}?interval=1d&range=5d`,
+  ];
+
+  for (const proxy of PROXIES) {
+    try {
+      const res  = await fetch(proxy(tr.ticker));
+      const data = await res.json();
+      const meta = data?.chart?.result?.[0]?.meta;
+      if (!meta) continue;
+      const price  = meta.regularMarketPrice || meta.previousClose;
+      const prev   = meta.chartPreviousClose || meta.previousClose;
+      const change = price - prev;
+      const pct    = (change/prev*100).toFixed(2);
+
+      prices[id] = price;
+
+      const priceEl  = document.getElementById(`live-price-${id}`);
+      const changeEl = document.getElementById(`live-change-${id}`);
+      const slEl     = document.getElementById(`sl-alert-${id}`);
+
+      if (priceEl)  { priceEl.textContent = '€'+(price<1?price.toFixed(6):price.toFixed(2)); priceEl.className='ticker-price '+(change>=0?'up':'down'); }
+      if (changeEl) { changeEl.textContent=(change>=0?'+':'')+change.toFixed(2)+' ('+(change>=0?'+':'')+pct+'%)'; changeEl.className='ticker-change '+(change>=0?'up':'down'); }
+      if (statusEl) statusEl.textContent = new Date().toLocaleTimeString();
+      if (slEl && tr.stoploss) slEl.style.display = price <= tr.stoploss ? 'block' : 'none';
+
+      // Update stats silently
+      renderView();
+      return;
+    } catch(e) {}
+  }
+  if (statusEl) statusEl.textContent = '⚠️ Unavailable';
+}
+
+/* ── Add purchase ── */
+function addPurchase(id) {
+  const date   = document.getElementById(`inp-date-${id}`)?.value;
+  const price  = parseFloat(document.getElementById(`inp-price-${id}`)?.value);
+  const amount = parseFloat(document.getElementById(`inp-amount-${id}`)?.value);
+  if (!date || !price || !amount) return;
+
+  const trackers = getTrackers();
+  const tr = trackers.find(t => t.id === id);
+  if (!tr) return;
+
+  tr.purchases.push({ id: Date.now(), date, price, amount, units: amount/price });
+  tr.purchases.sort((a,b) => new Date(a.date)-new Date(b.date));
+  saveTrackers(trackers);
+  renderView();
+  renderChart(id, prices[id]);
+}
+
+/* ── Delete purchase ── */
+function deletePurchase(trackerId, purchaseId) {
+  const trackers = getTrackers();
+  const tr = trackers.find(t => t.id === trackerId);
+  if (!tr) return;
+  tr.purchases = tr.purchases.filter(p => p.id !== purchaseId);
+  saveTrackers(trackers);
+  renderView();
+}
+
+/* ── Chart ── */
+function renderChart(id, livePrice) {
+  const trackers = getTrackers();
+  const tr = trackers.find(t => t.id === id);
+  if (!tr || !tr.purchases.length) return;
+  const canvas = document.getElementById(`chart-${id}`);
+  if (!canvas) return;
+
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+
+  const labels=[], cumInv=[], cumVal=[], avgLine=[];
+  let totInv=0, totUnits=0;
+  tr.purchases.forEach(p => {
+    totInv   += p.amount;
+    totUnits += p.units;
+    labels.push(p.date);
+    cumInv.push(parseFloat(totInv.toFixed(2)));
+    cumVal.push(livePrice ? parseFloat((totUnits*livePrice).toFixed(2)) : null);
+    avgLine.push(parseFloat(((totInv/totUnits)*totUnits).toFixed(2)));
+  });
+
+  const datasets = [
+    { label:'Invested', data:cumInv, borderColor:'rgba(255,255,255,0.25)', backgroundColor:'transparent', borderWidth:1.5, borderDash:[4,4], pointRadius:0, tension:.3 },
+    { label:'Avg cost', data:avgLine, borderColor:'rgba(255,217,122,0.75)', backgroundColor:'transparent', borderWidth:1.5, pointRadius:3, pointBackgroundColor:'rgba(255,217,122,0.75)', tension:.3 },
+  ];
+  if (livePrice) datasets.push({ label:'Value now', data:cumVal, borderColor:'rgba(0,255,136,0.9)', backgroundColor:'rgba(0,255,136,0.06)', borderWidth:2, pointRadius:3, pointBackgroundColor:'rgba(0,255,136,0.9)', tension:.3, fill:true });
+  if (tr.stoploss) {
+    datasets.push({ label:'Stop loss', data:tr.purchases.map((_,i)=>{ const u=tr.purchases.slice(0,i+1).reduce((s,p)=>s+p.units,0); return parseFloat((tr.stoploss*u).toFixed(2)); }), borderColor:'rgba(255,68,68,0.5)', backgroundColor:'transparent', borderWidth:1, borderDash:[5,3], pointRadius:0 });
+  }
+
+  charts[id] = new Chart(canvas.getContext('2d'), {
+    type:'line', data:{ labels, datasets },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{ legend:{labels:{color:'rgba(180,240,220,0.5)',font:{family:'DM Mono',size:10},boxWidth:14,padding:10}}, tooltip:{backgroundColor:'rgba(0,10,6,0.95)',borderColor:'rgba(0,255,178,0.3)',borderWidth:1,titleColor:'#00ffb2',bodyColor:'#e0fff5',callbacks:{label:c=>' '+c.dataset.label+': €'+Math.round(c.raw).toLocaleString()}} },
+      scales:{ x:{ticks:{color:'rgba(180,240,220,0.4)',font:{family:'DM Mono',size:9},maxTicksLimit:8},grid:{color:'rgba(0,255,178,0.05)'}}, y:{ticks:{color:'rgba(180,240,220,0.4)',font:{family:'DM Mono',size:9},callback:v=>'€'+v.toLocaleString()},grid:{color:'rgba(0,255,178,0.05)'}} }
+    }
+  });
+}
+
+/* ── Reset modal ── */
+function openResetModal(id) {
+  resetTarget = id;
+  const trackers = getTrackers();
+  const tr = trackers.find(t => t.id === id);
+  const tl = T[lang];
+  document.getElementById('modal-title').textContent   = tl.modalTitle;
+  document.getElementById('modal-sub').innerHTML       = `${tl.modalSub} <strong style="color:var(--g)">${tr?.ticker||''}</strong>. ${tl.modalWord ? 'Type <span class="modal-word">'+tl.modalWord+'</span> to confirm.' : ''}`;
+  document.getElementById('modal-cancel-btn').textContent  = tl.modalCancel;
+  document.getElementById('modal-confirm-btn').textContent = tl.modalConfirm;
+  document.getElementById('modal-input').value = '';
+  document.getElementById('modal-confirm-btn').classList.remove('ready');
+  document.getElementById('reset-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('reset-modal').classList.remove('open'); }
+
+function checkModalInput() {
+  const val = document.getElementById('modal-input').value.trim().toUpperCase();
+  document.getElementById('modal-confirm-btn').classList.toggle('ready', val === 'RESET');
+}
+
+function confirmReset() {
+  if (!resetTarget) return;
+  let trackers = getTrackers();
+  delete charts[resetTarget];
+  delete prices[resetTarget];
+  trackers = trackers.filter(t => t.id !== resetTarget);
+  saveTrackers(trackers);
+  activeId = trackers.length ? trackers[trackers.length-1].id : null;
+  closeModal();
+  renderAll();
+  resetTarget = null;
+}
+
+document.getElementById('reset-modal').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+
+/* ── Init ── */
+const browserLang = (navigator.language||'en').split('-')[0].toLowerCase();
+const flagMap = {nl:'🇳🇱 NL',en:'🇬🇧 EN',fr:'🇫🇷 FR',es:'🇪🇸 ES',de:'🇩🇪 DE',it:'🇮🇹 IT',pt:'🇵🇹 PT',tr:'🇹🇷 TR',ar:'🇸🇦 AR',ru:'🇷🇺 RU'};
+const initLang = T[browserLang] ? browserLang : 'en';
+setLang(initLang, flagMap[initLang]);
+
+// Auto-fetch prices for all trackers on load
+getTrackers().forEach(tr => fetchPrice(tr.id));
+</script>
+</body>
+</html>
