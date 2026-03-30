@@ -60,6 +60,22 @@
     tfoot tr { background: #000f08; position: sticky; bottom: 0; z-index: 2; }
     tfoot td { padding: 9px 12px; text-align: right; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; border-top: 1px solid rgba(0,255,178,0.15); color: var(--text); }
     tfoot td:first-child { text-align: left; color: rgba(0,255,178,0.5); letter-spacing: .08em; text-transform: uppercase; font-size: 10px; }
+    .reset-btn { background:transparent; border:1px solid rgba(255,80,80,0.2); border-radius:7px; padding:5px 12px; font-size:11px; color:rgba(255,120,120,0.5); cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; }
+    .reset-btn:hover { border-color:rgba(255,80,80,0.45); color:rgba(255,120,120,0.85); }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#000d07; border:1px solid rgba(255,68,68,0.3); border-radius:18px; padding:2rem; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+    .modal-icon { font-size:32px; text-align:center; margin-bottom:12px; }
+    .modal-title { font-size:16px; font-weight:600; color:rgba(255,150,150,0.9); text-align:center; margin-bottom:8px; }
+    .modal-sub { font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:1.25rem; line-height:1.6; }
+    .modal-word { font-family:'DM Mono',monospace; color:var(--red); font-weight:600; }
+    .modal-input { width:100%; background:var(--inp); border:1px solid rgba(255,68,68,0.2); border-radius:10px; padding:10px 14px; color:var(--text); font-family:'DM Mono',monospace; font-size:14px; outline:none; margin-bottom:1rem; transition:border-color .2s; }
+    .modal-input:focus { border-color:rgba(255,68,68,0.5); }
+    .modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .modal-cancel { background:transparent; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:10px; color:var(--text-muted); font-family:'Outfit',sans-serif; font-size:13px; cursor:pointer; }
+    .modal-confirm { background:rgba(255,68,68,0.12); border:1px solid rgba(255,68,68,0.3); border-radius:10px; padding:10px; color:var(--red); font-family:'Outfit',sans-serif; font-size:13px; cursor:pointer; opacity:.4; pointer-events:none; transition:all .2s; }
+    .modal-confirm.ready { opacity:1; pointer-events:all; }
+    .modal-confirm.ready:hover { background:rgba(255,68,68,0.22); }
     .tax-btn:hover { background:rgba(0,255,178,0.07); }
     .tax-btn.active { background:rgba(255,217,122,0.1); border-color:rgba(255,217,122,0.4); color:var(--gold); }
     @media(max-width:700px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
@@ -105,7 +121,19 @@
 <div class="tl"></div>
 
 <!-- Language switcher -->
-<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+<!-- Clear all modal -->
+<div class="modal-overlay" id="clear-modal">
+  <div class="modal">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title" id="clear-modal-title">Clear all trades?</div>
+    <div class="modal-sub" id="clear-modal-sub">Type <span class="modal-word">CLEAR</span> to confirm. This cannot be undone.</div>
+    <input class="modal-input" id="clear-modal-input" placeholder="Type CLEAR" oninput="checkClearInput()">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeClearModal()" id="clear-modal-cancel">Cancel</button>
+      <button class="modal-confirm" id="clear-modal-confirm" onclick="confirmClearAll()">Clear all</button>
+    </div>
+  </div>
+</div>
   <span id="cur-lang">🇬🇧 EN</span> ▾
   <div class="lang-menu" id="lang-menu">
     <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
@@ -370,8 +398,8 @@
             oninput="saveStartCap();renderCharts()" style="font-size:13px">
         </div>
         <div id="compound-toggle-wrap" style="display:none;gap:6px;display:none">
-          <button class="tax-btn active" id="compound-classic" onclick="setCompound('classic')">Classic</button>
-          <button class="tax-btn" id="compound-safe" onclick="setCompound('safe')">Safe</button>
+          <div class="tax-btn active" id="compound-classic" onclick="setCompound('classic')">Classic</div>
+          <div class="tax-btn" id="compound-safe" onclick="setCompound('safe')">Safe</div>
         </div>
       </div>
       <div id="chart-portfolio-wrap" style="display:none">
@@ -406,7 +434,7 @@
           <span id="t-sec-history" style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,255,178,0.35)">Trade history</span>
           <button onclick="toggleSection('history-content','history-arrow')" id="history-arrow" class="toggle-btn">Hide</button>
         </div>
-        <button class="clear-btn" id="t-clear-btn" onclick="clearAll()">Clear all</button>
+        <button class="reset-btn" id="t-clear-btn" onclick="openClearModal()" style="border-color:rgba(255,80,80,0.25);color:rgba(255,120,120,0.6)">⚠ Clear all</button>
       </div>
       <div id="history-content">
       <div class="table-wrap">
@@ -481,58 +509,58 @@
     document.querySelectorAll('.lang-menu div').forEach(d => {
       d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase()));
     });
-    document.getElementById('t-nav').textContent        = T.nav;
-    document.getElementById('t-title').textContent      = T.title;
-    document.getElementById('t-sec-log').textContent    = T.secLog;
-    document.getElementById('t-f-date').textContent     = T.fDate;
-    document.getElementById('t-f-pair').textContent     = T.fPair;
-    document.getElementById('t-f-dir').textContent      = T.fDir;
-    document.getElementById('t-f-result').textContent   = T.fResult;
-    document.getElementById('t-f-risk').textContent     = T.fRisk;
-    document.getElementById('t-f-pnl').textContent      = T.fPnl;
-    document.getElementById('t-f-rr').textContent       = T.fRr;
-    document.getElementById('t-f-notes').textContent    = T.fNotes;
-    document.getElementById('t-add-btn').textContent    = T.addBtn;
-    document.getElementById('t-sec-stats').textContent  = T.secStats;
+    { const _t_nav = document.getElementById('t-nav'); if(_t_nav) _t_nav.textContent        = T.nav; }
+    { const _t_title = document.getElementById('t-title'); if(_t_title) _t_title.textContent      = T.title; }
+    { const _t_sec_log = document.getElementById('t-sec-log'); if(_t_sec_log) _t_sec_log.textContent    = T.secLog; }
+    { const _t_f_date = document.getElementById('t-f-date'); if(_t_f_date) _t_f_date.textContent     = T.fDate; }
+    { const _t_f_pair = document.getElementById('t-f-pair'); if(_t_f_pair) _t_f_pair.textContent     = T.fPair; }
+    { const _t_f_dir = document.getElementById('t-f-dir'); if(_t_f_dir) _t_f_dir.textContent      = T.fDir; }
+    { const _t_f_result = document.getElementById('t-f-result'); if(_t_f_result) _t_f_result.textContent   = T.fResult; }
+    { const _t_f_risk = document.getElementById('t-f-risk'); if(_t_f_risk) _t_f_risk.textContent     = T.fRisk; }
+    { const _t_f_pnl = document.getElementById('t-f-pnl'); if(_t_f_pnl) _t_f_pnl.textContent      = T.fPnl; }
+    { const _t_f_rr = document.getElementById('t-f-rr'); if(_t_f_rr) _t_f_rr.textContent       = T.fRr; }
+    { const _t_f_notes = document.getElementById('t-f-notes'); if(_t_f_notes) _t_f_notes.textContent    = T.fNotes; }
+    { const _t_add_btn = document.getElementById('t-add-btn'); if(_t_add_btn) _t_add_btn.textContent    = T.addBtn; }
+    { const _t_sec_stats = document.getElementById('t-sec-stats'); if(_t_sec_stats) _t_sec_stats.textContent  = T.secStats; }
     if (T.secRisk) {
-      document.getElementById('t-sec-risk').textContent   = T.secRisk;
-      document.getElementById('t-st-sharpe').textContent  = T.stSharpe;
-      document.getElementById('t-st-sortino').textContent = T.stSortino;
-      document.getElementById('t-st-maxdd').textContent   = T.stMaxdd;
-      document.getElementById('t-st-consistency').textContent = T.stConsistency;
-      document.getElementById('t-risk-note').textContent  = T.riskNote;
+      { const _t_sec_risk = document.getElementById('t-sec-risk'); if(_t_sec_risk) _t_sec_risk.textContent   = T.secRisk; }
+      { const _t_st_sharpe = document.getElementById('t-st-sharpe'); if(_t_st_sharpe) _t_st_sharpe.textContent  = T.stSharpe; }
+      { const _t_st_sortino = document.getElementById('t-st-sortino'); if(_t_st_sortino) _t_st_sortino.textContent = T.stSortino; }
+      { const _t_st_maxdd = document.getElementById('t-st-maxdd'); if(_t_st_maxdd) _t_st_maxdd.textContent   = T.stMaxdd; }
+      { const _t_st_consistency = document.getElementById('t-st-consistency'); if(_t_st_consistency) _t_st_consistency.textContent = T.stConsistency; }
+      { const _t_risk_note = document.getElementById('t-risk-note'); if(_t_risk_note) _t_risk_note.textContent  = T.riskNote; }
     }
-    document.getElementById('t-st-total').textContent   = T.stTotal;
-    document.getElementById('t-st-wr').textContent      = T.stWr;
-    document.getElementById('t-st-rr').textContent      = T.stRr;
-    document.getElementById('t-st-pf').textContent      = T.stPf;
-    document.getElementById('t-st-pnl').textContent     = T.stPnl;
-    document.getElementById('t-st-wins').textContent    = T.stWins;
-    document.getElementById('t-st-losses').textContent  = T.stLosses;
-    document.getElementById('t-st-be').textContent      = T.stBe;
-    document.getElementById('t-st-avgwin').textContent  = T.stAvgwin;
-    document.getElementById('t-st-avgloss').textContent = T.stAvgloss;
-    document.getElementById('t-sec-history').textContent= T.secHistory;
-    document.getElementById('t-clear-btn').textContent  = T.clearBtn;
-    document.getElementById('th-date').textContent      = T.thDate;
-    document.getElementById('th-pair').textContent      = T.thPair;
-    document.getElementById('th-dir').textContent       = T.thDir;
-    document.getElementById('th-result').textContent    = T.thResult;
-    document.getElementById('th-risk').textContent      = T.thRisk;
-    document.getElementById('th-pnl').textContent       = T.thPnl;
-    document.getElementById('th-rr').textContent        = T.thRr;
-    document.getElementById('th-rr-actual').textContent = T.thRrActual || 'Actual R:R';
-    document.getElementById('t-f-rr').textContent       = T.fRr;
-    document.getElementById('t-f-rr-actual').textContent= T.fRrActual || 'Actual R:R';
+    { const _t_st_total = document.getElementById('t-st-total'); if(_t_st_total) _t_st_total.textContent   = T.stTotal; }
+    { const _t_st_wr = document.getElementById('t-st-wr'); if(_t_st_wr) _t_st_wr.textContent      = T.stWr; }
+    { const _t_st_rr = document.getElementById('t-st-rr'); if(_t_st_rr) _t_st_rr.textContent      = T.stRr; }
+    { const _t_st_pf = document.getElementById('t-st-pf'); if(_t_st_pf) _t_st_pf.textContent      = T.stPf; }
+    { const _t_st_pnl = document.getElementById('t-st-pnl'); if(_t_st_pnl) _t_st_pnl.textContent     = T.stPnl; }
+    { const _t_st_wins = document.getElementById('t-st-wins'); if(_t_st_wins) _t_st_wins.textContent    = T.stWins; }
+    { const _t_st_losses = document.getElementById('t-st-losses'); if(_t_st_losses) _t_st_losses.textContent  = T.stLosses; }
+    { const _t_st_be = document.getElementById('t-st-be'); if(_t_st_be) _t_st_be.textContent      = T.stBe; }
+    { const _t_st_avgwin = document.getElementById('t-st-avgwin'); if(_t_st_avgwin) _t_st_avgwin.textContent  = T.stAvgwin; }
+    { const _t_st_avgloss = document.getElementById('t-st-avgloss'); if(_t_st_avgloss) _t_st_avgloss.textContent = T.stAvgloss; }
+    { const _t_sec_history = document.getElementById('t-sec-history'); if(_t_sec_history) _t_sec_history.textContent= T.secHistory; }
+    { const _t_clear_btn = document.getElementById('t-clear-btn'); if(_t_clear_btn) _t_clear_btn.textContent  = T.clearBtn; }
+    { const _th_date = document.getElementById('th-date'); if(_th_date) _th_date.textContent      = T.thDate; }
+    { const _th_pair = document.getElementById('th-pair'); if(_th_pair) _th_pair.textContent      = T.thPair; }
+    { const _th_dir = document.getElementById('th-dir'); if(_th_dir) _th_dir.textContent       = T.thDir; }
+    { const _th_result = document.getElementById('th-result'); if(_th_result) _th_result.textContent    = T.thResult; }
+    { const _th_risk = document.getElementById('th-risk'); if(_th_risk) _th_risk.textContent      = T.thRisk; }
+    { const _th_pnl = document.getElementById('th-pnl'); if(_th_pnl) _th_pnl.textContent       = T.thPnl; }
+    { const _th_rr = document.getElementById('th-rr'); if(_th_rr) _th_rr.textContent        = T.thRr; }
+    { const _th_rr_actual = document.getElementById('th-rr-actual'); if(_th_rr_actual) _th_rr_actual.textContent = T.thRrActual || 'Actual R:R'; }
+    { const _t_f_rr = document.getElementById('t-f-rr'); if(_t_f_rr) _t_f_rr.textContent       = T.fRr; }
+    { const _t_f_rr_actual = document.getElementById('t-f-rr-actual'); if(_t_f_rr_actual) _t_f_rr_actual.textContent= T.fRrActual || 'Actual R:R'; }
     if(document.getElementById('t-st-rr-actual')) document.getElementById('t-st-rr-actual').textContent = T.stRrActual || 'Actual R:R';
-    document.getElementById('th-notes').textContent     = T.thNotes;
-    document.getElementById('opt-long').textContent     = T.optLong;
-    document.getElementById('opt-short').textContent    = T.optShort;
-    document.getElementById('opt-win').textContent      = T.optWin;
-    document.getElementById('opt-loss').textContent     = T.optLoss;
-    document.getElementById('opt-be').textContent       = T.optBe;
-    document.getElementById('log-empty').textContent    = T.emptyMsg;
-    document.getElementById('t-footer').textContent     = T.footer;
+    { const _th_notes = document.getElementById('th-notes'); if(_th_notes) _th_notes.textContent     = T.thNotes; }
+    { const _opt_long = document.getElementById('opt-long'); if(_opt_long) _opt_long.textContent     = T.optLong; }
+    { const _opt_short = document.getElementById('opt-short'); if(_opt_short) _opt_short.textContent    = T.optShort; }
+    { const _opt_win = document.getElementById('opt-win'); if(_opt_win) _opt_win.textContent      = T.optWin; }
+    { const _opt_loss = document.getElementById('opt-loss'); if(_opt_loss) _opt_loss.textContent     = T.optLoss; }
+    { const _opt_be = document.getElementById('opt-be'); if(_opt_be) _opt_be.textContent       = T.optBe; }
+    { const _log_empty = document.getElementById('log-empty'); if(_log_empty) _log_empty.textContent    = T.emptyMsg; }
+    { const _t_footer = document.getElementById('t-footer'); if(_t_footer) _t_footer.textContent     = T.footer; }
     document.getElementById('lang-sw').classList.remove('open');
     render();
   }
@@ -560,25 +588,31 @@
     if (btn) btn.classList.add('active');
     // Show/hide custom input
     const customWrap = document.getElementById('tax-custom-wrap');
-    if (pct !== 0 && !([10,33,50].includes(pct))) {
-      customWrap.style.display = 'flex';
-      document.getElementById('tax-custom-input').value = pct;
-    } else {
-      customWrap.style.display = 'none';
+    if (customWrap) {
+      if (pct !== 0 && !([10,33,50].includes(pct))) {
+        customWrap.style.display = 'flex';
+        const customInput = document.getElementById('tax-custom-input');
+        if (customInput) customInput.value = pct;
+      } else {
+        customWrap.style.display = 'none';
+      }
     }
-    // Badge
     const badge = document.getElementById('tax-active-badge');
-    if (pct > 0) { badge.style.display = 'block'; badge.textContent = pct + '% tax applied'; }
-    else { badge.style.display = 'none'; }
+    if (badge) {
+      if (pct > 0) { badge.style.display = 'block'; badge.textContent = pct + '% tax applied'; }
+      else { badge.style.display = 'none'; }
+    }
     render();
   }
 
   function focusTaxCustom() {
     document.querySelectorAll('.tax-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tax-btn-custom').classList.add('active');
+    const tcb = document.getElementById('tax-btn-custom');
+    if (tcb) tcb.classList.add('active');
     const wrap = document.getElementById('tax-custom-wrap');
-    wrap.style.display = 'flex';
-    document.getElementById('tax-custom-input').focus();
+    if (wrap) wrap.style.display = 'flex';
+    const tci = document.getElementById('tax-custom-input');
+    if (tci) tci.focus();
   }
 
   function applyCustomTax() {
@@ -701,8 +735,10 @@
   function setCompound(mode) {
     compoundMode = mode;
     try { localStorage.setItem('unda-logbook-compound', mode); } catch(e) {}
-    document.getElementById('compound-classic').classList.toggle('active', mode === 'classic');
-    document.getElementById('compound-safe').classList.toggle('active', mode === 'safe');
+    const cc = document.getElementById('compound-classic');
+    const cs = document.getElementById('compound-safe');
+    if (cc) cc.classList.toggle('active', mode === 'classic');
+    if (cs) cs.classList.toggle('active', mode === 'safe');
     renderCharts();
   }
 
@@ -715,10 +751,10 @@
     const hasCap = cap > 0;
 
     // Show/hide portfolio section
-    document.getElementById('chart-portfolio-wrap').style.display = hasCap ? 'block' : 'none';
-    document.getElementById('chart-no-cap').style.display = hasCap ? 'none' : 'block';
+    const cpw = document.getElementById('chart-portfolio-wrap'); if(cpw) cpw.style.display = hasCap ? 'block' : 'none';
+    const cnc = document.getElementById('chart-no-cap'); if(cnc) cnc.style.display = hasCap ? 'none' : 'block';
     const compWrap = document.getElementById('compound-toggle-wrap');
-    compWrap.style.display = (hasCap && taxRate > 0) ? 'flex' : 'none';
+    if (compWrap) compWrap.style.display = (hasCap && taxRate > 0) ? 'flex' : 'none';
 
     // Sort by id (timestamp) oldest first
     const sorted = [...trades].sort((a,b) => a.id - b.id);
@@ -972,6 +1008,29 @@
 
   function deleteTrade(id) { trades = trades.filter(t => t.id !== id); save(); render(); }
 
+  function openClearModal() {
+    const inp = document.getElementById('clear-modal-input');
+    const btn = document.getElementById('clear-modal-confirm');
+    const modal = document.getElementById('clear-modal');
+    if (inp) inp.value = '';
+    if (btn) btn.classList.remove('ready');
+    if (modal) modal.classList.add('open');
+  }
+  function closeClearModal() {
+    const modal = document.getElementById('clear-modal');
+    if (modal) modal.classList.remove('open');
+  }
+  function checkClearInput() {
+    const val = document.getElementById('clear-modal-input')?.value.trim().toUpperCase();
+    const btn = document.getElementById('clear-modal-confirm');
+    if (btn) btn.classList.toggle('ready', val === 'CLEAR');
+  }
+  function confirmClearAll() {
+    trades = []; save(); render();
+    closeClearModal();
+  }
+  document.getElementById('clear-modal').addEventListener('click', function(e) { if(e.target===this) closeClearModal(); });
+
   function clearAll() {
     const T = LANGS[currentLang];
     if (confirm(T.confirmClear)) { trades = []; save(); render(); }
@@ -1047,32 +1106,32 @@
     const avgWin    = wins.length ? '$' + (totalWin / wins.length).toFixed(2) : '—';
     const avgLoss   = losses.length ? '$' + (totalLoss / losses.length).toFixed(2) : '—';
 
-    document.getElementById('st-total').textContent   = total;
-    document.getElementById('st-wr').textContent      = wr;
-    document.getElementById('st-rr').textContent      = avgRRPlan !== '—' ? '1:' + avgRRPlan : '—';
+    { const _r_st_total = document.getElementById('st-total'); if(_r_st_total) _r_st_total.textContent = total; }
+    { const _r_st_wr = document.getElementById('st-wr'); if(_r_st_wr) _r_st_wr.textContent = wr; }
+    { const _r_st_rr = document.getElementById('st-rr'); if(_r_st_rr) _r_st_rr.textContent = avgRRPlan !== '—' ? '1:' + avgRRPlan : '—'; }
     const actEl = document.getElementById('st-rr-actual');
-    if (avgRRAct !== '—') {
+    if (actEl) { if (avgRRAct !== '—') {
       actEl.textContent  = '1:' + avgRRAct;
       const diff = parseFloat(avgRRAct) - parseFloat(avgRRPlan);
       actEl.className    = 'stat-val ' + (Math.abs(diff) < 0.2 ? 'c-green' : diff < 0 ? 'c-red' : 'c-gold');
     } else {
       actEl.textContent = '—';
       actEl.className   = 'stat-val';
-    }
-    document.getElementById('st-pf').textContent      = pf;
+    } }
+    { const _r_st_pf = document.getElementById('st-pf'); if(_r_st_pf) _r_st_pf.textContent = pf; }
     const pnlEl = document.getElementById('st-pnl');
-    pnlEl.textContent = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
-    pnlEl.className   = 'stat-val ' + (netPnl >= 0 ? 'c-green' : 'c-red');
-    document.getElementById('st-wins').textContent    = wins.length;
-    document.getElementById('st-losses').textContent  = losses.length;
-    document.getElementById('st-be').textContent      = bes.length;
-    document.getElementById('st-avgwin').textContent  = avgWin;
-    document.getElementById('st-avgloss').textContent = avgLoss;
+    if (pnlEl) { pnlEl.textContent = total > 0 ? (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(2) : '—';
+    pnlEl.className   = 'stat-val ' + (netPnl >= 0 ? 'c-green' : 'c-red'); }
+    { const _r_st_wins = document.getElementById('st-wins'); if(_r_st_wins) _r_st_wins.textContent = wins.length; }
+    { const _r_st_losses = document.getElementById('st-losses'); if(_r_st_losses) _r_st_losses.textContent = losses.length; }
+    { const _r_st_be = document.getElementById('st-be'); if(_r_st_be) _r_st_be.textContent = bes.length; }
+    { const _r_st_avgwin = document.getElementById('st-avgwin'); if(_r_st_avgwin) _r_st_avgwin.textContent = avgWin; }
+    { const _r_st_avgloss = document.getElementById('st-avgloss'); if(_r_st_avgloss) _r_st_avgloss.textContent = avgLoss; }
 
     // Long / Short stats
     const dirRow = document.getElementById('dir-stats-row');
     if (total > 0) {
-      dirRow.style.display = 'block';
+      if (dirRow) dirRow.style.display = 'block';
       const longs      = trades.filter(t => t.dir === 'Long');
       const shorts     = trades.filter(t => t.dir === 'Short');
       const longWins   = longs.filter(t => t.result === 'Win');
@@ -1082,19 +1141,17 @@
       const longPct    = total ? (longs.length / total * 100).toFixed(0) : 0;
       const shortPct   = total ? (shorts.length / total * 100).toFixed(0) : 0;
 
-      document.getElementById('st-longtrades').textContent  = longs.length;
+      { const _r_st_longtrades = document.getElementById('st-longtrades'); if(_r_st_longtrades) _r_st_longtrades.textContent = longs.length; }
       const longWREl = document.getElementById('st-longwr');
-      longWREl.textContent  = longWR;
-      longWREl.className    = 'stat-sub ' + (longs.length ? (longWins.length/longs.length >= 0.5 ? 'c-green' : 'c-red') : 'c-white');
+      if (longWREl) { longWREl.textContent = longWR; longWREl.className = 'stat-sub ' + (longs.length ? (longWins.length/longs.length >= 0.5 ? 'c-green' : 'c-red') : 'c-white'); }
 
-      document.getElementById('st-shorttrades').textContent = shorts.length;
+      { const _r_st_shorttrades = document.getElementById('st-shorttrades'); if(_r_st_shorttrades) _r_st_shorttrades.textContent = shorts.length; }
       const shortWREl = document.getElementById('st-shortwr');
-      shortWREl.textContent = shortWR;
-      shortWREl.className   = 'stat-sub ' + (shorts.length ? (shortWins.length/shorts.length >= 0.5 ? 'c-green' : 'c-red') : 'c-white');
+      if (shortWREl) { shortWREl.textContent = shortWR; shortWREl.className = 'stat-sub ' + (shorts.length ? (shortWins.length/shorts.length >= 0.5 ? 'c-green' : 'c-red') : 'c-white'); }
 
-      document.getElementById('st-longshortpct').textContent = longs.length && shorts.length ? longPct + '% / ' + shortPct + '%' : longs.length ? '100% L' : shorts.length ? '100% S' : '—';
+      { const _r_st_longshortpct = document.getElementById('st-longshortpct'); if(_r_st_longshortpct) _r_st_longshortpct.textContent = longs.length && shorts.length ? longPct + '% / ' + shortPct + '%' : longs.length ? '100% L' : shorts.length ? '100% S' : '—'; }
     } else {
-      dirRow.style.display = 'none';
+      if (dirRow) dirRow.style.display = 'none';
     }
 
     // Tax stats
@@ -1161,19 +1218,19 @@
       const sharpeEl  = document.getElementById('st-sharpe');
       const sortinoEl = document.getElementById('st-sortino');
       sharpeEl.textContent  = sharpe;
-      sharpeEl.className    = 'stat-val ' + (sharpeNum >= 1 ? 'c-green' : sharpeNum >= 0 ? 'c-gold' : 'c-red');
+      if (sharpeEl) sharpeEl.className    = 'stat-val ' + (sharpeNum >= 1 ? 'c-green' : sharpeNum >= 0 ? 'c-gold' : 'c-red');
       sortinoEl.textContent = sortino;
-      sortinoEl.className   = 'stat-val ' + (sortinoNum >= 1 ? 'c-green' : sortinoNum >= 0 ? 'c-gold' : 'c-red');
-      document.getElementById('st-maxdd').textContent        = maxDDstr;
-      document.getElementById('st-consistency').textContent  = consScore + '%';
-      document.getElementById('st-consistency').className    = 'stat-val ' + (consScore >= 70 ? 'c-green' : consScore >= 50 ? 'c-gold' : 'c-red');
+      if (sortinoEl) sortinoEl.className   = 'stat-val ' + (sortinoNum >= 1 ? 'c-green' : sortinoNum >= 0 ? 'c-gold' : 'c-red');
+      { const _r_st_maxdd = document.getElementById('st-maxdd'); if(_r_st_maxdd) _r_st_maxdd.textContent = maxDDstr; }
+      { const _r_st_consistency = document.getElementById('st-consistency'); if(_r_st_consistency) _r_st_consistency.textContent = consScore + '%'; }
+      { const _r_st_consistency = document.getElementById('st-consistency'); if(_r_st_consistency) _r_st_consistency.className = 'stat-val ' + (consScore >= 70 ? 'c-green' : consScore >= 50 ? 'c-gold' : 'c-red'); }
 
       const TT = LANGS[currentLang];
       if (TT.sharpeHint) {
-        document.getElementById('st-sharpe-hint').textContent     = TT.sharpeHint(sharpeNum);
-        document.getElementById('st-sortino-hint').textContent    = TT.sortinoHint(sortinoNum);
-        document.getElementById('st-consistency-hint').textContent= TT.consistencyHint(consScore);
-        document.getElementById('risk-explain').textContent       = TT.riskExplain(sharpe, sortino, maxDDstr, consScore, n);
+        { const _r_st_sharpe_hint = document.getElementById('st-sharpe-hint'); if(_r_st_sharpe_hint) _r_st_sharpe_hint.textContent = TT.sharpeHint(sharpeNum); }
+        { const _r_st_sortino_hint = document.getElementById('st-sortino-hint'); if(_r_st_sortino_hint) _r_st_sortino_hint.textContent = TT.sortinoHint(sortinoNum); }
+        { const _r_st_consistency_hint = document.getElementById('st-consistency-hint'); if(_r_st_consistency_hint) _r_st_consistency_hint.textContent = TT.consistencyHint(consScore); }
+        { const _r_risk_explain = document.getElementById('risk-explain'); if(_r_risk_explain) _r_risk_explain.textContent = TT.riskExplain(sharpe, sortino, maxDDstr, consScore, n); }
       }
     } else {
       riskCard.style.display = 'none';
@@ -1190,8 +1247,10 @@
   setLang(initLang, flagMap[initLang]);
   setTaxRate(taxRate);
   if (startCap > 0) document.getElementById('chart-startcap').value = startCap;
-  document.getElementById('compound-classic').classList.toggle('active', compoundMode === 'classic');
-  document.getElementById('compound-safe').classList.toggle('active', compoundMode === 'safe');
+  const ccEl = document.getElementById('compound-classic');
+  const csEl = document.getElementById('compound-safe');
+  if (ccEl) ccEl.classList.toggle('active', compoundMode === 'classic');
+  if (csEl) csEl.classList.toggle('active', compoundMode === 'safe');
   colorDir(); colorResult();
 </script>
 </body>
