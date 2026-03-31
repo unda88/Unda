@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unda · Monte Carlo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --g: #00ffb2; --g2: rgba(0,255,178,0.55); --gold: #ffd97a;
+      --red: #ff4444; --text: #e0fff5; --text-muted: rgba(0,255,178,0.45);
+      --border: rgba(0,255,178,0.18); --card: rgba(255,255,255,0.035); --inp: rgba(255,255,255,0.05);
+    }
+    html, body { min-height: 100vh; font-family: 'Outfit', sans-serif; background: #000b08; color: var(--text); overflow-x: hidden; }
+    .bg { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 15% 15%, #001a0e 0%, #000c18 45%, #000508 100%); }
+    .bg-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,178,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,178,0.025) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%); }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .orb-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(0,255,178,0.08) 0%, transparent 65%); animation: drift1 12s ease-in-out infinite alternate; }
+    .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(255,217,122,0.07) 0%, transparent 65%); animation: drift2 15s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(30px,20px)} }
+    @keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-20px,-30px)} }
+    .tl { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 10; background: linear-gradient(90deg, transparent 5%, var(--g) 30%, #fff 50%, var(--g) 70%, transparent 95%); box-shadow: 0 0 6px 2px var(--g), 0 0 30px 10px rgba(0,255,178,0.3); animation: flicker 9s ease-in-out infinite; }
+    @keyframes flicker { 0%,100%{opacity:1} 93%{opacity:.7} 94%{opacity:1} 96%{opacity:.85} 97%{opacity:1} }
+
+    /* Lang switcher */
+    .lang-sw { position: fixed; top: 14px; right: 18px; z-index: 100; font-size: 11px; color: var(--g2); cursor: pointer; user-select: none; background: rgba(0,255,178,0.06); border: 1px solid rgba(0,255,178,0.15); border-radius: 8px; padding: 5px 10px; transition: background .2s; }
+    .lang-sw:hover { background: rgba(0,255,178,0.12); }
+    .lang-menu { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #000d07; border: 1px solid rgba(0,255,178,0.18); border-radius: 12px; padding: 6px; min-width: 110px; box-shadow: 0 16px 40px rgba(0,0,0,0.7); flex-direction: column; gap: 2px; }
+    .lang-sw.open .lang-menu { display: flex; }
+    .lang-menu div { padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-muted); transition: all .15s; font-size: 11px; }
+    .lang-menu div:hover { background: rgba(0,255,178,0.1); color: var(--g); }
+    .lang-menu div.active { color: var(--g); background: rgba(0,255,178,0.07); }
+
+    .page { position: relative; z-index: 1; padding: 3rem 1.5rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 2rem; animation: fadeUp .6s both; }
+    .header-brand { font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: var(--g2); margin-bottom: 4px; }
+    .header-title { font-size: 26px; font-weight: 600; color: var(--gold); margin-bottom: 2px; }
+    .header-line3 { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(0,255,178,0.45); margin-bottom: 4px; }
+    .header-line4 { font-size: 36px; font-weight: 600; color: var(--g); letter-spacing: -.01em; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .card { background: var(--card); backdrop-filter: blur(32px); border-radius: 22px; border: 1px solid var(--border); overflow: visible; position: relative; box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.12), 0 20px 60px rgba(0,0,0,0.7); margin-bottom: 16px; }
+    .card::before { content:''; position:absolute; top:0; left:8%; right:8%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5) 35%,rgba(0,255,178,0.85) 50%,rgba(255,255,255,0.5) 65%,transparent); border-radius:22px 22px 0 0; }
+    .card-inner { padding: 1.75rem 2rem; }
+    .sec { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .sec::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:680px) { .two-col { grid-template-columns: 1fr; } }
+
+    .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .inputs-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    @media(max-width:500px) { .inputs-grid.three { grid-template-columns: 1fr 1fr; } }
+
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fl { font-size: 10px; color: var(--text-muted); letter-spacing: .1em; text-transform: uppercase; }
+    .iw { display: flex; align-items: center; background: var(--inp); border-radius: 10px; border: 1px solid rgba(0,255,178,0.12); padding: 0 13px; height: 44px; transition: border-color .2s; }
+    .iw:focus-within { border-color: rgba(0,255,178,0.5); background: rgba(0,255,178,0.04); }
+    .px { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--g2); margin-right: 9px; white-space: nowrap; }
+    .iw input, .iw select { background: transparent; border: none; outline: none; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; width: 100%; }
+    .iw input::-webkit-inner-spin-button { opacity: .3; }
+    .iw select option { background: #000d07; }
+
+    /* Tax rate shortcuts */
+    .rate-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 1rem; }
+    .rate-btn { background: var(--inp); border: 1px solid rgba(0,255,178,0.12); border-radius: 9px; padding: 8px 4px; text-align: center; font-size: 11px; color: var(--text-muted); cursor: pointer; transition: all .2s; font-family: 'DM Mono', monospace; }
+    .rate-btn:hover { background: rgba(0,255,178,0.07); }
+    .rate-btn.active { background: rgba(0,255,178,0.1); border-color: rgba(0,255,178,0.4); color: var(--g); }
+
+    /* Run button */
+    .run-btn { width: 100%; margin-top: .5rem; padding: 13px; background: rgba(0,255,178,0.1); border: 1px solid rgba(0,255,178,0.35); border-radius: 12px; color: var(--g); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .2s; }
+    .run-btn:hover { background: rgba(0,255,178,0.18); box-shadow: 0 0 20px rgba(0,255,178,0.15); }
+
+    /* Result blocks */
+    .result-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1rem; }
+    @media(max-width:500px) { .result-grid { grid-template-columns: 1fr 1fr; } }
+    .rblock { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.1); border-radius: 14px; padding: 14px 12px; position: relative; overflow: hidden; }
+    .rblock::before { content:''; position:absolute; top:0; left:10%; right:10%; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); }
+    .rblock.gold { border-color: rgba(255,217,122,0.2); background: rgba(255,217,122,0.04); }
+    .rblock.green { border-color: rgba(0,255,136,0.25); background: rgba(0,255,136,0.05); }
+    .rblock.red-b { border-color: rgba(255,68,68,0.2); background: rgba(255,68,68,0.04); }
+    .rl { font-size: 9px; color: var(--text-muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+    .rv { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; }
+    .rs { font-size: 11px; color: rgba(180,240,220,0.5); margin-top: 3px; font-family: 'DM Mono', monospace; }
+    .c-green { color: #00ff88; } .c-gold { color: var(--gold); } .c-red { color: var(--red); } .c-white { color: var(--text); }
+
+    /* Verdict */
+    .verdict { border-radius: 12px; padding: 13px 16px; text-align: center; font-size: 13px; font-weight: 500; margin-bottom: 1rem; }
+
+    /* Chart */
+    .chart-wrap { position: relative; height: 380px; margin-bottom: .5rem; }
+
+    /* Year summary bar */
+    .year-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .year-pill { background: rgba(255,217,122,0.06); border: 1px solid rgba(255,217,122,0.2); border-radius: 10px; padding: 8px 12px; font-size: 10px; font-family: 'DM Mono', monospace; }
+    .year-pill-title { color: var(--gold); font-weight: 500; margin-bottom: 4px; font-size: 11px; }
+    .year-pill-row { color: rgba(180,240,220,0.5); display: flex; justify-content: space-between; gap: 12px; margin-top: 2px; }
+    .year-pill-row span:last-child { color: var(--text); }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1rem; }
+    @media(max-width:500px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+    .stat { background: rgba(0,255,178,0.04); border: 1px solid rgba(0,255,178,0.08); border-radius: 10px; padding: 11px 10px; text-align: center; }
+    .stat-l { font-size: 9px; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-v { font-family: 'DM Mono', monospace; font-size: 14px; }
+
+    /* Trade log */
+    .log-wrap { max-height: 320px; overflow-y: auto; border-radius: 10px; border: 1px solid rgba(0,255,178,0.1); }
+    .log-wrap::-webkit-scrollbar { width: 4px; }
+    .log-wrap::-webkit-scrollbar-thumb { background: rgba(0,255,178,0.2); border-radius: 2px; }
+    .log-total-row td { font-weight: 600; font-family: 'DM Mono', monospace; font-size: 12px; padding: 9px 12px; text-align: right; border-top: 1px solid rgba(0,255,178,0.2); background: rgba(0,255,178,0.04); color: var(--text); position: sticky; bottom: 0; }
+    .log-total-row td:first-child { text-align: left; color: var(--g2); }
+    .active-sim-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,255,178,0.08); border: 1px solid rgba(0,255,178,0.25); border-radius: 8px; padding: 3px 10px; font-size: 10px; color: var(--g); font-family: 'DM Mono', monospace; margin-left: 8px; cursor: pointer; transition: all .2s; }
+    .active-sim-badge:hover { background: rgba(0,255,178,0.14); }
+    table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 12px; }
+    thead tr { background: #000f08; position: sticky; top: 0; z-index: 2; }
+    tfoot tr { background: #000f08; position: sticky; bottom: 0; z-index: 2; }
+    th { padding: 9px 12px; text-align: right; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
+    th:first-child { text-align: left; }
+    td { padding: 7px 12px; text-align: right; border-bottom: 1px solid rgba(0,255,178,0.05); }
+    td:first-child { text-align: left; }
+    tr:last-child td { border-bottom: none; }
+    .win-row td:first-child { color: #00ff88; }
+    .loss-row td:first-child { color: var(--red); }
+
+    .note { font-size: 11px; color: rgba(0,255,178,0.25); text-align: center; margin-top: .5rem; font-style: italic; }
+
+    /* Tooltips */
+    .flr { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .ti { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%; background:rgba(0,255,178,0.07); color:rgba(0,255,178,0.5); font-size:9px; cursor:pointer; position:relative; flex-shrink:0; font-style:normal; border:1px solid rgba(0,255,178,0.18); transition:all .15s; }
+    .ti:hover { background:rgba(0,255,178,0.14); }
+    #global-tooltip { display:none; position:fixed; z-index:99999; background:rgba(0,10,6,0.97); border:1px solid rgba(0,255,178,0.25); border-radius:10px; padding:10px 13px; font-family:'Outfit',sans-serif; font-size:11px; color:#a8ffdf; width:240px; white-space:normal; line-height:1.6; box-shadow:0 10px 30px rgba(0,0,0,0.8); pointer-events:none; }
+    .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+
+    /* Break-even bar */
+    .be-bar-wrap { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,255,178,0.08); }
+    .be-bar-title { font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .be-bar-track { position: relative; height: 6px; background: rgba(255,68,68,0.15); border-radius: 3px; margin-bottom: 6px; }
+    .be-bar-fill { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+    .be-needle { position: absolute; top: -5px; width: 2px; height: 16px; border-radius: 1px; background: var(--gold); transition: left .3s; transform: translateX(-50%); box-shadow: 0 0 6px rgba(255,217,122,0.6); }
+    .be-needle-wr { background: #00ff88; box-shadow: 0 0 6px rgba(0,255,136,0.6); }
+    .be-bar-labels { display: flex; justify-content: space-between; font-size: 9px; font-family: 'DM Mono', monospace; color: rgba(0,255,178,0.3); }
+    .be-bar-stats { display: flex; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
+    .be-stat { font-size: 10px; font-family: 'DM Mono', monospace; }
+    .be-stat-label { color: rgba(0,255,178,0.35); margin-right: 4px; }
+    .be-verdict-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  </style>
+<script>
+  if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
+  window.addEventListener('pageshow',e=>{if(e.persisted)location.reload(true);});
+</script>
+</head>
+<body>
+<div id="global-tooltip"></div>
+<div class="bg"><div class="bg-grid"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="tl"></div>
+
+<div class="lang-sw" id="lang-sw" onclick="toggleLangMenu()">
+  <span id="cur-lang">🇬🇧 EN</span> ▾
+  <div class="lang-menu" id="lang-menu">
+    <div onclick="setLang('nl','🇳🇱 NL')">🇳🇱 NL</div>
+    <div onclick="setLang('en','🇬🇧 EN')" class="active">🇬🇧 EN</div>
+    <div onclick="setLang('fr','🇫🇷 FR')">🇫🇷 FR</div>
+    <div onclick="setLang('es','🇪🇸 ES')">🇪🇸 ES</div>
+    <div onclick="setLang('de','🇩🇪 DE')">🇩🇪 DE</div>
+    <div onclick="setLang('it','🇮🇹 IT')">🇮🇹 IT</div>
+    <div onclick="setLang('pt','🇵🇹 PT')">🇵🇹 PT</div>
+    <div onclick="setLang('tr','🇹🇷 TR')">🇹🇷 TR</div>
+    <div onclick="setLang('ar','🇸🇦 AR')">🇸🇦 AR</div>
+    <div onclick="setLang('ru','🇷🇺 RU')">🇷🇺 RU</div>
+  </div>
+</div>
+
+<div class="page">
+  <a class="nav" id="t-nav" href="index.html" style="position:relative;z-index:1;display:inline-block;font-size:12px;color:rgba(0,255,178,0.45);text-decoration:none;margin-bottom:1.5rem;transition:color .2s;align-self:flex-start">← Back to suite</a>
+
+  <div class="header">
+    <div class="header-brand">Unda</div>
+    <div class="header-title" id="t-title">Monte Carlo</div>
+    <div class="header-line3">Tax</div>
+    <div class="header-line4" id="t-subtitle">Reality Check</div>
+  </div>
+
+  <div class="two-col">
+    <!-- Simulation params -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec" id="t-sec-sim">Simulation parameters</div>
+        <div class="inputs-grid">
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-account">Account size</span><i class="ti" id="tip-account" data-tip="Your starting capital in dollars. All results are calculated as a multiple of this amount.">?</i></div>
+            <div class="iw"><span class="px">$</span><input type="number" id="account" value="10000" min="100"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-winrate">Win rate (%)</span><i class="ti" id="tip-winrate" data-tip="Percentage of trades that end in profit. 40% means 4 out of 10 trades win. Most profitable strategies win between 35–60% of trades.">?</i></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="winrate" value="40" min="1" max="100" step="1" oninput="if(this.value!==''){this.value=Math.min(Math.max(parseInt(this.value),1),100);}updateBeBar()"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-rr">Risk / Reward</span><i class="ti" id="tip-rr" data-tip="How much you win vs how much you lose per trade. R:R of 2 means if you risk $100, you gain $200 on a win. Higher R:R = you need fewer wins to be profitable.">?</i></div>
+            <div class="iw"><span class="px">R</span><input type="number" id="rr" value="2" min="0.1" step="0.1" oninput="updateBeBar()"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-risk">Risk per trade (%)</span><i class="ti" id="tip-risk" data-tip="Percentage of your current account balance you risk per trade. 1% is conservative. Above 3% is aggressive. This compounds — your bet size grows as your account grows.">?</i></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="riskpt" value="1" min="0.1" max="100" step="0.1" oninput="if(this.value!=='')this.value=Math.min(Math.max(parseFloat(this.value),0.1),100)"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-trades">Number of trades</span><i class="ti" id="tip-trades" data-tip="How many trades per simulation run. More trades = more reliable result. 100–500 trades represents roughly 1–2 years of active trading.">?</i></div>
+            <div class="iw"><span class="px">#</span><input type="number" id="trades" value="200" min="10" max="2000" step="10"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-years">Number of years</span><i class="ti" id="tip-years" data-tip="How many years your trades span. This determines how many times the annual exemption is applied and shows yearly tax deductions as drops in the chart. E.g. 200 trades over 2 years = exemption applied twice.">?</i></div>
+            <div class="iw"><span class="px">#</span><input type="number" id="years" value="1" min="1" max="10" step="1" oninput="if(this.value!=='')this.value=Math.min(Math.max(parseInt(this.value),1),10)"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-sims">Simulations</span><i class="ti" id="tip-sims" data-tip="How many times to run the simulation. More simulations = more reliable average. 10–20 gives a good picture. Results are averaged across all runs.">?</i></div>
+            <div class="iw"><span class="px">x</span><input type="number" id="sims" value="10" min="1" max="1000" step="1" oninput="checkSimsWarning()"></div>
+          </div>
+        </div>
+
+        <!-- Break-even bar -->
+        <div class="be-bar-wrap" id="be-bar-section">
+          <div class="be-bar-title">
+            <span id="t-be-bar-title">Break-even indicator</span>
+            <span id="be-verdict-text" style="font-size:10px;font-weight:500"></span>
+          </div>
+          <div class="be-bar-track">
+            <div class="be-bar-fill" id="be-bar-fill"></div>
+            <div class="be-needle" id="be-needle-be" style="left:25%"></div>
+            <div class="be-needle be-needle-wr" id="be-needle-wr" style="left:40%"></div>
+          </div>
+          <div class="be-bar-labels">
+            <span>0%</span><span>50%</span><span>100%</span>
+          </div>
+          <div class="be-bar-stats">
+            <div class="be-stat"><span class="be-stat-label" id="t-be-gross-lbl">BE gross:</span><span id="be-gross-val" style="color:var(--gold)">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-real-lbl">BE real:</span><span id="be-real-val" style="color:var(--red)">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-wr-lbl">Win rate:</span><span id="be-wr-val" style="color:#00ff88">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-margin-lbl">Margin:</span><span id="be-margin-val">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec" id="t-sec-tax">Tax settings</div>
+
+        <div class="fg" style="margin-bottom:.75rem">
+          <div class="flr"><span class="fl" id="t-lbl-taxrate">Tax rate on profits (%)</span><i class="ti" id="tip-taxrate" data-tip="The percentage of your trading profits you pay as capital gains tax. Use the shortcuts or enter your country's rate. Belgium 2026: 10%. Many countries: 25–33%.">?</i></div>
+          <div class="rate-row">
+            <div class="rate-btn" id="rate-10-btn" onclick="setRate(10)">10%</div>
+            <div class="rate-btn" id="rate-33-btn" onclick="setRate(33)">33%</div>
+            <div class="rate-btn" id="rate-50-btn" onclick="setRate(50)">50%</div>
+            <div class="rate-btn active" id="rate-custom-btn" onclick="focusCustomRate()">Custom</div>
+          </div>
+          <div class="iw"><span class="px">%</span><input type="number" id="taxrate" value="10" min="0" max="99" step="0.5" oninput="clearRateButtons();updateBeBar()"></div>
+        </div>
+
+        <div class="inputs-grid">
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-exemption">Annual exemption</span><i class="ti" id="tip-exemption" data-tip="The first X euros of profit per year are tax-free. In Belgium 2026 this is €10,000. Set to 0 if your country has no exemption. Reduces your effective tax rate.">?</i></div>
+            <div class="iw"><span class="px">€</span><input type="number" id="exemption" value="10000" min="0" step="500"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-lossdeduct">Loss deductible (%)</span><i class="ti" id="tip-lossdeduct" data-tip="In some countries you can deduct trading losses from your taxable gains. 0% = no deduction (Belgium). 100% = full deduction. Enter any % between 0 and 100 for your country.">?</i></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="lossdeduct" value="0" min="0" max="100" step="5"></div>
+          </div>
+          <div class="fg">
+            <div class="flr"><span class="fl" id="t-lbl-fees">Fees per trade (%)</span><i class="ti" id="tip-fees" data-tip="Broker/exchange fee as % of your bet per trade. E.g. 0.1% on Binance. Applied to every trade — deducted from gross P&L before tax.">?</i></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="feerate" value="0" min="0" max="10" step="0.01" placeholder="0" oninput="updateBeBar()"></div>
+          </div>
+        </div>
+
+        <!-- Classic / Safe toggle -->
+        <div style="margin-bottom:.75rem;margin-top:.5rem">
+          <div class="flr" style="margin-bottom:8px">
+            <span class="fl" id="t-lbl-compound">Compound mode</span>
+            <i class="ti" id="tip-compound" data-tip="Classic: compound on full gross balance, tax deducted at year end — big drop visible at year end. Safe: deduct tax after each winning trade, compound only on net — no surprise at year end but lower final balance.">?</i>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="rate-btn active" id="compound-classic-btn" onclick="setCompoundMode('classic')" id="t-compound-classic">Classic</div>
+            <div class="rate-btn" id="compound-safe-btn" onclick="setCompoundMode('safe')" id="t-compound-safe">Safe</div>
+          </div>
+        </div>
+
+        <button class="run-btn" onclick="runSim()" id="run-btn">▶ <span id="t-runbtn">Run Simulation</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" style="display:none">
+
+    <!-- Main result blocks -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec" id="t-sec-results">Results summary <span style="font-size:9px;color:rgba(0,255,178,0.3);font-weight:400;letter-spacing:.05em" id="t-avg-label">(average of all simulations)</span></div>
+        <div class="result-grid">
+          <div class="rblock">
+            <div class="flr"><div class="rl" id="t-r-gross">Gross balance (avg)</div><i class="ti" id="tip-gross" data-tip="Your average final account balance across all simulations, WITHOUT tax deducted. This is what you would have if there were no capital gains tax.">?</i></div>
+            <div class="rv c-white" id="r-gross">—</div>
+            <div class="rs" id="r-gross-pnl">—</div>
+          </div>
+          <div class="rblock gold">
+            <div class="flr"><div class="rl" id="t-r-tax">Total tax paid (avg)</div><i class="ti" id="tip-tax" data-tip="Average total tax paid across all simulations. Calculated on winning trades only, after subtracting your annual exemption. Loss deduction % also reduces this.">?</i></div>
+            <div class="rv c-gold" id="r-tax">—</div>
+            <div class="rs" id="r-tax-sub">—</div>
+          </div>
+          <div class="rblock green">
+            <div class="flr"><div class="rl" id="t-r-net">Net balance (avg)</div><i class="ti" id="tip-net" data-tip="What you actually keep after tax. This is gross balance minus total tax paid. The most important number — your real result.">?</i></div>
+            <div class="rv" id="r-net">—</div>
+            <div class="rs" id="r-net-pnl">—</div>
+          </div>
+          <div class="rblock">
+            <div class="flr"><div class="rl" id="t-r-best">Best run (gross)</div><i class="ti" id="tip-best" data-tip="The best final balance across all simulations — before tax. Shows the upside potential of your strategy.">?</i></div>
+            <div class="rv c-green" id="r-best">—</div>
+          </div>
+          <div class="rblock red-b">
+            <div class="flr"><div class="rl" id="t-r-worst">Worst run (gross)</div><i class="ti" id="tip-worst" data-tip="The worst final balance across all simulations — before tax. Shows your downside risk. If this is below your starting account, your strategy can blow up.">?</i></div>
+            <div class="rv c-red" id="r-worst">—</div>
+          </div>
+          <div class="rblock">
+            <div class="flr"><div class="rl" id="t-r-efftax">Effective tax rate</div><i class="ti" id="tip-efftax" data-tip="Your real tax rate on gross profit — after exemption and loss deductions. Usually lower than your nominal tax rate because of the exemption.">?</i></div>
+            <div class="rv c-gold" id="r-efftax">—</div>
+            <div class="rs" id="t-r-efftax-sub">of gross profit</div>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat"><div class="flr" style="justify-content:center;margin-bottom:5px"><div class="stat-l" id="t-st-wr">Real win rate</div><i class="ti" id="tip-wr" data-tip="Your actual win rate from the simulation — should be close to your input win rate but will vary due to randomness.">?</i></div><div class="stat-v c-green" id="st-wr">—</div></div>
+          <div class="stat"><div class="flr" style="justify-content:center;margin-bottom:5px"><div class="stat-l" id="t-st-be">Break-even WR</div><i class="ti" id="tip-be" data-tip="The minimum win rate needed to break even with your R:R ratio. Formula: 1 ÷ (1 + R:R). If your win rate is below this, you lose money long-term.">?</i></div><div class="stat-v c-white" id="st-be">—</div></div>
+          <div class="stat"><div class="flr" style="justify-content:center;margin-bottom:5px"><div class="stat-l" id="t-st-pf">Profit factor</div><i class="ti" id="tip-pf" data-tip="Total gross wins divided by total gross losses. Above 1 = profitable. Above 1.5 = good. Above 2 = excellent. Below 1 = losing strategy.">?</i></div><div class="stat-v c-white" id="st-pf">—</div></div>
+          <div class="stat"><div class="flr" style="justify-content:center;margin-bottom:5px"><div class="stat-l" id="t-st-saved">Saved by exemption</div><i class="ti" id="tip-saved" data-tip="How much tax you avoided thanks to the annual exemption. The first X of your annual profits are tax-free — this is what that saves you on average.">?</i></div><div class="stat-v c-gold" id="st-saved">—</div></div>
+        </div>
+
+        <!-- Win/Blown stats -->
+        <div class="stats-row" id="sim-outcome-row" style="margin-top:0">
+          <div class="stat" style="border-color:rgba(0,255,136,0.15);background:rgba(0,255,136,0.04)">
+            <div class="stat-l" id="t-st-profitable">✅ Profitable runs</div>
+            <div class="stat-v c-green" id="st-profitable">—</div>
+          </div>
+          <div class="stat" style="border-color:rgba(255,68,68,0.15);background:rgba(255,68,68,0.04)">
+            <div class="stat-l" id="t-st-blown">❌ Account blown</div>
+            <div class="stat-v c-red" id="st-blown">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-l" id="t-st-survival">Survival rate</div>
+            <div class="stat-v" id="st-survival">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-l" id="t-st-totalruns">Total runs</div>
+            <div class="stat-v c-white" id="st-totalruns">—</div>
+          </div>
+        </div>
+
+        <!-- Drawdown / Consecutive stats (avg) -->
+        <div class="stats-row" style="margin-top:0">
+          <div class="stat" style="border-color:rgba(255,68,68,0.12);background:rgba(255,68,68,0.03)">
+            <div class="stat-l">Avg max drawdown <span style="color:rgba(0,255,178,0.25);font-size:8px">(excl. tax)</span></div>
+            <div class="stat-v c-red" id="st-maxdd">—</div>
+          </div>
+          <div class="stat" style="border-color:rgba(255,68,68,0.12);background:rgba(255,68,68,0.03)">
+            <div class="stat-l">Avg max consec. losses</div>
+            <div class="stat-v c-red" id="st-consecloss">—</div>
+          </div>
+          <div class="stat" style="border-color:rgba(0,255,136,0.12);background:rgba(0,255,136,0.03)">
+            <div class="stat-l">Avg max consec. wins</div>
+            <div class="stat-v c-green" id="st-consecwin">—</div>
+          </div>
+          <div class="stat" style="border-color:rgba(0,255,178,0.12);background:rgba(0,255,178,0.03)">
+            <div class="stat-l">Median final balance</div>
+            <div class="stat-v" id="st-medianbal">—</div>
+          </div>
+        </div>
+
+        <!-- Verdict -->
+        <div class="verdict" id="verdict"></div>
+        <div class="note" id="verdict-note"></div>
+      </div>
+    </div>
+
+    <!-- Monte Carlo chart -->
+    <div class="card">
+      <div class="card-inner">
+        <div style="display:flex;align-items:center;margin-bottom:1rem;gap:8px">
+          <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,255,178,0.35)" id="t-sec-chart">Monte Carlo — all simulations</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent)"></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button id="median-btn" onclick="toggleAvg('median')" style="background:rgba(0,210,255,0.15);border:1px solid rgba(0,210,255,0.5);border-radius:8px;padding:3px 10px;font-size:10px;color:rgba(0,210,255,0.9);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Median</button>
+            <button id="avg-btn" onclick="toggleAvg('avg')" style="background:rgba(180,100,255,0.15);border:1px solid rgba(180,100,255,0.5);border-radius:8px;padding:3px 10px;font-size:10px;color:rgba(180,100,255,0.9);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Avg</button>
+            <button id="solo-btn" onclick="toggleSolo()" style="background:rgba(0,10,6,0.85);border:1px solid rgba(0,255,178,0.25);border-radius:8px;padding:3px 10px;font-size:10px;color:var(--g2);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Solo</button>
+          </div>
+        </div>
+        <div style="position:relative">
+          <div class="chart-wrap"><canvas id="simChart"></canvas></div>
+        </div>
+        <div class="year-summary" id="year-summary" style="display:none"></div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:9px;font-family:'DM Mono',monospace;color:rgba(180,240,220,0.3)">
+          <span>🟣 Average</span>
+          <span>🔵 Median</span>
+          <span>🟡 Selected sim</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trade log sim 1 -->
+    <div class="card">
+      <div class="card-inner">
+        <div class="sec" id="t-sec-log">Trade log <span id="active-sim-badge" class="active-sim-badge">Sim 1</span> <span style="font-size:9px;color:rgba(0,255,178,0.3);font-weight:400;letter-spacing:.05em" id="t-log-sub">(one example run — gross P&L, tax per trade & net result)</span></div>
+        <!-- Per-sim stats -->
+        <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap" id="sim-stats-row">
+          <div style="background:rgba(255,68,68,0.05);border:1px solid rgba(255,68,68,0.15);border-radius:8px;padding:6px 12px;font-size:10px;font-family:'DM Mono',monospace">
+            <span style="color:rgba(0,255,178,0.35)">Max drawdown (excl. tax): </span><span class="c-red" id="sim-maxdd">—</span>
+          </div>
+          <div style="background:rgba(255,68,68,0.05);border:1px solid rgba(255,68,68,0.15);border-radius:8px;padding:6px 12px;font-size:10px;font-family:'DM Mono',monospace">
+            <span style="color:rgba(0,255,178,0.35)">Max consec. losses: </span><span class="c-red" id="sim-consecloss">—</span>
+          </div>
+          <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:6px 12px;font-size:10px;font-family:'DM Mono',monospace">
+            <span style="color:rgba(0,255,178,0.35)">Max consec. wins: </span><span class="c-green" id="sim-consecwin">—</span>
+          </div>
+
+        </div>
+        <div class="log-wrap">
+          <table>
+            <thead><tr>
+              <th id="th-result">Result</th>
+              <th id="th-bet">Bet $</th>
+              <th id="th-gross">Gross P&L</th>
+              <th id="th-tax">Tax</th>
+              <th id="th-net">Net P&L</th>
+              <th id="th-bal">Balance $</th>
+            </tr></thead>
+            <tbody id="log-body"></tbody>
+            <tfoot id="log-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer" id="t-footer">unda · wave your risk · tax simulation for educational purposes only</div>
+</div>
+
+<script>
+const LANGS = {
+  en: { nav:'← Back to suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Tax', secSim:'Simulation parameters', lblAccount:'Account size', lblWinrate:'Win rate (%)', lblRr:'Risk / Reward', lblRisk:'Risk per trade (%)', lblTrades:'Number of trades', lblYears:'Number of years', lblSims:'Simulations', secTax:'Tax settings', lblTaxrate:'Tax rate on profits (%)', lblExemption:'Annual exemption', lblLossdeduct:'Loss deductible (%)', runBtn:'Run Simulation', runAgain:'Run Again', running:'Simulating...', secResults:'Results summary', rGross:'Gross balance (avg)', rTax:'Total tax paid (avg)', rNet:'Net balance (avg)', rBest:'Best run (gross)', rWorst:'Worst run (gross)', rEfftax:'Effective tax rate', rEfftaxSub:'of gross profit', stWr:'Real win rate', stBe:'Break-even WR', stPf:'Profit factor', stSaved:'Saved by exemption', secChart:'Monte Carlo — all simulations', secLog:'Trade log — simulation 1', thResult:'Result', thBet:'Bet $', thGross:'Gross P&L', thTax:'Tax', thNet:'Net P&L', thBal:'Balance $', win:'WIN', loss:'LOSS', verdictGreat:'Excellent — strong profit even after tax', verdictGood:'Good — solid profit after tax', verdictMarginal:'Marginal — low profit after tax. Improve your R:R or win rate.', verdictBad:'Not worth it — loss after tax. Build your edge first.', note:'Educational only — consult a tax advisor for your country', solo:'Solo', allSims:'All sims', total:'TOTAL', taxDeducted:'Tax deducted', exemptionLbl:'Exemption', afterTax:'After tax', clickLog:'click to open log', yearEnd:'Year {y} end — Sim {s} · Tax', footer:'unda · wave your risk · tax simulation for educational purposes only', lblFees:'Fees per trade (%)', lblCompound:'Compound mode', compoundClassic:'Classic', compoundSafe:'Safe',
+    tips: { account:'Your starting capital. All results scale from this amount.', winrate:'Percentage of trades that end in profit. 40% = 4 out of 10 trades win. Most strategies win 35–60%.', rr:'How much you win vs lose per trade. R:R 2 = risk $100, gain $200 on a win. Higher R:R = fewer wins needed.', risk:'% of account risked per trade. 1% is conservative, above 3% is aggressive. Compounds as account grows.', trades:'Trades per simulation. 100–500 ≈ 1–2 years of active trading. More trades = more reliable result.', sims:'Number of simulation runs. Results are averaged across all runs. 10–20 gives a good picture.', taxrate:"% of profits paid as capital gains tax. Belgium 2026: 10%. Many countries: 25–33%. Enter your country's rate.", exemption:'First X of annual profit is tax-free. Belgium 2026: €10,000. Set to 0 if no exemption in your country.', lossdeduct:'% of losses you can deduct from taxable gains. Belgium: 0%. Some countries allow full deduction (100%).', gross:'Average final balance WITHOUT tax across all simulations. What you would have with no capital gains tax.', tax:'Average total tax paid. Calculated on wins only, after exemption. Loss deduction % also reduces this.', net:'What you actually keep after tax. Gross balance minus tax paid. Your real result.', best:'Best final balance across all simulations — before tax. Your upside potential.', worst:'Worst final balance across all simulations — before tax. Your downside risk. Below start = strategy can blow up.', efftax:'Your real tax rate on gross profit — after exemption and loss deductions. Usually lower than nominal rate.', wr:'Actual win rate from the simulation. Should be close to your input but varies due to randomness.', be:'Minimum win rate to break even with your R:R. Formula: 1 ÷ (1 + R:R). Below this = losing long-term.', pf:'Total gross wins ÷ total gross losses. Above 1 = profitable. Above 1.5 = good. Above 2 = excellent.', saved:'Tax saved by the annual exemption. First X of annual profits are tax-free — this is what that saves you on average.' }
+  },
+  nl: { nav:'← Terug naar suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Belasting', secSim:'Simulatieparameters', lblAccount:'Accountgrootte', lblWinrate:'Winstpercentage (%)', lblRr:'Risico / Rendement', lblRisk:'Risico per trade (%)', lblTrades:'Aantal trades', lblYears:'Aantal jaren', lblSims:'Simulaties', secTax:'Belastinginstellingen', lblTaxrate:'Belastingtarief op winst (%)', lblExemption:'Jaarlijkse vrijstelling', lblLossdeduct:'Verlies aftrekbaar (%)', runBtn:'Simulatie starten', runAgain:'Opnieuw starten', running:'Simuleren...', secResults:'Resultaten overzicht', rGross:'Bruto saldo (gem.)', rTax:'Totale belasting (gem.)', rNet:'Netto saldo (gem.)', rBest:'Beste run (bruto)', rWorst:'Slechtste run (bruto)', rEfftax:'Effectief belastingtarief', rEfftaxSub:'van bruto winst', stWr:'Echte winstrate', stBe:'Break-even WR', stPf:'Winstfactor', stSaved:'Bespaard via vrijstelling', secChart:'Monte Carlo — alle simulaties', secLog:'Trade log — simulatie 1', thResult:'Resultaat', thBet:'Inzet $', thGross:'Bruto W/V', thTax:'Belasting', thNet:'Netto W/V', thBal:'Saldo $', win:'WIN', loss:'VERLIES', verdictGreat:'Uitstekend — sterke winst ook na belasting', verdictGood:'Goed — solide winst na belasting', verdictMarginal:'Marginaal — lage winst na belasting. Verbeter je R:R of winstrate.', verdictBad:'Niet de moeite — verlies na belasting. Bouw eerst je edge op.', note:'Enkel educatief — raadpleeg een belastingadviseur voor jouw land', solo:'Solo', allSims:'Alle sims', total:'TOTAAL', taxDeducted:'Belasting afgetrokken', exemptionLbl:'Vrijstelling', afterTax:'Na belasting', clickLog:'klik om log te openen', yearEnd:'Jaar {y} einde — Sim {s} · Belasting', footer:'unda · beheers je risico · belastingsimulatie enkel voor educatieve doeleinden', lblFees:'Kosten per trade (%)', lblCompound:'Samengesteld modus', compoundClassic:'Klassiek', compoundSafe:'Veilig',
+    tips: { account:'Je startkapitaal. Alle resultaten worden berekend als veelvoud van dit bedrag.', winrate:'Percentage trades dat eindigt in winst. 40% = 4 van de 10 trades winnen. De meeste strategieën winnen 35–60%.', rr:'Hoeveel je wint vs verliest per trade. R:R 2 = riskeer €100, win €200. Hogere R:R = minder wins nodig.', risk:'% van je account dat je per trade riskeert. 1% is conservatief, boven 3% is agressief. Groeit mee met je account.', trades:'Trades per simulatie. 100–500 ≈ 1–2 jaar actief traden. Meer trades = betrouwbaarder resultaat.', sims:'Aantal simulatierondes. Resultaten worden gemiddeld over alle rondes. 10–20 geeft een goed beeld.', taxrate:'% van je winst dat je betaalt als vermogenswinstbelasting. België 2026: 10%. Vul het tarief van jouw land in.', exemption:'De eerste X euro winst per jaar is belastingvrij. België 2026: €10.000. Zet op 0 als jouw land geen vrijstelling heeft.', lossdeduct:'% van je verliezen dat je mag aftrekken van de belastbare winst. België: 0%. Sommige landen laten 100% toe.', gross:'Gemiddeld eindsaldo ZONDER belasting over alle simulaties. Wat je zou hebben zonder vermogenswinstbelasting.', tax:'Gemiddelde totale belasting betaald. Berekend op winsten na vrijstelling. Verliesaftrek verlaagt dit ook.', net:'Wat je echt overhoudt na belasting. Bruto saldo minus belasting. Je echte resultaat.', best:'Beste eindsaldo over alle simulaties — voor belasting. Je maximale potentieel.', worst:'Slechtste eindsaldo over alle simulaties — voor belasting. Je neerwaarts risico. Onder start = strategie kan failliet gaan.', efftax:'Je echte belastingtarief op bruto winst — na vrijstelling en verliesaftrek. Meestal lager dan het nominale tarief.', wr:'Werkelijke winstrate van de simulatie. Dicht bij je invoer maar varieert door willekeur.', be:'Minimale winstrate om break-even te draaien met je R:R. Formule: 1 ÷ (1 + R:R). Lager = verlies op lange termijn.', pf:'Totale bruto winst ÷ totale bruto verlies. Boven 1 = winstgevend. Boven 1,5 = goed. Boven 2 = uitstekend.', saved:'Belasting bespaard via de jaarlijkse vrijstelling. De eerste X winst is belastingvrij — dit is wat dat gemiddeld bespaart.' }
+  },
+  fr: { nav:'← Retour à la suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Impôt', secSim:'Paramètres de simulation', lblAccount:'Taille du compte', lblWinrate:'Taux de gain (%)', lblRr:'Risque / Rendement', lblRisk:'Risque par trade (%)', lblTrades:'Nombre de trades', lblYears:'Nombre d\'années', lblSims:'Simulations', secTax:'Paramètres fiscaux', lblTaxrate:'Taux d\'imposition sur les gains (%)', lblExemption:'Exonération annuelle', lblLossdeduct:'Pertes déductibles (%)', runBtn:'Lancer la simulation', runAgain:'Relancer', running:'Simulation...', secResults:'Résumé des résultats', rGross:'Solde brut (moy.)', rTax:'Total impôts payés (moy.)', rNet:'Solde net (moy.)', rBest:'Meilleure run (brut)', rWorst:'Pire run (brut)', rEfftax:'Taux d\'imposition effectif', rEfftaxSub:'du profit brut', stWr:'Taux de gain réel', stBe:'Seuil de rentabilité', stPf:'Facteur de profit', stSaved:'Économisé par exonération', secChart:'Monte Carlo — toutes les simulations', secLog:'Journal — simulation 1', thResult:'Résultat', thBet:'Mise $', thGross:'P&P Brut', thTax:'Impôt', thNet:'P&P Net', thBal:'Solde $', win:'GAIN', loss:'PERTE', verdictGreat:'Excellent — fort profit même après impôts', verdictGood:'Bon — profit solide après impôts', verdictMarginal:'Marginal — faible profit après impôts. Améliorez votre R:R ou taux de gain.', verdictBad:'Pas rentable — perte après impôts. Construisez d\'abord votre avantage.', note:'Éducatif uniquement — consultez un conseiller fiscal pour votre pays', solo:'Solo', allSims:'Toutes', total:'TOTAL', taxDeducted:'Impôt déduit', exemptionLbl:'Exonération', afterTax:'Après impôt', clickLog:'cliquer pour ouvrir le journal', yearEnd:'Fin année {y} — Sim {s} · Impôt', footer:'unda · maîtrisez votre risque · simulation fiscale à des fins éducatives uniquement', lblFees:'Frais par trade (%)', lblCompound:'Mode de capitalisation', compoundClassic:'Classique', compoundSafe:'Sécurisé',
+    tips: { 'account':'Votre capital de départ. Tous les résultats sont calculés en multiple de ce montant.', 'winrate':'% des trades terminés en profit. 40% = 4 trades sur 10 gagnants. La plupart des stratégies gagnent 35–60%.', 'rr':'Gains vs pertes par trade. R:R 2 = risquer 100$, gagner 200$ sur un gain. R:R plus élevé = moins de gains nécessaires.', 'risk':'% du compte risqué par trade. 1% est conservateur, au-dessus de 3% est agressif. Se compose avec la croissance du compte.', 'trades':'Trades par simulation. 100–500 ≈ 1–2 ans de trading actif. Plus de trades = résultat plus fiable.', 'sims':'Nombre de runs de simulation. Les résultats sont moyennés sur tous les runs. 10–20 donne une bonne image.', 'taxrate':'% des profits payés en impôt sur les plus-values. Belgique 2026: 10%. Entrez le taux de votre pays.', 'exemption':'Les premiers X euros de profit annuel sont exonérés d\'impôt. Belgique 2026: €10 000. Mettez 0 si pas d\'exonération.', 'lossdeduct':'% des pertes déductibles des gains imposables. Belgique: 0%. Certains pays autorisent 100%.', 'gross':'Solde final moyen SANS impôt sur toutes les simulations. Ce que vous auriez sans impôt sur les plus-values.', 'tax':'Impôt total moyen payé. Calculé sur les gains après exonération. La déduction des pertes réduit aussi ce montant.', 'net':'Ce que vous gardez réellement après impôt. Solde brut moins impôt payé. Votre vrai résultat.', 'best':'Meilleur solde final sur toutes les simulations — avant impôt. Votre potentiel maximum.', 'worst':'Pire solde final sur toutes les simulations — avant impôt. Votre risque baissier.', 'efftax':'Votre taux d\'imposition réel sur le profit brut — après exonération et déductions. Généralement inférieur au taux nominal.', 'wr':'Taux de gain réel de la simulation. Proche de votre saisie mais varie aléatoirement.', 'be':'Taux de gain minimum pour atteindre le seuil de rentabilité avec votre R:R. Formule: 1 ÷ (1 + R:R).', 'pf':'Gains bruts totaux ÷ pertes brutes totales. Au-dessus de 1 = rentable. Au-dessus de 1,5 = bien. Au-dessus de 2 = excellent.', 'saved':'Impôt économisé grâce à l\'exonération annuelle. Les premiers X de profit annuel sont exonérés.' }
+  },
+  es: { nav:'← Volver a la suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Impuesto', secSim:'Parámetros de simulación', lblAccount:'Tamaño de cuenta', lblWinrate:'Tasa de acierto (%)', lblRr:'Riesgo / Rendimiento', lblRisk:'Riesgo por trade (%)', lblTrades:'Número de trades', lblYears:'Número de años', lblSims:'Simulaciones', secTax:'Ajustes fiscales', lblTaxrate:'Tasa impositiva sobre ganancias (%)', lblExemption:'Exención anual', lblLossdeduct:'Pérdidas deducibles (%)', runBtn:'Ejecutar simulación', runAgain:'Ejecutar de nuevo', running:'Simulando...', secResults:'Resumen de resultados', rGross:'Saldo bruto (prom.)', rTax:'Impuestos pagados (prom.)', rNet:'Saldo neto (prom.)', rBest:'Mejor ejecución (bruto)', rWorst:'Peor ejecución (bruto)', rEfftax:'Tasa impositiva efectiva', rEfftaxSub:'del beneficio bruto', stWr:'Tasa de acierto real', stBe:'Tasa de equilibrio', stPf:'Factor de beneficio', stSaved:'Ahorrado por exención', secChart:'Monte Carlo — todas las simulaciones', secLog:'Registro — simulación 1', thResult:'Resultado', thBet:'Apuesta $', thGross:'PyG Bruto', thTax:'Impuesto', thNet:'PyG Neto', thBal:'Saldo $', win:'GANANCIA', loss:'PÉRDIDA', verdictGreat:'Excelente — fuerte beneficio incluso después de impuestos', verdictGood:'Bueno — beneficio sólido después de impuestos', verdictMarginal:'Marginal — bajo beneficio tras impuestos. Mejora tu R:R o tasa de acierto.', verdictBad:'No vale la pena — pérdida después de impuestos. Construye tu ventaja primero.', note:'Solo educativo — consulta un asesor fiscal de tu país', solo:'Solo', allSims:'Todas', total:'TOTAL', taxDeducted:'Impuesto deducido', exemptionLbl:'Exención', afterTax:'Tras impuesto', clickLog:'clic para abrir registro', yearEnd:'Fin año {y} — Sim {s} · Impuesto', footer:'unda · domina tu riesgo · simulación fiscal solo para fines educativos', lblFees:'Comisiones por trade (%)', lblCompound:'Modo de capitalización', compoundClassic:'Clásico', compoundSafe:'Seguro',
+    tips: { 'account':'Tu capital inicial. Todos los resultados se calculan como múltiplo de este monto.', 'winrate':'% de trades que terminan en ganancia. 40% = 4 de 10 trades ganan. La mayoría de estrategias ganan 35–60%.', 'rr':'Ganancias vs pérdidas por trade. R:R 2 = arriesgar $100, ganar $200 en ganancia. Mayor R:R = menos wins necesarios.', 'risk':'% de cuenta arriesgado por trade. 1% es conservador, más de 3% es agresivo. Se compone con el crecimiento de la cuenta.', 'trades':'Trades por simulación. 100–500 ≈ 1–2 años de trading activo. Más trades = resultado más fiable.', 'sims':'Número de runs de simulación. Los resultados se promedian en todos los runs. 10–20 da una buena imagen.', 'taxrate':'% de ganancias pagadas como impuesto sobre ganancias de capital. Ingresa la tasa de tu país.', 'exemption':'Los primeros X euros de ganancia anual están exentos de impuestos. Pon 0 si tu país no tiene exención.', 'lossdeduct':'% de pérdidas deducibles de las ganancias imponibles. 0% = sin deducción. 100% = deducción total.', 'gross':'Saldo final promedio SIN impuesto en todas las simulaciones. Lo que tendrías sin impuesto sobre ganancias.', 'tax':'Impuesto total promedio pagado. Calculado sobre ganancias después de exención. La deducción de pérdidas también lo reduce.', 'net':'Lo que realmente conservas después de impuestos. Saldo bruto menos impuesto pagado. Tu resultado real.', 'best':'Mejor saldo final en todas las simulaciones — antes de impuestos. Tu potencial máximo.', 'worst':'Peor saldo final en todas las simulaciones — antes de impuestos. Tu riesgo a la baja.', 'efftax':'Tu tasa impositiva real sobre el beneficio bruto — después de exención y deducciones.', 'wr':'Tasa de acierto real de la simulación. Cercana a tu entrada pero varía aleatoriamente.', 'be':'Tasa de acierto mínima para alcanzar el punto de equilibrio con tu R:R. Fórmula: 1 ÷ (1 + R:R).', 'pf':'Ganancias brutas totales ÷ pérdidas brutas totales. Más de 1 = rentable. Más de 1,5 = bien. Más de 2 = excelente.', 'saved':'Impuesto ahorrado por la exención anual. Los primeros X de ganancia anual son libres de impuestos.' }
+  },
+  de: { nav:'← Zurück zur Suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Steuer', secSim:'Simulationsparameter', lblAccount:'Kontogröße', lblWinrate:'Gewinnrate (%)', lblRr:'Risiko / Rendite', lblRisk:'Risiko pro Trade (%)', lblTrades:'Anzahl Trades', lblYears:'Anzahl Jahre', lblSims:'Simulationen', secTax:'Steuereinstellungen', lblTaxrate:'Steuersatz auf Gewinne (%)', lblExemption:'Jahresfreibetrag', lblLossdeduct:'Verluste absetzbar (%)', runBtn:'Simulation starten', runAgain:'Erneut starten', running:'Simuliere...', secResults:'Ergebnisübersicht', rGross:'Bruttostand (Ø)', rTax:'Gezahlte Steuer (Ø)', rNet:'Nettostand (Ø)', rBest:'Bester Lauf (brutto)', rWorst:'Schlechtester Lauf (brutto)', rEfftax:'Effektiver Steuersatz', rEfftaxSub:'des Bruttogewinns', stWr:'Reale Gewinnrate', stBe:'Break-Even-Rate', stPf:'Gewinnfaktor', stSaved:'Durch Freibetrag gespart', secChart:'Monte Carlo — alle Simulationen', secLog:'Trade-Log — Simulation 1', thResult:'Ergebnis', thBet:'Einsatz $', thGross:'Brutto G/V', thTax:'Steuer', thNet:'Netto G/V', thBal:'Konto $', win:'GEWINN', loss:'VERLUST', verdictGreat:'Ausgezeichnet — starker Gewinn trotz Steuern', verdictGood:'Gut — solider Gewinn nach Steuern', verdictMarginal:'Grenzwertig — geringer Gewinn nach Steuern. Verbessere R:R oder Gewinnrate.', verdictBad:'Nicht lohnenswert — Verlust nach Steuern. Baue erst deinen Edge auf.', note:'Nur zu Bildungszwecken — konsultiere einen Steuerberater für dein Land', solo:'Solo', allSims:'Alle', total:'GESAMT', taxDeducted:'Steuer abgezogen', exemptionLbl:'Freibetrag', afterTax:'Nach Steuer', clickLog:'klicken um Log zu öffnen', yearEnd:'Ende Jahr {y} — Sim {s} · Steuer', footer:'unda · steuere dein Risiko · Steuersimulation nur zu Bildungszwecken', lblFees:'Gebühren pro Trade (%)', lblCompound:'Zinseszins-Modus', compoundClassic:'Klassisch', compoundSafe:'Sicher',
+    tips: { 'account':'Dein Startkapital. Alle Ergebnisse werden als Vielfaches dieses Betrags berechnet.', 'winrate':'% der Trades, die mit Gewinn enden. 40% = 4 von 10 Trades gewinnen. Die meisten Strategien gewinnen 35–60%.', 'rr':'Gewinn vs. Verlust pro Trade. R:R 2 = 100$ riskieren, 200$ gewinnen. Höheres R:R = weniger Gewinne nötig.', 'risk':'% des Kontos, das pro Trade riskiert wird. 1% ist konservativ, über 3% ist aggressiv. Steigt mit dem Kontowachstum.', 'trades':'Trades pro Simulation. 100–500 ≈ 1–2 Jahre aktives Trading. Mehr Trades = zuverlässigeres Ergebnis.', 'sims':'Anzahl der Simulationsläufe. Ergebnisse werden über alle Läufe gemittelt. 10–20 gibt ein gutes Bild.', 'taxrate':'% der Gewinne als Kapitalertragsteuer. Gib den Satz deines Landes ein.', 'exemption':'Die ersten X Euro Jahresgewinn sind steuerfrei. Auf 0 setzen, wenn kein Freibetrag in deinem Land.', 'lossdeduct':'% der Verluste, die von steuerpflichtigen Gewinnen abgezogen werden können. Deutschland: 0%. Manche Länder erlauben 100%.', 'gross':'Durchschnittlicher Endstand OHNE Steuer über alle Simulationen. Was du ohne Kapitalertragsteuer hättest.', 'tax':'Durchschnittlich gezahlte Gesamtsteuer. Berechnet auf Gewinne nach Freibetrag. Verlustabzug reduziert dies auch.', 'net':'Was du wirklich nach Steuern behältst. Bruttostand minus gezahlte Steuer. Dein echtes Ergebnis.', 'best':'Bester Endstand über alle Simulationen — vor Steuern. Dein maximales Potenzial.', 'worst':'Schlechtester Endstand über alle Simulationen — vor Steuern. Dein Abwärtsrisiko.', 'efftax':'Dein realer Steuersatz auf Bruttogewinn — nach Freibetrag und Verlustabzügen.', 'wr':'Tatsächliche Gewinnrate aus der Simulation. Nahe deiner Eingabe, variiert aber durch Zufall.', 'be':'Minimale Gewinnrate zum Break-even mit deinem R:R. Formel: 1 ÷ (1 + R:R).', 'pf':'Gesamte Bruttogewinne ÷ gesamte Bruttoverluste. Über 1 = profitabel. Über 1,5 = gut. Über 2 = ausgezeichnet.', 'saved':'Steuern gespart durch den Jahresfreibetrag. Die ersten X des Jahresgewinns sind steuerfrei.' }
+  },
+  it: { nav:'← Torna alla suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Imposta', secSim:'Parametri di simulazione', lblAccount:'Dimensione conto', lblWinrate:'Tasso di vincita (%)', lblRr:'Rischio / Rendimento', lblRisk:'Rischio per trade (%)', lblTrades:'Numero di trade', lblYears:'Numero di anni', lblSims:'Simulazioni', secTax:'Impostazioni fiscali', lblTaxrate:'Aliquota fiscale sui profitti (%)', lblExemption:'Esenzione annuale', lblLossdeduct:'Perdite deducibili (%)', runBtn:'Avvia simulazione', runAgain:'Riesegui', running:'Simulazione...', secResults:'Riepilogo risultati', rGross:'Saldo lordo (med.)', rTax:'Imposte pagate (med.)', rNet:'Saldo netto (med.)', rBest:'Migliore run (lordo)', rWorst:'Peggiore run (lordo)', rEfftax:'Aliquota fiscale effettiva', rEfftaxSub:'del profitto lordo', stWr:'Tasso di vincita reale', stBe:'Soglia di pareggio', stPf:'Fattore di profitto', stSaved:'Risparmiato con esenzione', secChart:'Monte Carlo — tutte le simulazioni', secLog:'Log trade — simulazione 1', thResult:'Risultato', thBet:'Puntata $', thGross:'P&L Lordo', thTax:'Imposta', thNet:'P&L Netto', thBal:'Saldo $', win:'VINCITA', loss:'PERDITA', verdictGreat:'Eccellente — forte profitto anche dopo le tasse', verdictGood:'Buono — profitto solido dopo le tasse', verdictMarginal:'Marginale — basso profitto dopo le tasse. Migliora R:R o tasso di vincita.', verdictBad:'Non conviene — perdita dopo le tasse. Costruisci prima il tuo vantaggio.', note:'Solo educativo — consulta un consulente fiscale del tuo paese', solo:'Solo', allSims:'Tutte', total:'TOTALE', taxDeducted:'Imposta dedotta', exemptionLbl:'Esenzione', afterTax:'Dopo imposta', clickLog:'clicca per aprire il log', yearEnd:'Fine anno {y} — Sim {s} · Imposta', footer:'unda · gestisci il tuo rischio · simulazione fiscale solo a scopo educativo', lblFees:'Commissioni per trade (%)', lblCompound:'Modalità capitalizzazione', compoundClassic:'Classico', compoundSafe:'Sicuro',
+    tips: { 'account':'Il tuo capitale iniziale. Tutti i risultati si calcolano come multiplo di questo importo.', 'winrate':'% dei trade che finiscono in profitto. 40% = 4 trade su 10 vincono. La maggior parte delle strategie vince 35–60%.', 'rr':'Guadagni vs perdite per trade. R:R 2 = rischiare $100, guadagnare $200 su una vincita. R:R più alto = meno vincite necessarie.', 'risk':'% del conto rischiata per trade. 1% è conservativo, sopra 3% è aggressivo. Si compone con la crescita del conto.', 'trades':'Trade per simulazione. 100–500 ≈ 1–2 anni di trading attivo. Più trade = risultato più affidabile.', 'sims':'Numero di esecuzioni di simulazione. I risultati vengono mediati su tutte le esecuzioni. 10–20 dà un buon quadro.', 'taxrate':'% dei profitti pagati come imposta sulle plusvalenze. Inserisci l\'aliquota del tuo paese.', 'exemption':'I primi X euro di profitto annuale sono esenti da imposta. Metti 0 se il tuo paese non ha esenzione.', 'lossdeduct':'% delle perdite deducibili dai guadagni imponibili. 0% = nessuna deduzione. 100% = deduzione totale.', 'gross':'Saldo finale medio SENZA tasse su tutte le simulazioni. Quello che avresti senza imposta sulle plusvalenze.', 'tax':'Imposta totale media pagata. Calcolata sulle vincite dopo l\'esenzione. La deduzione delle perdite La deduzione delle perdite la riduce..', 'net':'Quello che tieni effettivamente dopo le tasse. Saldo lordo meno tasse pagate. Il tuo risultato reale.', 'best':'Miglior saldo finale su tutte le simulazioni — prima delle tasse. Il tuo potenziale massimo.', 'worst':'Peggior saldo finale su tutte le simulazioni — prima delle tasse. Il tuo rischio al ribasso.', 'efftax':'La tua aliquota fiscale reale sul profitto lordo — dopo esenzione e deduzioni.', 'wr':'Tasso di vincita reale dalla simulazione. Vicino al tuo input ma varia per casualità.', 'be':'Tasso di vincita minimo per raggiungere il pareggio con il tuo R:R. Formula: 1 ÷ (1 + R:R).', 'pf':'Guadagni lordi totali ÷ perdite lorde totali. Sopra 1 = redditizio. Sopra 1,5 = buono. Sopra 2 = eccellente.', 'saved':'Tasse risparmiate grazie all\'esenzione annuale. I primi X del profitto annuale sono esentasse.' }
+  },
+  pt: { nav:'← Voltar à suite', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Imposto', secSim:'Parâmetros de simulação', lblAccount:'Tamanho da conta', lblWinrate:'Taxa de acerto (%)', lblRr:'Risco / Retorno', lblRisk:'Risco por trade (%)', lblTrades:'Número de trades', lblYears:'Número de anos', lblSims:'Simulações', secTax:'Configurações fiscais', lblTaxrate:'Taxa de imposto sobre lucros (%)', lblExemption:'Isenção anual', lblLossdeduct:'Perdas dedutíveis (%)', runBtn:'Executar simulação', runAgain:'Executar novamente', running:'Simulando...', secResults:'Resumo dos resultados', rGross:'Saldo bruto (méd.)', rTax:'Impostos pagos (méd.)', rNet:'Saldo líquido (méd.)', rBest:'Melhor execução (bruto)', rWorst:'Pior execução (bruto)', rEfftax:'Taxa de imposto efetiva', rEfftaxSub:'do lucro bruto', stWr:'Taxa de acerto real', stBe:'Taxa de equilíbrio', stPf:'Fator de lucro', stSaved:'Poupado pela isenção', secChart:'Monte Carlo — todas as simulações', secLog:'Registo — simulação 1', thResult:'Resultado', thBet:'Aposta $', thGross:'L&P Bruto', thTax:'Imposto', thNet:'L&P Líquido', thBal:'Saldo $', win:'VITÓRIA', loss:'DERROTA', verdictGreat:'Excelente — forte lucro mesmo após impostos', verdictGood:'Bom — lucro sólido após impostos', verdictMarginal:'Marginal — lucro baixo após impostos. Melhore o R:R ou taxa de acerto.', verdictBad:'Não vale a pena — perda após impostos. Construa primeiro a sua vantagem.', note:'Apenas educativo — consulte um consultor fiscal do seu país', solo:'Solo', allSims:'Todas', total:'TOTAL', taxDeducted:'Imposto deduzido', exemptionLbl:'Isenção', afterTax:'Após imposto', clickLog:'clique para abrir registo', yearEnd:'Fim ano {y} — Sim {s} · Imposto', footer:'unda · controle seu risco · simulação fiscal apenas para fins educativos', lblFees:'Taxas por trade (%)', lblCompound:'Modo de capitalização', compoundClassic:'Clássico', compoundSafe:'Seguro',
+    tips: { 'account':'O seu capital inicial. Todos os resultados são calculados como múltiplo deste valor.', 'winrate':'% dos trades que terminam em lucro. 40% = 4 em 10 trades ganham. A maioria das estratégias ganha 35–60%.', 'rr':'Ganhos vs perdas por trade. R:R 2 = arriscar $100, ganhar $200. R:R mais alto = menos vitórias necessárias.', 'risk':'% da conta arriscada por trade. 1% é conservador, acima de 3% é agressivo. Compõe com o crescimento da conta.', 'trades':'Trades por simulação. 100–500 ≈ 1–2 anos de trading ativo. Mais trades = resultado mais confiável.', 'sims':'Número de execuções de simulação. Os resultados são calculados em média de todas as execuções. 10–20 dá uma boa imagem.', 'taxrate':'% dos lucros pagos como imposto sobre ganhos de capital. Insira a taxa do seu país.', 'exemption':'Os primeiros X euros de lucro anual são isentos de imposto. Coloque 0 se o seu país não tiver isenção.', 'lossdeduct':'% das perdas dedutíveis dos ganhos tributáveis. 0% = sem dedução. 100% = dedução total.', 'gross':'Saldo final médio SEM imposto em todas as simulações. O que teria sem imposto sobre ganhos de capital.', 'tax':'Imposto total médio pago. Calculado sobre ganhos após isenção. A dedução de perdas também o reduz.', 'net':'O que realmente retém após impostos. Saldo bruto menos imposto pago. O seu resultado real.', 'best':'Melhor saldo final em todas as simulações — antes de impostos. O seu potencial máximo.', 'worst':'Pior saldo final em todas as simulações — antes de impostos. O seu risco de queda.', 'efftax':'A sua taxa de imposto real sobre o lucro bruto — após isenção e deduções.', 'wr':'Taxa de acerto real da simulação. Próxima da sua entrada mas varia aleatoriamente.', 'be':'Taxa de acerto mínima para atingir o equilíbrio com o seu R:R. Fórmula: 1 ÷ (1 + R:R).', 'pf':'Ganhos brutos totais ÷ perdas brutas totais. Acima de 1 = rentável. Acima de 1,5 = bom. Acima de 2 = excelente.', 'saved':'Imposto poupado pela isenção anual. Os primeiros X do lucro anual são isentos de imposto.' }
+  },
+  tr: { nav:'← Suiteye dön', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Vergi', secSim:'Simülasyon parametreleri', lblAccount:'Hesap büyüklüğü', lblWinrate:'Kazanma oranı (%)', lblRr:'Risk / Getiri', lblRisk:'İşlem başına risk (%)', lblTrades:'İşlem sayısı', lblYears:'Yıl sayısı', lblSims:'Simülasyonlar', secTax:'Vergi ayarları', lblTaxrate:'Kâr üzerindeki vergi oranı (%)', lblExemption:'Yıllık muafiyet', lblLossdeduct:'Kayıp indirilebilir (%)', runBtn:'Simülasyonu başlat', runAgain:'Tekrar başlat', running:'Simüle ediliyor...', secResults:'Sonuçlar özeti', rGross:'Brüt bakiye (ort.)', rTax:'Ödenen vergi (ort.)', rNet:'Net bakiye (ort.)', rBest:'En iyi çalışma (brüt)', rWorst:'En kötü çalışma (brüt)', rEfftax:'Efektif vergi oranı', rEfftaxSub:'brüt kârın', stWr:'Gerçek kazanma oranı', stBe:'Başabaş kazanma oranı', stPf:'Kâr faktörü', stSaved:'Muafiyetle tasarruf', secChart:'Monte Carlo — tüm simülasyonlar', secLog:'İşlem günlüğü — simülasyon 1', thResult:'Sonuç', thBet:'Bahis $', thGross:'Brüt K/Z', thTax:'Vergi', thNet:'Net K/Z', thBal:'Bakiye $', win:'KAZANÇ', loss:'KAYIP', verdictGreat:'Mükemmel — vergiden sonra bile güçlü kâr', verdictGood:'İyi — vergiden sonra sağlam kâr', verdictMarginal:'Marjinal — vergiden sonra düşük kâr. R:R veya kazanma oranını geliştirin.', verdictBad:'Değmez — vergiden sonra kayıp. Önce avantajınızı oluşturun.', note:'Yalnızca eğitim amaçlı — ülkeniz için bir vergi danışmanına başvurun', solo:'Solo', allSims:'Tümü', total:'TOPLAM', taxDeducted:'Kesilen vergi', exemptionLbl:'Muafiyet', afterTax:'Vergiden sonra', clickLog:'log açmak için tıkla', yearEnd:'Yıl {y} sonu — Sim {s} · Vergi', footer:'unda · riskinizi yönetin · vergi simülasyonu yalnızca eğitim amaçlıdır', lblFees:'İşlem başına ücret (%)', lblCompound:'Bileşik modu', compoundClassic:'Klasik', compoundSafe:'Güvenli',
+    tips: { 'account':'Başlangıç sermayeniz. Tüm sonuçlar bu miktarın katları olarak hesaplanır.', 'winrate':'Kâr ile biten işlemlerin yüzdesi. 40% = 10 islemden 4u kazanir. Çoğu strateji 35–60% kazanır.', 'rr':'İşlem başına kazanç vs kayıp. R:R 2 = 100$ riskle 200$ kazanç. Daha yüksek R:R = daha az kazanç gerektirir.', 'risk':'İşlem başına riske edilen hesap yüzdesi. 1% muhafazakâr, 3% üzeri agresif. Hesap büyüdükçe bileşik artar.', 'trades':'Simülasyon başına işlem sayısı. 100–500 ≈ 1–2 yıl aktif işlem. Daha fazla işlem = daha güvenilir sonuç.', 'sims':'Simülasyon çalıştırma sayısı. Sonuçlar tüm çalıştırmalar üzerinden ortalaması alınır. 10–20 iyi bir tablo sağlar.', 'taxrate':'Kâr üzerinden sermaye kazancı vergisi olarak ödenen yüzde. Ülkenizin oranını girin.', 'exemption':'Yıllık kârın ilk X euro vergiden muaftır. Ülkenizde muafiyet yoksa 0 girin.', 'lossdeduct':'Vergilendirilebilir kazançlardan düşülecek kayıp yüzdesi. 0% = kesinti yok. 100% = tam kesinti.', 'gross':'Tüm simülasyonlarda VERGİSİZ ortalama nihai bakiye. Sermaye kazancı vergisi olmadan sahip olacağınız.', 'tax':'Ödenen ortalama toplam vergi. Yalnızca kazanımlarda hesaplanır, muafiyetten sonra. Kayıp kesintisi bunu da azaltır.', 'net':'Vergilerden sonra gerçekten elinizde kalanlar. Brüt bakiye eksi ödenen vergi. Gerçek sonucunuz.', 'best':'Tüm simülasyonlardaki en iyi nihai bakiye — vergiden önce. Maksimum potansiyeliniz.', 'worst':'Tüm simülasyonlardaki en kötü nihai bakiye — vergiden önce. Düşüş riskiniz.', 'efftax':'Muafiyet ve kesintilerden sonra brüt kâr üzerindeki gerçek vergi oranınız.', 'wr':'Simülasyondan gerçek kazanma oranı. Giridinize yakın ancak rastgelelik nedeniyle değişir.', 'be':'R:R ile başabaş olmak için gereken minimum kazanma oranı. Formül: 1 ÷ (1 + R:R).', 'pf':'Toplam brüt kazanç ÷ toplam brüt kayıp. 1 üzeri = karlı. 1,5 üzeri = iyi. 2 üzeri = mükemmel.', 'saved':'Yıllık muafiyet sayesinde tasarruf edilen vergi. Yıllık kârın ilk X vergiden muaftır.' }
+  },
+  ar: { nav:'العودة إلى القائمة →', dir:'rtl', title:'Monte Carlo', subtitle:'Reality Check', line3:'ضريبة', secSim:'معاملات المحاكاة', lblAccount:'حجم الحساب', lblWinrate:'معدل الفوز (%)', lblRr:'المخاطرة / العائد', lblRisk:'المخاطرة لكل صفقة (%)', lblTrades:'عدد الصفقات', lblYears:'عدد السنوات', lblSims:'المحاكاة', secTax:'إعدادات الضرائب', lblTaxrate:'معدل الضريبة على الأرباح (%)', lblExemption:'الإعفاء السنوي', lblLossdeduct:'الخسائر قابلة للخصم (%)', runBtn:'تشغيل المحاكاة', runAgain:'تشغيل مجدداً', running:'جارٍ المحاكاة...', secResults:'ملخص النتائج', rGross:'الرصيد الإجمالي (متوسط)', rTax:'إجمالي الضرائب (متوسط)', rNet:'الرصيد الصافي (متوسط)', rBest:'أفضل تشغيل (إجمالي)', rWorst:'أسوأ تشغيل (إجمالي)', rEfftax:'معدل الضريبة الفعلي', rEfftaxSub:'من إجمالي الربح', stWr:'معدل الفوز الحقيقي', stBe:'نقطة التعادل', stPf:'عامل الربح', stSaved:'وُفِّر بالإعفاء', secChart:'مونت كارلو — جميع المحاكاة', secLog:'سجل الصفقات — محاكاة 1', thResult:'النتيجة', thBet:'الرهان $', thGross:'إجمالي الربح/الخسارة', thTax:'الضريبة', thNet:'صافي الربح/الخسارة', thBal:'الرصيد $', win:'فوز', loss:'خسارة', verdictGreat:'ممتاز — ربح قوي حتى بعد الضرائب', verdictGood:'جيد — ربح متين بعد الضرائب', verdictMarginal:'هامشي — ربح منخفض بعد الضرائب. حسّن R:R أو معدل الفوز.', verdictBad:'لا يستحق — خسارة بعد الضرائب. ابنِ ميزتك أولاً.', note:'لأغراض تعليمية فقط — استشر مستشاراً ضريبياً في بلدك', solo:'منفرد', allSims:'الكل', total:'المجموع', taxDeducted:'الضريبة المخصومة', exemptionLbl:'الإعفاء', afterTax:'بعد الضريبة', clickLog:'انقر لفتح السجل', yearEnd:'نهاية السنة {y} — المحاكاة {s} · الضريبة', footer:'unda · تحكم في مخاطرك · محاكاة ضريبية لأغراض تعليمية فقط', lblFees:'رسوم لكل صفقة (%)', lblCompound:'وضع المضاعفة', compoundClassic:'كلاسيكي', compoundSafe:'آمن',
+    tips: { 'account':'رأس مالك الابتدائي. تُحسب جميع النتائج كمضاعف لهذا المبلغ.', 'winrate':'نسبة الصفقات التي تنتهي بربح. 40% = 4 من أصل 10 صفقات تكسب. معظم الاستراتيجيات تكسب 35–60%.', 'rr':'الأرباح مقابل الخسائر لكل صفقة. R:R 2 = مخاطرة بـ 100$، كسب 200$ عند الربح. R:R أعلى = تحتاج لفوز أقل.', 'risk':'نسبة الحساب المخاطر بها لكل صفقة. 1% محافظ، فوق 3% عدواني. يتراكم مع نمو الحساب.', 'trades':'الصفقات لكل محاكاة. 100–500 ≈ 1–2 سنة من التداول النشط. المزيد من الصفقات = نتيجة أكثر موثوقية.', 'sims':'عدد مرات تشغيل المحاكاة. يتم احتساب المتوسط عبر جميع التشغيلات. 10–20 يعطي صورة جيدة.', 'taxrate':'نسبة الأرباح المدفوعة كضريبة أرباح رأس المال. أدخل معدل بلدك.', 'exemption':'أول X يورو من الربح السنوي معفي من الضريبة. أدخل 0 إذا لم يكن في بلدك إعفاء.', 'lossdeduct':'نسبة الخسائر القابلة للخصم من الأرباح الخاضعة للضريبة. 0% = لا خصم. 100% = خصم كامل.', 'gross':'متوسط الرصيد النهائي بدون ضريبة عبر جميع المحاكاة. ما ستملكه بدون ضريبة أرباح رأس المال.', 'tax':'متوسط إجمالي الضريبة المدفوعة. تُحسب على الأرباح بعد الإعفاء. خصم الخسارة يقلل ذلك أيضاً.', 'net':'ما تحتفظ به فعلياً بعد الضريبة. الرصيد الإجمالي ناقص الضريبة المدفوعة. نتيجتك الحقيقية.', 'best':'أفضل رصيد نهائي عبر جميع المحاكاة — قبل الضريبة. إمكاناتك القصوى.', 'worst':'أسوأ رصيد نهائي عبر جميع المحاكاة — قبل الضريبة. مخاطر الهبوط لديك.', 'efftax':'معدل ضريبتك الفعلي على إجمالي الربح — بعد الإعفاء والخصومات.', 'wr':'معدل الفوز الفعلي من المحاكاة. قريب من مدخلاتك لكنه يتفاوت بسبب العشوائية.', 'be':'الحد الأدنى لمعدل الفوز لتحقيق التعادل مع R:R. الصيغة: 1 ÷ (1 + R:R).', 'pf':'إجمالي الأرباح الإجمالية ÷ إجمالي الخسائر الإجمالية. فوق 1 = مربح. فوق 1.5 = جيد. فوق 2 = ممتاز.', 'saved':'الضريبة الموفرة بفضل الإعفاء السنوي. أول X من الربح السنوي معفي من الضريبة.' }
+  },
+  ru: { nav:'← Назад к набору', dir:'ltr', title:'Monte Carlo', subtitle:'Reality Check', line3:'Налог', secSim:'Параметры симуляции', lblAccount:'Размер счёта', lblWinrate:'Процент побед (%)', lblRr:'Риск / Доходность', lblRisk:'Риск на сделку (%)', lblTrades:'Количество сделок', lblYears:'Количество лет', lblSims:'Симуляции', secTax:'Налоговые настройки', lblTaxrate:'Налоговая ставка на прибыль (%)', lblExemption:'Годовой вычет', lblLossdeduct:'Убытки вычитаются (%)', runBtn:'Запустить симуляцию', runAgain:'Запустить снова', running:'Симулирую...', secResults:'Сводка результатов', rGross:'Валовый баланс (ср.)', rTax:'Уплачено налогов (ср.)', rNet:'Чистый баланс (ср.)', rBest:'Лучший запуск (валовый)', rWorst:'Худший запуск (валовый)', rEfftax:'Эффективная ставка налога', rEfftaxSub:'от валовой прибыли', stWr:'Реальный % побед', stBe:'Порог безубыточности', stPf:'Фактор прибыли', stSaved:'Сэкономлено на вычете', secChart:'Монте-Карло — все симуляции', secLog:'Лог сделок — симуляция 1', thResult:'Результат', thBet:'Ставка $', thGross:'Валовый П/У', thTax:'Налог', thNet:'Чистый П/У', thBal:'Баланс $', win:'ПОБЕДА', loss:'УБЫТОК', verdictGreat:'Отлично — сильная прибыль даже после налогов', verdictGood:'Хорошо — солидная прибыль после налогов', verdictMarginal:'Маргинально — низкая прибыль после налогов. Улучшите R:R или % побед.', verdictBad:'Не стоит — убыток после налогов. Сначала постройте своё преимущество.', ru:'Только для образования — проконсультируйтесь с налоговым советником', solo:'Соло', allSims:'Все', total:'ИТОГО', taxDeducted:'Налог вычтен', exemptionLbl:'Вычет', afterTax:'После налога', clickLog:'нажмите чтобы открыть лог', yearEnd:'Конец года {y} — Сим {s} · Налог', footer:'unda · управляй своим риском · симуляция налогов только в образовательных целях', lblFees:'Комиссия за сделку (%)', lblCompound:'Режим начисления', compoundClassic:'Классический', compoundSafe:'Безопасный',
+    tips: { 'account':'Ваш стартовый капитал. Все результаты рассчитываются как кратное этой суммы.', 'winrate':'% сделок, завершившихся прибылью. 40% = 4 из 10 сделок выигрывают. Большинство стратегий выигрывают 35–60%.', 'rr':'Прибыль vs убытки на сделку. R:R 2 = рискнуть $100, выиграть $200. Более высокий R:R = нужно меньше побед.', 'risk':'% счёта, рискуемый на сделку. 1% — консервативно, выше 3% — агрессивно. Растёт вместе со счётом.', 'trades':'Сделок на симуляцию. 100–500 ≈ 1–2 года активной торговли. Больше сделок = надёжнее результат.', 'sims':'Количество запусков симуляции. Результаты усредняются по всем запускам. 10–20 даёт хорошую картину.', 'taxrate':'% прибыли, уплачиваемой как налог на прирост капитала. Введите ставку вашей страны.', 'exemption':'Первые X евро годовой прибыли освобождены от налога. Поставьте 0, если в вашей стране нет льготы.', 'lossdeduct':'% убытков, вычитаемых из налогооблагаемой прибыли. 0% = без вычета. 100% = полный вычет.', 'gross':'Средний итоговый баланс БЕЗ налога по всем симуляциям. Что было бы без налога на прирост капитала.', 'tax':'Средний уплаченный налог. Рассчитывается на выигрыши после вычета. Вычет убытков тоже снижает его.', 'net':'Что вы реально сохраняете после налогов. Валовый баланс минус уплаченный налог. Ваш реальный результат.', 'best':'Лучший итоговый баланс по всем симуляциям — до налогов. Ваш максимальный потенциал.', 'worst':'Худший итоговый баланс по всем симуляциям — до налогов. Ваш риск снижения.', 'efftax':'Ваша реальная налоговая ставка на валовую прибыль — после льготы и вычетов.', 'wr':'Реальный процент побед из симуляции. Близко к вашему вводу, но варьируется из-за случайности.', 'be':'Минимальный процент побед для выхода в ноль с вашим R:R. Формула: 1 ÷ (1 + R:R).', 'pf':'Суммарная валовая прибыль ÷ суммарные валовые убытки. Выше 1 = прибыльно. Выше 1,5 = хорошо. Выше 2 = отлично.', 'saved':'Налог, сэкономленный благодаря годовой льготе. Первые X годовой прибыли освобождены от налога.' }
+  },
+};
+
+let lang = 'en';
+let chartInstance = null;
+let allSimsData = [];
+let exemptionVal = 0;
+let soloMode = false;
+let activeSimIdx = 0;
+let lastVerdictType = null;
+let lastNetPnl = 0;
+let lastAccount = 10000;
+let compoundMode = 'classic';
+let avgMode = true; // show avg line by default
+
+let avgVisible    = true;
+let medianVisible = true;
+
+function toggleAvg(type) {
+  if (!chartInstance) return;
+  const ds = chartInstance.data.datasets;
+  const avgIdx    = ds.length - 3;
+  const medianIdx = ds.length - 2;
+
+  if (type === 'avg') {
+    avgVisible = !avgVisible;
+    const btn = document.getElementById('avg-btn');
+    btn.style.background  = avgVisible ? 'rgba(180,100,255,0.15)' : 'rgba(0,10,6,0.85)';
+    btn.style.borderColor = avgVisible ? 'rgba(180,100,255,0.5)'  : 'rgba(180,100,255,0.2)';
+    btn.style.color       = avgVisible ? 'rgba(180,100,255,0.9)'  : 'rgba(180,100,255,0.35)';
+    if (avgIdx >= 0) ds[avgIdx].borderColor = avgVisible ? 'rgba(180,100,255,0.9)' : 'transparent';
+  } else {
+    medianVisible = !medianVisible;
+    const btn = document.getElementById('median-btn');
+    btn.style.background  = medianVisible ? 'rgba(0,210,255,0.15)' : 'rgba(0,10,6,0.85)';
+    btn.style.borderColor = medianVisible ? 'rgba(0,210,255,0.5)'  : 'rgba(0,210,255,0.2)';
+    btn.style.color       = medianVisible ? 'rgba(0,210,255,0.9)'  : 'rgba(0,210,255,0.35)';
+    if (medianIdx >= 0) ds[medianIdx].borderColor = medianVisible ? 'rgba(0,210,255,0.9)' : 'transparent';
+  }
+  chartInstance.update('none');
+}
+
+function toggleSolo() {
+  soloMode = !soloMode;
+  const btn = document.getElementById('solo-btn');
+  const TL = LANGS[lang];
+  btn.style.background    = soloMode ? 'rgba(255,217,122,0.15)' : 'rgba(0,10,6,0.85)';
+  btn.style.borderColor   = soloMode ? 'rgba(255,217,122,0.5)'  : 'rgba(0,255,178,0.25)';
+  btn.style.color         = soloMode ? 'var(--gold)'            : 'var(--g2)';
+  btn.textContent         = soloMode ? (TL.allSims||'All sims') : (TL.solo||'Solo');
+  applyChartHighlight(activeSimIdx);
+} // store all sim logs for click interaction
+
+/* ── Global tooltip ── */
+const GT = document.getElementById('global-tooltip');
+
+document.addEventListener('mouseover', e => {
+  const ti = e.target.closest('.ti');
+  if (!ti) return;
+  const text = ti.getAttribute('data-tip');
+  if (!text) return;
+  GT.textContent = text;
+  GT.style.display = 'block';
+  const rect = ti.getBoundingClientRect();
+  const W = 240, pad = 8;
+  let left = rect.left + rect.width/2 - W/2;
+  let top  = rect.top - GT.offsetHeight - 10;
+  if (top < pad) top = rect.bottom + 8;
+  if (left < pad) left = pad;
+  if (left + W > window.innerWidth - pad) left = window.innerWidth - W - pad;
+  GT.style.left = left + 'px';
+  GT.style.top  = top + 'px';
+});
+
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.ti')) GT.style.display = 'none';
+});
+
+/* ── Lang ── */
+function toggleLangMenu() { document.getElementById('lang-sw').classList.toggle('open'); }
+document.addEventListener('click', e => { if (!document.getElementById('lang-sw').contains(e.target)) document.getElementById('lang-sw').classList.remove('open'); });
+
+function setLang(code, label) {
+  lang = code;
+  const T = LANGS[code];
+  document.documentElement.setAttribute('lang', code);
+  const navEl=document.getElementById('t-nav'); if(navEl&&T.nav)navEl.textContent=T.nav;
+  document.documentElement.setAttribute('dir', T.dir);
+  if (label) document.getElementById('cur-lang').textContent = label;
+  document.querySelectorAll('.lang-menu div').forEach(d => d.classList.toggle('active', d.textContent.trim().endsWith(code.toUpperCase())));
+  const ids = { 't-title':T.title,'t-subtitle':T.subtitle,'t-sec-sim':T.secSim,'t-lbl-account':T.lblAccount,'t-lbl-winrate':T.lblWinrate,'t-lbl-rr':T.lblRr,'t-lbl-risk':T.lblRisk,'t-lbl-trades':T.lblTrades,'t-lbl-years':T.lblYears,'t-lbl-sims':T.lblSims,'t-sec-tax':T.secTax,'t-lbl-taxrate':T.lblTaxrate,'t-lbl-exemption':T.lblExemption,'t-lbl-lossdeduct':T.lblLossdeduct,'t-runbtn':T.runBtn,'t-sec-results':T.secResults,'t-r-gross':T.rGross,'t-r-tax':T.rTax,'t-r-net':T.rNet,'t-r-best':T.rBest,'t-r-worst':T.rWorst,'t-r-efftax':T.rEfftax,'t-r-efftax-sub':T.rEfftaxSub,'t-st-wr':T.stWr,'t-st-be':T.stBe,'t-st-pf':T.stPf,'t-st-saved':T.stSaved,'t-sec-chart':T.secChart,'th-result':T.thResult,'th-bet':T.thBet,'th-gross':T.thGross,'th-tax':T.thTax,'th-net':T.thNet,'th-bal':T.thBal,'t-footer':T.footer };
+  Object.entries(ids).forEach(([id,txt]) => { const el=document.getElementById(id); if(el&&txt!==undefined) el.textContent=txt; });
+  const line3El = document.querySelector('.header-line3');
+  if (line3El && T.line3) line3El.textContent = T.line3;
+  // Dynamic subtitle labels
+  const avgLabels = { en:'(average of all simulations)', nl:'(gemiddelde van alle simulaties)', fr:'(moyenne de toutes les simulations)', es:'(promedio de todas las simulaciones)', de:'(Durchschnitt aller Simulationen)', it:'(media di tutte le simulazioni)', pt:'(média de todas as simulações)', tr:'(tüm simülasyonların ortalaması)', ar:'(متوسط جميع المحاكاة)', ru:'(среднее всех симуляций)' };
+  const logSubs   = { en:'(one example run — gross P&L, tax per trade & net result)', nl:'(één voorbeeldrun — bruto W/V, belasting per trade & netto)', fr:'(une run exemple — P&P brut, impôt par trade & net)', es:'(una run de ejemplo — PyG bruto, impuesto por trade & neto)', de:'(eine Beispielrun — Brutto G/V, Steuer je Trade & Netto)', it:'(una run di esempio — P&L lordo, imposta per trade & netto)', pt:'(uma run de exemplo — L&P bruto, imposto por trade & líquido)', tr:'(örnek çalışma — brüt K/Z, işlem başına vergi & net)', ar:'(تشغيل مثال — إجمالي الربح/الخسارة، الضريبة لكل صفقة والصافي)', ru:'(пример одного запуска — валовый П/У, налог на сделку & чистый)' };
+  const avgEl  = document.getElementById('t-avg-label');
+  const logEl  = document.getElementById('t-log-sub');
+  if (avgEl) avgEl.textContent = avgLabels[code] || avgLabels.en;
+  if (logEl) logEl.textContent = logSubs[code]   || logSubs.en;
+  // Update all tooltip data-tip attributes
+  const tipMap = { 'tip-account':T.tips.account,'tip-winrate':T.tips.winrate,'tip-rr':T.tips.rr,'tip-risk':T.tips.risk,'tip-trades':T.tips.trades,'tip-sims':T.tips.sims,'tip-taxrate':T.tips.taxrate,'tip-exemption':T.tips.exemption,'tip-lossdeduct':T.tips.lossdeduct,'tip-gross':T.tips.gross,'tip-tax':T.tips.tax,'tip-net':T.tips.net,'tip-best':T.tips.best,'tip-worst':T.tips.worst,'tip-efftax':T.tips.efftax,'tip-wr':T.tips.wr,'tip-be':T.tips.be,'tip-pf':T.tips.pf,'tip-saved':T.tips.saved };
+  Object.entries(tipMap).forEach(([id,txt]) => { const el=document.getElementById(id); if(el&&txt) el.setAttribute('data-tip', txt); });
+
+  document.getElementById('lang-sw').classList.remove('open');
+
+  // New fields
+  const lblFees = document.getElementById('t-lbl-fees');
+  if (lblFees && T.lblFees) lblFees.textContent = T.lblFees;
+  const lblCompound = document.getElementById('t-lbl-compound');
+  if (lblCompound && T.lblCompound) lblCompound.textContent = T.lblCompound;
+  const cc = document.getElementById('compound-classic-btn');
+  const cs = document.getElementById('compound-safe-btn');
+  if (cc && T.compoundClassic) cc.textContent = T.compoundClassic;
+  if (cs && T.compoundSafe) cs.textContent = T.compoundSafe;
+
+  // Re-render dynamic content if sim has been run
+  if (lastVerdictType) {
+    const map = { great:[T.verdictGreat,'rgba(0,255,136,0.1)','#00ff88'], good:[T.verdictGood,'rgba(0,255,178,0.08)','var(--g)'], marginal:[T.verdictMarginal,'rgba(255,217,122,0.1)','var(--gold)'], bad:[T.verdictBad,'rgba(255,68,68,0.1)','var(--red)'] };
+    const [vText, vBg, vColor] = map[lastVerdictType];
+    const vEl = document.getElementById('verdict');
+    if (vEl) { vEl.textContent = vText; vEl.style.background = vBg; vEl.style.color = vColor; vEl.style.border = '1px solid '+vBg.replace('0.1','0.3').replace('0.08','0.2'); }
+    const vnEl = document.getElementById('verdict-note');
+    if (vnEl) vnEl.textContent = T.note;
+  }
+  if (allSimsData.length) renderLog(activeSimIdx);
+}
+
+/* ── Tax rate shortcuts ── */
+function setRate(pct) {
+  document.getElementById('taxrate').value = pct;
+  document.querySelectorAll('.rate-btn:not(#compound-classic-btn):not(#compound-safe-btn)').forEach(b => b.classList.remove('active'));
+  const map = {10:'rate-10-btn', 33:'rate-33-btn', 50:'rate-50-btn'};
+  const btnId = map[pct];
+  if (btnId) { const b = document.getElementById(btnId); if(b) b.classList.add('active'); }
+  updateBeBar();
+}
+
+function focusCustomRate() {
+  document.getElementById('taxrate').focus();
+  clearRateButtons();
+}
+
+function clearRateButtons() {
+  document.querySelectorAll('.rate-btn:not(#compound-classic-btn):not(#compound-safe-btn)').forEach(b => b.classList.remove('active'));
+  document.getElementById('rate-custom-btn').classList.add('active');
+}
+
+function checkSimsWarning() {
+  const input = document.getElementById('sims');
+  let n = parseInt(input.value) || 0;
+  if (n > 1000) { n = 1000; input.value = 1000; }
+  const w = document.getElementById('sims-warning');
+  if (w) w.style.display = n > 100 ? 'block' : 'none';
+}
+
+function setCompoundMode(mode) {
+  compoundMode = mode;
+  const cc = document.getElementById('compound-classic-btn');
+  const cs = document.getElementById('compound-safe-btn');
+  if (cc) cc.classList.toggle('active', mode === 'classic');
+  if (cs) cs.classList.toggle('active', mode === 'safe');
+  updateBeBar();
+}
+
+/* ── Break-even bar ── */
+function updateBeBar() {
+  const rr  = parseFloat(document.getElementById('rr').value) || 2;
+  const wr  = parseFloat(document.getElementById('winrate').value) || 40;
+  const tax = parseFloat(document.getElementById('taxrate').value) || 0;
+  const fee = parseFloat(document.getElementById('feerate').value) || 0;
+
+  const taxF = tax / 100;
+  const feeF = fee / 100;
+
+  const netWin  = rr * (1 - feeF) * (1 - taxF);
+  const netLoss = 1 + feeF;
+
+  const beGross = (1 / (1 + rr)) * 100;
+  const beReal  = (netLoss / (netWin + netLoss)) * 100;
+  const margin  = wr - beReal;
+
+  // Update needles
+  const fillEl   = document.getElementById('be-bar-fill');
+  const needleBe = document.getElementById('be-needle-be');
+  const needleWr = document.getElementById('be-needle-wr');
+  const verdictEl = document.getElementById('be-verdict-text');
+
+  if (!fillEl) return;
+
+  const bePct = Math.min(Math.max(beReal, 0), 100);
+  const wrPct = Math.min(Math.max(wr, 0), 100);
+
+  fillEl.style.width      = wrPct + '%';
+  fillEl.style.background = margin > 0
+    ? 'linear-gradient(90deg, rgba(255,68,68,0.25), rgba(0,255,136,0.4))'
+    : 'rgba(255,68,68,0.3)';
+
+  needleBe.style.left = bePct + '%';
+  needleWr.style.left = wrPct + '%';
+
+  // Stats
+  const bgv = document.getElementById('be-gross-val');
+  const brv = document.getElementById('be-real-val');
+  const bwv = document.getElementById('be-wr-val');
+  const bmv = document.getElementById('be-margin-val');
+  if (bgv) bgv.textContent = beGross.toFixed(1) + '%';
+  if (brv) brv.textContent = beReal.toFixed(1) + '%';
+  if (bwv) bwv.textContent = wr.toFixed(0) + '%';
+  if (bmv) {
+    bmv.textContent = (margin >= 0 ? '+' : '') + margin.toFixed(1) + '%';
+    bmv.style.color = margin > 5 ? '#00ff88' : margin >= 0 ? 'var(--gold)' : 'var(--red)';
+  }
+
+  // Verdict
+  if (verdictEl) {
+    if (margin > 10)      { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:#00ff88"></span>Strong edge'; verdictEl.style.color = '#00ff88'; }
+    else if (margin > 3)  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--g)"></span>Profitable'; verdictEl.style.color = 'var(--g)'; }
+    else if (margin > 0)  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--gold)"></span>Marginal'; verdictEl.style.color = 'var(--gold)'; }
+    else                  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--red)"></span>Below BE'; verdictEl.style.color = 'var(--red)'; }
+  }
+}
+
+/* ── Main simulation ── */
+function runSim() {
+  const T        = LANGS[lang];
+  const account  = parseFloat(document.getElementById('account').value);
+  const winRate  = parseFloat(document.getElementById('winrate').value) / 100;
+  const rr       = parseFloat(document.getElementById('rr').value);
+  const riskPt   = parseFloat(document.getElementById('riskpt').value) / 100;
+  const trades   = parseInt(document.getElementById('trades').value);
+  const numSims  = Math.min(parseInt(document.getElementById('sims').value), 1000);
+  const numYears = parseInt(document.getElementById('years').value) || 1;
+  const taxRate  = parseFloat(document.getElementById('taxrate').value) / 100;
+  const exemption = parseFloat(document.getElementById('exemption').value) || 0;
+  exemptionVal = exemption;
+  const lossDeductPct = parseFloat(document.getElementById('lossdeduct').value) / 100;
+  const feeRate = parseFloat(document.getElementById('feerate').value) / 100 || 0;
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.querySelector('#t-runbtn').textContent = T.running;
+
+  setTimeout(() => {
+    let sumGross=0, sumNet=0, sumTax=0, sumWins=0, sumLosses=0, sumWinAmt=0, sumLossAmt=0, sumSaved=0;
+    let bestGross=-Infinity, worstGross=Infinity;
+    const allSims = [];
+    let sim1Log = [];
+
+    for (let s = 0; s < numSims; s++) {
+      let balGross = account;
+      let wins=0, losses=0, winAmt=0, lossAmt=0;
+      let totalTax=0, totalSaved=0;
+      const history = [account];
+      const log = [];
+      const yearMarkers = []; // trade indices where year ends
+
+      const tradesPerYear = Math.floor(trades / numYears);
+
+      for (let y = 0; y < numYears; y++) {
+        let yearWinAmt = 0, yearLossAmt = 0;
+        const yearStart = y * tradesPerYear;
+        const yearEnd   = y === numYears - 1 ? trades : (y + 1) * tradesPerYear;
+
+        for (let i = yearStart; i < yearEnd; i++) {
+          const isWin = Math.random() < winRate;
+          const bet   = balGross * riskPt;
+          const fee   = bet * feeRate;
+
+          if (isWin) {
+            const profit    = bet * rr;
+            const grossPnl  = profit - fee;
+            if (compoundMode === 'safe' && taxRate > 0) {
+              // Safe: deduct tax immediately after each win
+              const tradeTax  = Math.max(0, grossPnl * taxRate);
+              const netProfit = grossPnl - tradeTax;
+              balGross   += netProfit;
+              yearWinAmt += grossPnl;
+              winAmt     += grossPnl;
+              wins++;
+              log.push({ win: true, bet, grossPnl, balance: balGross, tax: tradeTax, netPnl: netProfit, year: y+1 });
+            } else {
+              // Classic: compound on gross, tax at year end
+              balGross   += grossPnl;
+              yearWinAmt += grossPnl;
+              winAmt     += grossPnl;
+              wins++;
+              log.push({ win: true, bet, grossPnl, balance: balGross, tax: 0, netPnl: grossPnl, year: y+1 });
+            }
+          } else {
+            const grossPnl = -bet - fee;
+            balGross   += grossPnl;
+            yearLossAmt+= bet;
+            lossAmt    += bet;
+            losses++;
+            log.push({ win: false, bet, grossPnl, balance: balGross, tax: 0, netPnl: grossPnl, year: y+1 });
+          }
+
+          history.push(parseFloat(balGross.toFixed(2)));
+          if (balGross <= 0) { balGross = 0; break; }
+        }
+
+        // Annual tax calculation (Classic only — Safe deducts per trade)
+        const taxable    = Math.max(0, yearWinAmt - exemption);
+        const saved      = Math.min(yearWinAmt, exemption);
+        const lossDeduct = yearLossAmt * lossDeductPct * taxRate;
+        const yearTax    = compoundMode === 'safe' ? 0 : Math.max(0, taxable * taxRate - lossDeduct);
+
+        totalTax   += compoundMode === 'safe'
+          ? log.filter(e => e.year === y+1).reduce((s,e) => s + (e.tax||0), 0)
+          : yearTax;
+        totalSaved += saved;
+
+        // Deduct tax from balance at year end (Classic only)
+        if (compoundMode === 'classic') {
+          balGross = Math.max(0, balGross - yearTax);
+        }
+
+        // Record year end marker
+        yearMarkers.push({ tradeIdx: history.length - 1, tax: compoundMode === 'classic' ? yearTax : 0, year: y+1, balance: balGross });
+
+        // Add tax drop to history (Classic only)
+        if (compoundMode === 'classic') {
+          history.push(parseFloat(balGross.toFixed(2)));
+        }
+
+        // Annotate log trades for Classic
+        if (compoundMode === 'classic') {
+          const taxPerWinUnit = yearWinAmt > 0 ? yearTax / yearWinAmt : 0;
+          log.filter(e => e.year === y+1 && e.win).forEach(e => {
+            e.tax    = e.grossPnl * taxPerWinUnit;
+            e.netPnl = e.grossPnl - e.tax;
+          });
+        }
+
+        if (balGross <= 0) break;
+      }
+
+      const balNet = balGross; // already deducted per year
+
+      sumGross += balGross;
+      sumNet   += balNet;
+      sumTax   += totalTax;
+      sumWins  += wins;
+      sumLosses+= losses;
+      sumWinAmt+= winAmt;
+      sumLossAmt+=lossAmt;
+      sumSaved += totalSaved;
+
+      if (balGross > bestGross) bestGross = balGross;
+      if (balGross < worstGross) worstGross = balGross;
+
+      allSims.push({ history, finalBalance: balGross, isWinner: balGross >= account, log, yearMarkers });
+      if (s === 0) sim1Log = log;
+    }
+
+    const avgGross  = sumGross / numSims;
+    const avgNet    = sumNet / numSims;
+    const avgTax    = sumTax / numSims;
+    const avgWins   = sumWins / numSims;
+    const avgLosses = sumLosses / numSims;
+    const avgWinAmt = sumWinAmt / numSims;
+    const avgLossAmt= sumLossAmt / numSims;
+    const avgSaved  = sumSaved / numSims;
+
+    const grossPnl  = avgGross - account;
+    const netPnl    = avgNet - account;
+    const grossPct  = (grossPnl / account) * 100;
+    const netPct    = (netPnl / account) * 100;
+    const realWR    = (avgWins / Math.max(avgWins + avgLosses, 1)) * 100;
+    const beWR      = 1 / (1 + rr) * 100;
+    const pf        = avgLossAmt > 0 ? avgWinAmt / avgLossAmt : 0;
+    const effTax    = grossPnl > 0 ? (avgTax / grossPnl) * 100 : 0;
+
+    const fmt  = n => '$' + Math.round(Math.abs(n)).toLocaleString();
+    const fmtp = n => (n >= 0 ? '+' : '-') + fmt(n);
+
+    // Update avg label with actual count
+    const avgLabels2 = { en:`(average of ${numSims} simulations)`, nl:`(gemiddelde van ${numSims} simulaties)`, fr:`(moyenne de ${numSims} simulations)`, es:`(promedio de ${numSims} simulaciones)`, de:`(Durchschnitt von ${numSims} Simulationen)`, it:`(media di ${numSims} simulazioni)`, pt:`(média de ${numSims} simulações)`, tr:`(${numSims} simülasyonun ortalaması)`, ar:`(متوسط ${numSims} محاكاة)`, ru:`(среднее ${numSims} симуляций)` };
+    const avgEl2 = document.getElementById('t-avg-label');
+    if (avgEl2) avgEl2.textContent = avgLabels2[lang] || avgLabels2.en;
+
+    // Update result blocks
+    document.getElementById('r-gross').textContent    = '$' + Math.round(avgGross).toLocaleString();
+    document.getElementById('r-gross-pnl').textContent= fmtp(grossPnl) + ' (' + (grossPct >= 0 ? '+' : '') + grossPct.toFixed(1) + '%)';
+    document.getElementById('r-tax').textContent      = '$' + Math.round(avgTax).toLocaleString() + ' avg';
+    document.getElementById('r-tax-sub').textContent  = 'After $' + Math.round(avgSaved).toLocaleString() + ' exemption';
+    const netEl = document.getElementById('r-net');
+    netEl.textContent   = '$' + Math.round(avgNet).toLocaleString();
+    netEl.className     = 'rv ' + (netPnl >= 0 ? 'c-green' : 'c-red');
+    document.getElementById('r-net-pnl').textContent  = fmtp(netPnl) + ' (' + (netPct >= 0 ? '+' : '') + netPct.toFixed(1) + '%)';
+    document.getElementById('r-best').textContent     = '$' + Math.round(bestGross).toLocaleString();
+    document.getElementById('r-worst').textContent    = '$' + Math.round(worstGross).toLocaleString();
+    document.getElementById('r-efftax').textContent   = effTax.toFixed(1) + '%';
+    document.getElementById('st-wr').textContent      = realWR.toFixed(1) + '%';
+    document.getElementById('st-be').textContent      = beWR.toFixed(1) + '%';
+    document.getElementById('st-pf').textContent      = pf.toFixed(2);
+    document.getElementById('st-saved').textContent   = '$' + Math.round(avgSaved).toLocaleString();
+
+    // Outcome stats
+    const profitableRuns = allSims.filter(s => s.finalBalance > account).length;
+    const blownRuns      = allSims.filter(s => s.finalBalance <= 0).length;
+    const survivalRate   = ((numSims - blownRuns) / numSims * 100).toFixed(1);
+
+    // Max drawdown, consecutive wins/losses per sim → average
+    let sumMaxDD = 0, sumMaxConsecLoss = 0, sumMaxConsecWin = 0;
+    allSims.forEach(sim => {
+      // Build set of tax-drop indices to skip
+      const taxIndices = new Set((sim.yearMarkers || []).map(m => m.tradeIdx + 1));
+      let peak = 0, maxDD = 0;
+      sim.history.forEach((v, idx) => {
+        if (taxIndices.has(idx)) return;
+        if (v > peak) peak = v;
+        const dd = peak > 0 ? (peak - v) / peak * 100 : 0;
+        if (dd > maxDD) maxDD = dd;
+      });
+      sumMaxDD    += maxDD;
+      let maxWin = 0, maxLoss = 0, curWin = 0, curLoss = 0;
+      sim.log.forEach(t => {
+        if (t.win) { curWin++; curLoss = 0; if (curWin > maxWin) maxWin = curWin; }
+        else       { curLoss++; curWin = 0; if (curLoss > maxLoss) maxLoss = curLoss; }
+      });
+      sumMaxConsecWin  += maxWin;
+      sumMaxConsecLoss += maxLoss;
+    });
+
+    const avgMaxDD      = (sumMaxDD / numSims).toFixed(1);
+    const avgConsecLoss = Math.round(sumMaxConsecLoss / numSims);
+    const avgConsecWin  = Math.round(sumMaxConsecWin  / numSims);
+
+    // Median final balance
+    const sortedBals = allSims.map(s => s.finalBalance).sort((a,b) => a-b);
+    const mid = Math.floor(sortedBals.length / 2);
+    const medianBal = sortedBals.length % 2 === 0
+      ? (sortedBals[mid-1] + sortedBals[mid]) / 2
+      : sortedBals[mid];
+
+    const ddEl  = document.getElementById('st-maxdd');
+    const clEl  = document.getElementById('st-consecloss');
+    const cwEl  = document.getElementById('st-consecwin');
+    const mbEl  = document.getElementById('st-medianbal');
+    if (ddEl) { ddEl.textContent = '-' + avgMaxDD + '%'; ddEl.className = 'stat-v c-red'; }
+    if (clEl) clEl.textContent = avgConsecLoss + ' trades';
+    if (cwEl) cwEl.textContent = avgConsecWin  + ' trades';
+    if (mbEl) { mbEl.textContent = '$' + Math.round(medianBal).toLocaleString(); mbEl.className = 'stat-v ' + (medianBal >= account ? 'c-green' : 'c-red'); }
+    const profEl = document.getElementById('st-profitable');
+    const blwnEl = document.getElementById('st-blown');
+    const survEl = document.getElementById('st-survival');
+    const totEl  = document.getElementById('st-totalruns');
+    if (profEl) { profEl.textContent = profitableRuns + '/' + numSims; profEl.className = 'stat-v ' + (profitableRuns/numSims >= 0.7 ? 'c-green' : 'c-gold'); }
+    if (blwnEl) { blwnEl.textContent = blownRuns + '/' + numSims; blwnEl.className = 'stat-v ' + (blownRuns > 0 ? 'c-red' : 'c-green'); }
+    if (survEl) { survEl.textContent = survivalRate + '%'; survEl.className = 'stat-v ' + (parseFloat(survivalRate) >= 90 ? 'c-green' : parseFloat(survivalRate) >= 70 ? 'c-gold' : 'c-red'); }
+    if (totEl)  totEl.textContent = numSims;
+
+    // Verdict
+    lastNetPnl = netPnl;
+    lastAccount = account;
+    const verdictEl = document.getElementById('verdict');
+    let vText, vBg, vColor;
+    if (netPnl > account * 0.5)       { vText=T.verdictGreat; vBg='rgba(0,255,136,0.1)'; vColor='#00ff88'; lastVerdictType='great'; }
+    else if (netPnl > account * 0.1)  { vText=T.verdictGood;  vBg='rgba(0,255,178,0.08)'; vColor='var(--g)'; lastVerdictType='good'; }
+    else if (netPnl > 0)              { vText=T.verdictMarginal; vBg='rgba(255,217,122,0.1)'; vColor='var(--gold)'; lastVerdictType='marginal'; }
+    else                              { vText=T.verdictBad;   vBg='rgba(255,68,68,0.1)'; vColor='var(--red)'; lastVerdictType='bad'; }
+    verdictEl.textContent = vText;
+    verdictEl.style.background = vBg;
+    verdictEl.style.color      = vColor;
+    verdictEl.style.border     = '1px solid ' + vBg.replace('0.1','0.3').replace('0.08','0.2');
+    document.getElementById('verdict-note').textContent = T.note;
+
+    // Store all sim logs globally
+    allSimsData = allSims;
+
+    // Monte Carlo chart
+    if (chartInstance) chartInstance.destroy();
+    const maxLen = Math.max(...allSims.map(s => s.history.length));
+
+    const labels = Array.from({ length: maxLen }, (_, i) => {
+      if (i === 0) return '0';
+      if (i % 50 === 0) return String(i);
+      return '';
+    });
+
+    const datasets = allSims.map((sim, i) => ({
+      label: 'Sim ' + (i+1),
+      data: sim.history,
+      borderColor: sim.isWinner ? `rgba(0,255,136,${0.3 + 0.5/numSims})` : `rgba(255,80,80,${0.3 + 0.5/numSims})`,
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      pointRadius: 0,
+      pointHitRadius: 20,
+      tension: 0.3,
+    }));
+
+    // Average line (purple)
+    const avgData = Array.from({ length: maxLen }, (_, i) => {
+      const vals = allSims.map(s => s.history[i]).filter(v => v !== undefined);
+      return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+    });
+    datasets.push({
+      label: 'Average',
+      data: avgData,
+      borderColor: avgMode ? 'rgba(180,100,255,0.9)' : 'transparent',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      pointHitRadius: 0,
+      tension: 0.3,
+      order: -1,
+    });
+
+    // Median line (cyan)
+    const medianData = Array.from({ length: maxLen }, (_, i) => {
+      const vals = allSims.map(s => s.history[i]).filter(v => v !== undefined).sort((a,b) => a-b);
+      if (!vals.length) return null;
+      const mid = Math.floor(vals.length / 2);
+      return vals.length % 2 === 0 ? (vals[mid-1] + vals[mid]) / 2 : vals[mid];
+    });
+    datasets.push({
+      label: 'Median',
+      data: medianData,
+      borderColor: avgMode ? 'rgba(0,210,255,0.9)' : 'transparent',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [3, 3],
+      pointRadius: 0,
+      pointHitRadius: 0,
+      tension: 0.3,
+      order: -1,
+    });
+
+    datasets.push({ label: 'Start', data: Array(maxLen).fill(account), borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'transparent', borderWidth: 1, borderDash: [4,4], pointRadius: 0 });
+
+    const ctx = document.getElementById('simChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'line', data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        onClick: (e, elements) => {
+          if (!elements.length) return;
+          const idx = elements[0].datasetIndex;
+          if (idx < allSimsData.length) renderLog(idx);
+        },
+        onHover: (e, elements) => {
+          e.native.target.style.cursor = (elements.length && elements[0].datasetIndex < allSimsData.length) ? 'pointer' : 'default';
+        },
+        interaction: { mode: 'nearest', intersect: false, axis: 'xy' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'nearest', intersect: false,
+            backgroundColor: 'rgba(0,10,6,0.95)', borderColor: 'rgba(0,255,178,0.3)', borderWidth: 1,
+            titleColor: '#00ffb2', bodyColor: '#e0fff5',
+            callbacks: {
+              title: items => {
+                const idx  = items[0]?.datasetIndex;
+                const xIdx = items[0]?.dataIndex;
+                if (idx === undefined || idx >= allSimsData.length) return 'Baseline';
+                const s = allSimsData[idx];
+                // Check if hovering a year marker dot
+                const marker = (s.yearMarkers || []).find(m => m.tradeIdx === xIdx);
+                if (marker) { const yt = (LANGS[lang].yearEnd||'Year {y} end — Sim {s} · Tax').replace('{y}',marker.year).replace('{s}',idx+1); return `📅 ${yt}: -$${Math.round(marker.tax).toLocaleString()}`; }
+                return `Sim ${idx+1} — ${s.isWinner ? '✅' : '❌'} · Final: $${Math.round(s.finalBalance).toLocaleString()}`;
+              },
+              label: c => {
+                if (c.datasetIndex >= allSimsData.length) return ' Baseline';
+                const s = allSimsData[c.datasetIndex];
+                const marker = (s.yearMarkers || []).find(m => m.tradeIdx === c.dataIndex);
+                if (marker) return ` Balance after tax: $${Math.round(c.raw).toLocaleString()} · Exempt: $${Math.round(exemptionVal).toLocaleString()}`;
+                return ` Balance: $${Math.round(c.raw).toLocaleString()} · ${LANGS[lang].clickLog||'click to open log'}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 } }, grid: { color: 'rgba(0,255,178,0.05)' } },
+          y: { ticks: { color: 'rgba(180,240,220,0.4)', font: { family: 'DM Mono', size: 10 }, callback: v => '$'+Math.round(v).toLocaleString() }, grid: { color: 'rgba(0,255,178,0.05)' } }
+        }
+      }
+    });
+
+    // Store sim1Log on first sim
+    allSimsData[0].log = sim1Log;
+
+    // Year summary pills — sim 1 default
+    const sim0Markers = allSims[0]?.yearMarkers || [];
+    const yearSummaryEl = document.getElementById('year-summary');
+    if (numYears > 1 && sim0Markers.length) {
+      yearSummaryEl.style.display = 'flex';
+      const T2 = LANGS[lang];
+      yearSummaryEl.innerHTML = sim0Markers.map(m => {
+        const exempt = Math.min(exemption, m.tax / (taxRate || 0.01) + exemption);
+        return `<div class="year-pill">
+          <div class="year-pill-title">📅 Year ${m.year}</div>
+          <div class="year-pill-row"><span>Tax</span><span>-$${Math.round(m.tax).toLocaleString()}</span></div>
+          <div class="year-pill-row"><span>Exempt</span><span>$${Math.round(exemption).toLocaleString()}</span></div>
+          <div class="year-pill-row"><span>${LANGS[lang].afterTax||'After tax'}</span><span>$${Math.round(m.balance).toLocaleString()}</span></div>
+        </div>`;
+      }).join('');
+    } else {
+      yearSummaryEl.style.display = 'none';
+    }
+
+    // Render sim 1 by default
+    soloMode = false;
+    const soloBtn = document.getElementById('solo-btn');
+    if (soloBtn) { soloBtn.style.background='rgba(0,255,178,0.07)'; soloBtn.style.borderColor='rgba(0,255,178,0.2)'; soloBtn.style.color='var(--g2)'; soloBtn.textContent=LANGS[lang].solo||'Solo'; }
+    // Restore avg button state
+    const avgBtn = document.getElementById('avg-btn');
+    if (avgBtn) { avgBtn.style.background = 'rgba(180,100,255,0.15)'; avgBtn.style.borderColor = 'rgba(180,100,255,0.5)'; avgBtn.style.color = 'rgba(180,100,255,0.9)'; }
+    const medianBtn = document.getElementById('median-btn');
+    if (medianBtn) { medianBtn.style.background = 'rgba(0,210,255,0.15)'; medianBtn.style.borderColor = 'rgba(0,210,255,0.5)'; medianBtn.style.color = 'rgba(0,210,255,0.9)'; }
+    avgVisible = true; medianVisible = true;
+    renderLog(0);
+
+    document.getElementById('results-section').style.display = 'block';
+    btn.disabled = false;
+    btn.querySelector('#t-runbtn').textContent = T.runAgain;
+  }, 50);
+}
+
+function applyChartHighlight(simIdx) {
+  if (!chartInstance) return;
+  const sim = allSimsData[simIdx];
+  const markerIndices = new Set((sim?.yearMarkers || []).map(m => m.tradeIdx));
+
+  chartInstance.data.datasets.forEach((ds, i) => {
+    if (i >= allSimsData.length) return; // skip avg, median, baseline
+    const isActive = i === simIdx;
+
+    if (soloMode && !isActive) {
+      ds.borderColor = 'transparent';
+      ds.borderWidth = 0;
+      ds.pointRadius = 0;
+      return;
+    }
+
+    if (isActive) {
+      ds.borderColor = 'rgba(255,217,122,1)';
+      ds.borderWidth = 2.5;
+      const len = ds.data.length;
+      if (markerIndices.size > 0) {
+        ds.pointRadius = Array.from({ length: len }, (_, idx) => markerIndices.has(idx) ? 4 : 0);
+        ds.pointBackgroundColor = Array.from({ length: len }, (_, idx) => markerIndices.has(idx) ? 'rgba(0,255,178,1)' : 'transparent');
+        ds.pointBorderColor = Array.from({ length: len }, () => 'transparent');
+        ds.pointBorderWidth = 0;
+        ds.pointHoverRadius = Array.from({ length: len }, (_, idx) => markerIndices.has(idx) ? 6 : 0);
+      } else {
+        ds.pointRadius = 0;
+      }
+    } else {
+      ds.borderWidth = 1.5;
+      ds.borderColor = allSimsData[i].isWinner ? `rgba(0,255,136,${0.3 + 0.5/allSimsData.length})` : `rgba(255,80,80,${0.3 + 0.5/allSimsData.length})`;
+      ds.pointRadius = 0;
+    }
+  });
+  chartInstance.update('none');
+}
+
+function renderLog(simIdx) {
+  const T   = LANGS[lang];
+  const sim = allSimsData[simIdx];
+  const log = sim?.log;
+  if (!log || !log.length) return;
+
+  // Update badge
+  const badge = document.getElementById('active-sim-badge');
+  badge.textContent   = `Sim ${simIdx+1} ${sim.isWinner ? '✅' : '❌'}`;
+  badge.style.borderColor = sim.isWinner ? 'rgba(0,255,136,0.4)' : 'rgba(255,80,80,0.4)';
+  badge.style.color       = sim.isWinner ? '#00ff88' : 'var(--red)';
+
+  activeSimIdx = simIdx;
+  applyChartHighlight(simIdx);
+
+  // Per-sim stats (excl. tax drops)
+  const taxIdx = new Set((sim.yearMarkers || []).map(m => m.tradeIdx + 1));
+  let peak = 0, maxDD = 0, trough = Infinity, maxRunUp = 0, maxW = 0, maxL = 0, curW = 0, curL = 0;
+  sim.history.forEach((v, idx) => {
+    if (taxIdx.has(idx)) return;
+    if (v > peak) peak = v;
+    const dd = peak > 0 ? (peak - v) / peak * 100 : 0;
+    if (dd > maxDD) maxDD = dd;
+    if (v < trough) trough = v;
+    const ru = trough > 0 ? (v - trough) / trough * 100 : 0;
+    if (ru > maxRunUp) maxRunUp = ru;
+  });
+  log.forEach(t => {
+    if (t.win) { curW++; curL = 0; if (curW > maxW) maxW = curW; }
+    else       { curL++; curW = 0; if (curL > maxL) maxL = curL; }
+  });
+  const ddEl2 = document.getElementById('sim-maxdd');
+  const clEl2 = document.getElementById('sim-consecloss');
+  const cwEl2 = document.getElementById('sim-consecwin');
+  if (ddEl2) ddEl2.textContent = '-' + maxDD.toFixed(1) + '%';
+  if (clEl2) clEl2.textContent = maxL + ' trades';
+  if (cwEl2) cwEl2.textContent = maxW + ' trades';
+
+  // Totals
+  const totBet   = log.reduce((s,t) => s + t.bet, 0);
+  const totGross = log.reduce((s,t) => s + t.grossPnl, 0);
+  const totTax   = log.reduce((s,t) => s + t.tax, 0);
+  const totNet   = log.reduce((s,t) => s + t.netPnl, 0);
+
+  document.getElementById('log-body').innerHTML = log.map(t => `
+    <tr class="${t.win ? 'win-row' : 'loss-row'}">
+      <td>${t.win ? T.win : T.loss}</td>
+      <td>$${Math.round(t.bet).toLocaleString()}</td>
+      <td>${t.win ? '+' : ''}$${Math.round(t.grossPnl).toLocaleString()}</td>
+      <td>${t.tax > 0 ? '-$'+Math.round(t.tax).toLocaleString() : '—'}</td>
+      <td>${t.netPnl >= 0 ? '+' : ''}$${Math.round(t.netPnl).toLocaleString()}</td>
+      <td>$${Math.round(t.balance).toLocaleString()}</td>
+    </tr>`).join('');
+
+  document.getElementById('log-tfoot').innerHTML = `
+    <tr class="log-total-row">
+      <td>${LANGS[lang].total||'TOTAL'}</td>
+      <td>$${Math.round(totBet).toLocaleString()}</td>
+      <td>${totGross >= 0 ? '+' : ''}$${Math.round(totGross).toLocaleString()}</td>
+      <td>-$${Math.round(totTax).toLocaleString()}</td>
+      <td>${totNet >= 0 ? '+' : ''}$${Math.round(totNet).toLocaleString()}</td>
+      <td>$${Math.round(sim.finalBalance).toLocaleString()}</td>
+    </tr>`;
+
+  // Year summary pills — update to clicked sim
+  const yearSummaryEl = document.getElementById('year-summary');
+  if (sim.yearMarkers && sim.yearMarkers.length > 1) {
+    yearSummaryEl.style.display = 'flex';
+    yearSummaryEl.innerHTML = sim.yearMarkers.map(m => `
+      <div class="year-pill">
+        <div class="year-pill-title">📅 ${(LANGS[lang].yearEnd||'Year {y} end — Sim {s} · Tax').replace('{y}',m.year).replace('{s}',simIdx+1).split('·')[0].trim()}</div>
+        <div class="year-pill-row"><span>${LANGS[lang].taxDeducted||'Tax deducted'}</span><span>-$${Math.round(m.tax).toLocaleString()}</span></div>
+        <div class="year-pill-row"><span>${LANGS[lang].exemptionLbl||'Exemption'}</span><span>$${Math.round(exemptionVal).toLocaleString()}</span></div>
+        <div class="year-pill-row"><span>${LANGS[lang].afterTax||'After tax'}</span><span>$${Math.round(m.balance).toLocaleString()}</span></div>
+      </div>`).join('');
+  }
+}
+
+/* ── Init ── */
+const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
+const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
+const initLang = LANGS[browserLang] ? browserLang : 'en';
+setLang(initLang, flagMap[initLang]);
+updateBeBar();
+</script>
+</body>
+</html>
