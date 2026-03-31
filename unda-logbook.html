@@ -940,8 +940,11 @@
         }
         yearAccWin += t.pnl;
       } else if (t.result === 'Loss') {
-        bal += t.pnl; // negative
+        bal += t.pnl - calcFee(t.risk, t.pnl, t.feeCustom);
         yearAccLoss += Math.abs(t.pnl);
+      } else {
+        // Break even — still pay fees
+        bal -= calcFee(t.risk, t.pnl, t.feeCustom);
       }
 
       // Classic: deduct tax at year end
