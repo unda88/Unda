@@ -1226,9 +1226,9 @@
         const netAmt  = t.pnl - taxAmt - feeAmt;
         const showNet = taxOn || feeMode !== 'off';
         const taxCols = `
-          ${taxOn ? `<td style="color:rgba(255,217,122,0.7)">${t.result === 'Win' ? '-$'+taxAmt.toFixed(2) : '—'}</td>` : ''}
-          ${feeMode !== 'off' || t.feeCustom !== null ? `<td style="color:rgba(0,212,255,0.6)">-$${feeAmt.toFixed(2)}${t.feeCustom !== null && t.feeCustom !== undefined ? '<span style="font-size:8px;color:rgba(0,212,255,0.4);margin-left:3px">custom</span>' : ''}</td>` : ''}
-          ${showNet ? `<td style="color:${netAmt >= 0 ? '#00ff88' : 'var(--red)'}">${(netAmt >= 0 ? '+' : '') + '$' + Math.abs(netAmt).toFixed(2)}</td>` : ''}`;
+          ${taxOn ? `<td style="color:rgba(255,217,122,0.7)">${t.result === 'Win' ? '-$'+taxAmt.toFixed(2) : '—'}</td>` : '<td style="display:none"></td>'}
+          ${hasAnyFee ? `<td style="color:rgba(0,212,255,0.6)">-$${feeAmt.toFixed(2)}${t.feeCustom !== null && t.feeCustom !== undefined ? '<span style="font-size:8px;color:rgba(0,212,255,0.4);margin-left:3px">custom</span>' : ''}</td>` : '<td style="display:none"></td>'}
+          ${(taxOn || hasAnyFee) ? `<td style="color:${netAmt >= 0 ? '#00ff88' : 'var(--red)'}">${(netAmt >= 0 ? '+' : '') + '$' + Math.abs(netAmt).toFixed(2)}</td>` : '<td style="display:none"></td>'}`;
         return `<tr>
           <td style="color:var(--text-muted)">${i + 1}</td>
           <td style="color:var(--text-muted)">${t.date}</td>
@@ -1344,7 +1344,7 @@
       const avgRRActNum = validRRAct.length ? parseFloat((validRRAct.reduce((a,b) => a+(b.rrActual||0), 0) / validRRAct.length).toFixed(2)) : null;
       const avgRRActTot = avgRRActNum !== null ? avgRRActNum.toFixed(2) : '—';
       const rrColor = avgRRActNum !== null ? (avgRRActNum >= 0 ? 'rgba(0,255,178,0.6)' : 'var(--red)') : 'rgba(0,255,178,0.6)';
-      const showNet = taxOn || feeMode !== 'off';
+      const showNet = taxOn || hasAnyFee;
       const T2 = LANGS[currentLang];
       // Count how many optional columns are shown
       const taxCols  = taxOn ? 1 : 0;
@@ -1357,9 +1357,9 @@
         <td style="color:${totPnl>=0?'#00ff88':'var(--red)'}">${totPnl>=0?'+':''}$${totPnl.toFixed(2)}</td>
         <td></td>
         <td style="color:${rrColor}">${avgRRActTot !== '—' ? '1:'+avgRRActTot : '—'}</td>
-        ${taxOn ? `<td style="color:rgba(255,217,122,0.8)">-$${totTax.toFixed(2)}</td>` : ''}
-        ${feeMode !== 'off' ? `<td style="color:rgba(0,212,255,0.6)">-$${totFees.toFixed(2)}</td>` : ''}
-        ${showNet ? `<td style="color:${totNet>=0?'#00ff88':'var(--red)'}">${totNet>=0?'+':''}$${totNet.toFixed(2)}</td>` : ''}
+        ${taxOn ? `<td style="color:rgba(255,217,122,0.8)">-$${totTax.toFixed(2)}</td>` : '<td style="display:none"></td>'}
+        ${hasAnyFee ? `<td style="color:rgba(0,212,255,0.6)">-$${totFees.toFixed(2)}</td>` : '<td style="display:none"></td>'}
+        ${showNet ? `<td style="color:${totNet>=0?'#00ff88':'var(--red)'}">${totNet>=0?'+':''}$${totNet.toFixed(2)}</td>` : '<td style="display:none"></td>'}
         <td colspan="2"></td>
       </tr>`;
     } else if (tfoot) {
