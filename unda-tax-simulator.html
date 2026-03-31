@@ -136,6 +136,19 @@
     .ti:hover { background:rgba(0,255,178,0.14); }
     #global-tooltip { display:none; position:fixed; z-index:99999; background:rgba(0,10,6,0.97); border:1px solid rgba(0,255,178,0.25); border-radius:10px; padding:10px 13px; font-family:'Outfit',sans-serif; font-size:11px; color:#a8ffdf; width:240px; white-space:normal; line-height:1.6; box-shadow:0 10px 30px rgba(0,0,0,0.8); pointer-events:none; }
     .footer { text-align: center; margin-top: 1.5rem; font-size: 10px; color: rgba(0,255,178,0.18); letter-spacing: .12em; text-transform: uppercase; }
+
+    /* Break-even bar */
+    .be-bar-wrap { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,255,178,0.08); }
+    .be-bar-title { font-size: 9px; letter-spacing: .15em; text-transform: uppercase; color: rgba(0,255,178,0.35); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .be-bar-track { position: relative; height: 6px; background: rgba(255,68,68,0.15); border-radius: 3px; margin-bottom: 6px; }
+    .be-bar-fill { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+    .be-needle { position: absolute; top: -5px; width: 2px; height: 16px; border-radius: 1px; background: var(--gold); transition: left .3s; transform: translateX(-50%); box-shadow: 0 0 6px rgba(255,217,122,0.6); }
+    .be-needle-wr { background: #00ff88; box-shadow: 0 0 6px rgba(0,255,136,0.6); }
+    .be-bar-labels { display: flex; justify-content: space-between; font-size: 9px; font-family: 'DM Mono', monospace; color: rgba(0,255,178,0.3); }
+    .be-bar-stats { display: flex; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
+    .be-stat { font-size: 10px; font-family: 'DM Mono', monospace; }
+    .be-stat-label { color: rgba(0,255,178,0.35); margin-right: 4px; }
+    .be-verdict-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
   </style>
 <script>
   if(performance.getEntriesByType('navigation')[0]?.type==='back_forward'){location.reload(true);}
@@ -185,15 +198,15 @@
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-winrate">Win rate (%)</span><i class="ti" id="tip-winrate" data-tip="Percentage of trades that end in profit. 40% means 4 out of 10 trades win. Most profitable strategies win between 35–60% of trades.">?</i></div>
-            <div class="iw"><span class="px">%</span><input type="number" id="winrate" value="40" min="1" max="99" step="1"></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="winrate" value="40" min="1" max="100" step="1" oninput="if(this.value!==''){this.value=Math.min(Math.max(parseInt(this.value),1),100);}updateBeBar()"></div>
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-rr">Risk / Reward</span><i class="ti" id="tip-rr" data-tip="How much you win vs how much you lose per trade. R:R of 2 means if you risk $100, you gain $200 on a win. Higher R:R = you need fewer wins to be profitable.">?</i></div>
-            <div class="iw"><span class="px">R</span><input type="number" id="rr" value="2" min="0.1" step="0.1"></div>
+            <div class="iw"><span class="px">R</span><input type="number" id="rr" value="2" min="0.1" step="0.1" oninput="updateBeBar()"></div>
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-risk">Risk per trade (%)</span><i class="ti" id="tip-risk" data-tip="Percentage of your current account balance you risk per trade. 1% is conservative. Above 3% is aggressive. This compounds — your bet size grows as your account grows.">?</i></div>
-            <div class="iw"><span class="px">%</span><input type="number" id="riskpt" value="1" min="0.1" max="50" step="0.1"></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="riskpt" value="1" min="0.1" max="100" step="0.1" oninput="if(this.value!=='')this.value=Math.min(Math.max(parseFloat(this.value),0.1),100)"></div>
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-trades">Number of trades</span><i class="ti" id="tip-trades" data-tip="How many trades per simulation run. More trades = more reliable result. 100–500 trades represents roughly 1–2 years of active trading.">?</i></div>
@@ -201,17 +214,37 @@
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-years">Number of years</span><i class="ti" id="tip-years" data-tip="How many years your trades span. This determines how many times the annual exemption is applied and shows yearly tax deductions as drops in the chart. E.g. 200 trades over 2 years = exemption applied twice.">?</i></div>
-            <div class="iw"><span class="px">#</span><input type="number" id="years" value="1" min="1" max="20" step="1"></div>
+            <div class="iw"><span class="px">#</span><input type="number" id="years" value="1" min="1" max="10" step="1" oninput="if(this.value!=='')this.value=Math.min(Math.max(parseInt(this.value),1),10)"></div>
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-sims">Simulations</span><i class="ti" id="tip-sims" data-tip="How many times to run the simulation. More simulations = more reliable average. 10–20 gives a good picture. Results are averaged across all runs.">?</i></div>
-            <div class="iw"><span class="px">x</span><input type="number" id="sims" value="10" min="1" max="20" step="1"></div>
+            <div class="iw"><span class="px">x</span><input type="number" id="sims" value="10" min="1" max="1000" step="1" oninput="checkSimsWarning()"></div>
+          </div>
+        </div>
+
+        <!-- Break-even bar -->
+        <div class="be-bar-wrap" id="be-bar-section">
+          <div class="be-bar-title">
+            <span id="t-be-bar-title">Break-even indicator</span>
+            <span id="be-verdict-text" style="font-size:10px;font-weight:500"></span>
+          </div>
+          <div class="be-bar-track">
+            <div class="be-bar-fill" id="be-bar-fill"></div>
+            <div class="be-needle" id="be-needle-be" style="left:25%"></div>
+            <div class="be-needle be-needle-wr" id="be-needle-wr" style="left:40%"></div>
+          </div>
+          <div class="be-bar-labels">
+            <span>0%</span><span>50%</span><span>100%</span>
+          </div>
+          <div class="be-bar-stats">
+            <div class="be-stat"><span class="be-stat-label" id="t-be-gross-lbl">BE gross:</span><span id="be-gross-val" style="color:var(--gold)">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-real-lbl">BE real:</span><span id="be-real-val" style="color:var(--red)">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-wr-lbl">Win rate:</span><span id="be-wr-val" style="color:#00ff88">—</span></div>
+            <div class="be-stat"><span class="be-stat-label" id="t-be-margin-lbl">Margin:</span><span id="be-margin-val">—</span></div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Tax settings -->
     <div class="card">
       <div class="card-inner">
         <div class="sec" id="t-sec-tax">Tax settings</div>
@@ -224,7 +257,7 @@
             <div class="rate-btn" id="rate-50-btn" onclick="setRate(50)">50%</div>
             <div class="rate-btn active" id="rate-custom-btn" onclick="focusCustomRate()">Custom</div>
           </div>
-          <div class="iw"><span class="px">%</span><input type="number" id="taxrate" value="10" min="0" max="99" step="0.5" oninput="clearRateButtons()"></div>
+          <div class="iw"><span class="px">%</span><input type="number" id="taxrate" value="10" min="0" max="99" step="0.5" oninput="clearRateButtons();updateBeBar()"></div>
         </div>
 
         <div class="inputs-grid">
@@ -238,7 +271,7 @@
           </div>
           <div class="fg">
             <div class="flr"><span class="fl" id="t-lbl-fees">Fees per trade (%)</span><i class="ti" id="tip-fees" data-tip="Broker/exchange fee as % of your bet per trade. E.g. 0.1% on Binance. Applied to every trade — deducted from gross P&L before tax.">?</i></div>
-            <div class="iw"><span class="px">%</span><input type="number" id="feerate" value="0" min="0" max="10" step="0.01" placeholder="0"></div>
+            <div class="iw"><span class="px">%</span><input type="number" id="feerate" value="0" min="0" max="10" step="0.01" placeholder="0" oninput="updateBeBar()"></div>
           </div>
         </div>
 
@@ -305,6 +338,26 @@
           <div class="stat"><div class="flr" style="justify-content:center;margin-bottom:5px"><div class="stat-l" id="t-st-saved">Saved by exemption</div><i class="ti" id="tip-saved" data-tip="How much tax you avoided thanks to the annual exemption. The first X of your annual profits are tax-free — this is what that saves you on average.">?</i></div><div class="stat-v c-gold" id="st-saved">—</div></div>
         </div>
 
+        <!-- Win/Blown stats -->
+        <div class="stats-row" id="sim-outcome-row" style="margin-top:0">
+          <div class="stat" style="border-color:rgba(0,255,136,0.15);background:rgba(0,255,136,0.04)">
+            <div class="stat-l" id="t-st-profitable">✅ Profitable runs</div>
+            <div class="stat-v c-green" id="st-profitable">—</div>
+          </div>
+          <div class="stat" style="border-color:rgba(255,68,68,0.15);background:rgba(255,68,68,0.04)">
+            <div class="stat-l" id="t-st-blown">❌ Account blown</div>
+            <div class="stat-v c-red" id="st-blown">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-l" id="t-st-survival">Survival rate</div>
+            <div class="stat-v" id="st-survival">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-l" id="t-st-totalruns">Total runs</div>
+            <div class="stat-v c-white" id="st-totalruns">—</div>
+          </div>
+        </div>
+
         <!-- Verdict -->
         <div class="verdict" id="verdict"></div>
         <div class="note" id="verdict-note"></div>
@@ -314,12 +367,24 @@
     <!-- Monte Carlo chart -->
     <div class="card">
       <div class="card-inner">
-        <div class="sec" id="t-sec-chart">Monte Carlo — all simulations</div>
+        <div style="display:flex;align-items:center;margin-bottom:1rem;gap:8px">
+          <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(0,255,178,0.35)" id="t-sec-chart">Monte Carlo — all simulations</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,255,178,0.15),transparent)"></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button id="median-btn" onclick="toggleAvg('median')" style="background:rgba(0,210,255,0.15);border:1px solid rgba(0,210,255,0.5);border-radius:8px;padding:3px 10px;font-size:10px;color:rgba(0,210,255,0.9);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Median</button>
+            <button id="avg-btn" onclick="toggleAvg('avg')" style="background:rgba(180,100,255,0.15);border:1px solid rgba(180,100,255,0.5);border-radius:8px;padding:3px 10px;font-size:10px;color:rgba(180,100,255,0.9);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Avg</button>
+            <button id="solo-btn" onclick="toggleSolo()" style="background:rgba(0,10,6,0.85);border:1px solid rgba(0,255,178,0.25);border-radius:8px;padding:3px 10px;font-size:10px;color:var(--g2);cursor:pointer;font-family:'DM Mono',monospace;transition:all .2s">Solo</button>
+          </div>
+        </div>
         <div style="position:relative">
           <div class="chart-wrap"><canvas id="simChart"></canvas></div>
-          <button id="solo-btn" onclick="toggleSolo()" style="position:absolute;bottom:-32px;right:12px;background:rgba(0,10,6,0.85);border:1px solid rgba(0,255,178,0.25);border-radius:8px;padding:5px 12px;font-size:10px;color:var(--g2);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.08em;transition:all .2s;backdrop-filter:blur(8px);z-index:10">Solo</button>
         </div>
         <div class="year-summary" id="year-summary" style="display:none"></div>
+        <div style="display:flex;gap:16px;margin-top:8px;font-size:9px;font-family:'DM Mono',monospace;color:rgba(180,240,220,0.3)">
+          <span>🟣 Average</span>
+          <span>🔵 Median</span>
+          <span>🟡 Selected sim</span>
+        </div>
       </div>
     </div>
 
@@ -393,6 +458,34 @@ let lastVerdictType = null;
 let lastNetPnl = 0;
 let lastAccount = 10000;
 let compoundMode = 'classic';
+let avgMode = true; // show avg line by default
+
+let avgVisible    = true;
+let medianVisible = true;
+
+function toggleAvg(type) {
+  if (!chartInstance) return;
+  const ds = chartInstance.data.datasets;
+  const avgIdx    = ds.length - 3;
+  const medianIdx = ds.length - 2;
+
+  if (type === 'avg') {
+    avgVisible = !avgVisible;
+    const btn = document.getElementById('avg-btn');
+    btn.style.background  = avgVisible ? 'rgba(180,100,255,0.15)' : 'rgba(0,10,6,0.85)';
+    btn.style.borderColor = avgVisible ? 'rgba(180,100,255,0.5)'  : 'rgba(180,100,255,0.2)';
+    btn.style.color       = avgVisible ? 'rgba(180,100,255,0.9)'  : 'rgba(180,100,255,0.35)';
+    if (avgIdx >= 0) ds[avgIdx].borderColor = avgVisible ? 'rgba(180,100,255,0.9)' : 'transparent';
+  } else {
+    medianVisible = !medianVisible;
+    const btn = document.getElementById('median-btn');
+    btn.style.background  = medianVisible ? 'rgba(0,210,255,0.15)' : 'rgba(0,10,6,0.85)';
+    btn.style.borderColor = medianVisible ? 'rgba(0,210,255,0.5)'  : 'rgba(0,210,255,0.2)';
+    btn.style.color       = medianVisible ? 'rgba(0,210,255,0.9)'  : 'rgba(0,210,255,0.35)';
+    if (medianIdx >= 0) ds[medianIdx].borderColor = medianVisible ? 'rgba(0,210,255,0.9)' : 'transparent';
+  }
+  chartInstance.update('none');
+}
 
 function toggleSolo() {
   soloMode = !soloMode;
@@ -488,6 +581,7 @@ function setRate(pct) {
   const map = {10:'rate-10-btn', 33:'rate-33-btn', 50:'rate-50-btn'};
   const btnId = map[pct];
   if (btnId) { const b = document.getElementById(btnId); if(b) b.classList.add('active'); }
+  updateBeBar();
 }
 
 function focusCustomRate() {
@@ -500,12 +594,79 @@ function clearRateButtons() {
   document.getElementById('rate-custom-btn').classList.add('active');
 }
 
+function checkSimsWarning() {
+  const input = document.getElementById('sims');
+  let n = parseInt(input.value) || 0;
+  if (n > 1000) { n = 1000; input.value = 1000; }
+  const w = document.getElementById('sims-warning');
+  if (w) w.style.display = n > 100 ? 'block' : 'none';
+}
+
 function setCompoundMode(mode) {
   compoundMode = mode;
   const cc = document.getElementById('compound-classic-btn');
   const cs = document.getElementById('compound-safe-btn');
   if (cc) cc.classList.toggle('active', mode === 'classic');
   if (cs) cs.classList.toggle('active', mode === 'safe');
+  updateBeBar();
+}
+
+/* ── Break-even bar ── */
+function updateBeBar() {
+  const rr  = parseFloat(document.getElementById('rr').value) || 2;
+  const wr  = parseFloat(document.getElementById('winrate').value) || 40;
+  const tax = parseFloat(document.getElementById('taxrate').value) || 0;
+  const fee = parseFloat(document.getElementById('feerate').value) || 0;
+
+  const taxF = tax / 100;
+  const feeF = fee / 100;
+
+  const netWin  = rr * (1 - feeF) * (1 - taxF);
+  const netLoss = 1 + feeF;
+
+  const beGross = (1 / (1 + rr)) * 100;
+  const beReal  = (netLoss / (netWin + netLoss)) * 100;
+  const margin  = wr - beReal;
+
+  // Update needles
+  const fillEl   = document.getElementById('be-bar-fill');
+  const needleBe = document.getElementById('be-needle-be');
+  const needleWr = document.getElementById('be-needle-wr');
+  const verdictEl = document.getElementById('be-verdict-text');
+
+  if (!fillEl) return;
+
+  const bePct = Math.min(Math.max(beReal, 0), 100);
+  const wrPct = Math.min(Math.max(wr, 0), 100);
+
+  fillEl.style.width      = wrPct + '%';
+  fillEl.style.background = margin > 0
+    ? 'linear-gradient(90deg, rgba(255,68,68,0.25), rgba(0,255,136,0.4))'
+    : 'rgba(255,68,68,0.3)';
+
+  needleBe.style.left = bePct + '%';
+  needleWr.style.left = wrPct + '%';
+
+  // Stats
+  const bgv = document.getElementById('be-gross-val');
+  const brv = document.getElementById('be-real-val');
+  const bwv = document.getElementById('be-wr-val');
+  const bmv = document.getElementById('be-margin-val');
+  if (bgv) bgv.textContent = beGross.toFixed(1) + '%';
+  if (brv) brv.textContent = beReal.toFixed(1) + '%';
+  if (bwv) bwv.textContent = wr.toFixed(0) + '%';
+  if (bmv) {
+    bmv.textContent = (margin >= 0 ? '+' : '') + margin.toFixed(1) + '%';
+    bmv.style.color = margin > 5 ? '#00ff88' : margin >= 0 ? 'var(--gold)' : 'var(--red)';
+  }
+
+  // Verdict
+  if (verdictEl) {
+    if (margin > 10)      { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:#00ff88"></span>Strong edge'; verdictEl.style.color = '#00ff88'; }
+    else if (margin > 3)  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--g)"></span>Profitable'; verdictEl.style.color = 'var(--g)'; }
+    else if (margin > 0)  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--gold)"></span>Marginal'; verdictEl.style.color = 'var(--gold)'; }
+    else                  { verdictEl.innerHTML = '<span class="be-verdict-dot" style="background:var(--red)"></span>Below BE'; verdictEl.style.color = 'var(--red)'; }
+  }
 }
 
 /* ── Main simulation ── */
@@ -516,7 +677,7 @@ function runSim() {
   const rr       = parseFloat(document.getElementById('rr').value);
   const riskPt   = parseFloat(document.getElementById('riskpt').value) / 100;
   const trades   = parseInt(document.getElementById('trades').value);
-  const numSims  = parseInt(document.getElementById('sims').value);
+  const numSims  = Math.min(parseInt(document.getElementById('sims').value), 1000);
   const numYears = parseInt(document.getElementById('years').value) || 1;
   const taxRate  = parseFloat(document.getElementById('taxrate').value) / 100;
   const exemption = parseFloat(document.getElementById('exemption').value) || 0;
@@ -684,6 +845,19 @@ function runSim() {
     document.getElementById('st-pf').textContent      = pf.toFixed(2);
     document.getElementById('st-saved').textContent   = '$' + Math.round(avgSaved).toLocaleString();
 
+    // Outcome stats
+    const profitableRuns = allSims.filter(s => s.finalBalance > account).length;
+    const blownRuns      = allSims.filter(s => s.finalBalance <= 0).length;
+    const survivalRate   = ((numSims - blownRuns) / numSims * 100).toFixed(1);
+    const profEl = document.getElementById('st-profitable');
+    const blwnEl = document.getElementById('st-blown');
+    const survEl = document.getElementById('st-survival');
+    const totEl  = document.getElementById('st-totalruns');
+    if (profEl) { profEl.textContent = profitableRuns + '/' + numSims; profEl.className = 'stat-v ' + (profitableRuns/numSims >= 0.7 ? 'c-green' : 'c-gold'); }
+    if (blwnEl) { blwnEl.textContent = blownRuns + '/' + numSims; blwnEl.className = 'stat-v ' + (blownRuns > 0 ? 'c-red' : 'c-green'); }
+    if (survEl) { survEl.textContent = survivalRate + '%'; survEl.className = 'stat-v ' + (parseFloat(survivalRate) >= 90 ? 'c-green' : parseFloat(survivalRate) >= 70 ? 'c-gold' : 'c-red'); }
+    if (totEl)  totEl.textContent = numSims;
+
     // Verdict
     lastNetPnl = netPnl;
     lastAccount = account;
@@ -722,6 +896,45 @@ function runSim() {
       pointHitRadius: 20,
       tension: 0.3,
     }));
+
+    // Average line (purple)
+    const avgData = Array.from({ length: maxLen }, (_, i) => {
+      const vals = allSims.map(s => s.history[i]).filter(v => v !== undefined);
+      return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : null;
+    });
+    datasets.push({
+      label: 'Average',
+      data: avgData,
+      borderColor: avgMode ? 'rgba(180,100,255,0.9)' : 'transparent',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      pointRadius: 0,
+      pointHitRadius: 0,
+      tension: 0.3,
+      order: -1,
+    });
+
+    // Median line (cyan)
+    const medianData = Array.from({ length: maxLen }, (_, i) => {
+      const vals = allSims.map(s => s.history[i]).filter(v => v !== undefined).sort((a,b) => a-b);
+      if (!vals.length) return null;
+      const mid = Math.floor(vals.length / 2);
+      return vals.length % 2 === 0 ? (vals[mid-1] + vals[mid]) / 2 : vals[mid];
+    });
+    datasets.push({
+      label: 'Median',
+      data: medianData,
+      borderColor: avgMode ? 'rgba(0,210,255,0.9)' : 'transparent',
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: [3, 3],
+      pointRadius: 0,
+      pointHitRadius: 0,
+      tension: 0.3,
+      order: -1,
+    });
+
     datasets.push({ label: 'Start', data: Array(maxLen).fill(account), borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'transparent', borderWidth: 1, borderDash: [4,4], pointRadius: 0 });
 
     const ctx = document.getElementById('simChart').getContext('2d');
@@ -798,6 +1011,12 @@ function runSim() {
     soloMode = false;
     const soloBtn = document.getElementById('solo-btn');
     if (soloBtn) { soloBtn.style.background='rgba(0,255,178,0.07)'; soloBtn.style.borderColor='rgba(0,255,178,0.2)'; soloBtn.style.color='var(--g2)'; soloBtn.textContent=LANGS[lang].solo||'Solo'; }
+    // Restore avg button state
+    const avgBtn = document.getElementById('avg-btn');
+    if (avgBtn) { avgBtn.style.background = 'rgba(180,100,255,0.15)'; avgBtn.style.borderColor = 'rgba(180,100,255,0.5)'; avgBtn.style.color = 'rgba(180,100,255,0.9)'; }
+    const medianBtn = document.getElementById('median-btn');
+    if (medianBtn) { medianBtn.style.background = 'rgba(0,210,255,0.15)'; medianBtn.style.borderColor = 'rgba(0,210,255,0.5)'; medianBtn.style.color = 'rgba(0,210,255,0.9)'; }
+    avgVisible = true; medianVisible = true;
     renderLog(0);
 
     document.getElementById('results-section').style.display = 'block';
@@ -812,7 +1031,7 @@ function applyChartHighlight(simIdx) {
   const markerIndices = new Set((sim?.yearMarkers || []).map(m => m.tradeIdx));
 
   chartInstance.data.datasets.forEach((ds, i) => {
-    if (i >= allSimsData.length) return; // skip baseline
+    if (i >= allSimsData.length) return; // skip avg, median, baseline
     const isActive = i === simIdx;
 
     if (soloMode && !isActive) {
@@ -904,6 +1123,7 @@ const browserLang = (navigator.language || 'en').split('-')[0].toLowerCase();
 const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
 const initLang = LANGS[browserLang] ? browserLang : 'en';
 setLang(initLang, flagMap[initLang]);
+updateBeBar();
 </script>
 </body>
 </html>
