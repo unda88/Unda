@@ -182,9 +182,30 @@
       </div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-inner">
-      <div class="sec" id="t-sec-log">Log a trade</div>
+  <!-- Fees toggle -->
+  <div class="card" id="fees-toggle-card">
+    <div class="card-inner" style="padding:1rem 2rem">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(0,255,178,0.35)" id="t-fees-label">Fees</span>
+        <i class="ti" data-tip="Apply broker fees to each trade. Off = no fees. % = percentage of position size. Fixed = fixed amount per trade. Both = % + fixed combined.">?</i>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="tax-btn active" id="fee-btn-off" onclick="setFeeMode('off')">Off</div>
+          <div class="tax-btn" id="fee-btn-pct" onclick="setFeeMode('pct')">%</div>
+          <div class="tax-btn" id="fee-btn-fixed" onclick="setFeeMode('fixed')">$</div>
+          <div class="tax-btn" id="fee-btn-both" onclick="setFeeMode('both')">%+$</div>
+        </div>
+        <div id="fee-pct-wrap" style="display:none;background:var(--inp);border-radius:9px;border:1px solid rgba(0,255,178,0.12);padding:0 12px;height:36px;align-items:center;gap:6px">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--g2)">%</span>
+          <input type="number" id="fee-pct-input" min="0" max="10" step="0.01" placeholder="0.1" value="0.1" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;width:60px" oninput="saveFees();render()">
+        </div>
+        <div id="fee-fixed-wrap" style="display:none;background:var(--inp);border-radius:9px;border:1px solid rgba(0,255,178,0.12);padding:0 12px;height:36px;align-items:center;gap:6px">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--g2)">$</span>
+          <input type="number" id="fee-fixed-input" min="0" step="0.01" placeholder="3.50" value="3.50" style="background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;width:60px" oninput="saveFees();render()">
+        </div>
+        <div id="fee-active-badge" style="display:none;margin-left:auto;background:rgba(0,255,178,0.06);border:1px solid rgba(0,255,178,0.2);border-radius:8px;padding:4px 12px;font-size:11px;color:var(--g2);font-family:'DM Mono',monospace"></div>
+      </div>
+    </div>
+  </div>
       <div class="form-grid">
         <div class="fg"><span class="fl" id="t-f-date">Date</span>
           <div class="iw"><input type="date" id="f-date"></div>
@@ -226,6 +247,10 @@
         </div>
         <div class="fg"><span class="fl" id="t-f-notes">Notes</span>
           <div class="iw"><input type="text" id="f-notes" placeholder="Optional..."></div>
+        </div>
+        <div class="fg">
+          <span class="fl" id="t-f-fee">Fees $ <span style="color:rgba(0,255,178,0.25);font-size:9px" id="t-f-fee-sub">(optional — overrides global)</span></span>
+          <div class="iw"><span class="px">$</span><input type="number" id="f-fee" placeholder="—" min="0" step="0.01"></div>
         </div>
       </div>
       <button class="add-btn" id="t-add-btn" onclick="addTrade()">+ Add trade to log</button>
@@ -272,16 +297,20 @@
         </div>
       </div>
 
-      <!-- Tax stats -->
+      <!-- Tax/Fee stats -->
       <div id="tax-stats-row" style="display:none;margin-top:10px">
         <div style="height:1px;background:linear-gradient(90deg,rgba(255,217,122,0.2),transparent);margin-bottom:10px"></div>
         <div class="stats-grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">
-          <div class="stat" style="border-color:rgba(255,217,122,0.2);background:rgba(255,217,122,0.04)">
+          <div class="stat" style="border-color:rgba(255,217,122,0.2);background:rgba(255,217,122,0.04)" id="tax-stat-box">
             <div class="stat-label" id="t-st-totaltax">Total tax</div>
             <div class="stat-val c-gold" id="st-totaltax">—</div>
           </div>
+          <div class="stat" style="border-color:rgba(0,212,255,0.2);background:rgba(0,212,255,0.04)" id="fee-stat-box">
+            <div class="stat-label" id="t-st-totalfees">Total fees</div>
+            <div class="stat-val" style="color:rgba(0,212,255,0.8)" id="st-totalfees">—</div>
+          </div>
           <div class="stat" style="border-color:rgba(0,255,136,0.2);background:rgba(0,255,136,0.04)">
-            <div class="stat-label" id="t-st-netaftertax">Net after tax</div>
+            <div class="stat-label" id="t-st-netaftertax">Net after tax & fees</div>
             <div class="stat-val" id="st-netaftertax">—</div>
           </div>
         </div>
@@ -458,6 +487,7 @@
               <th id="th-rr">Planned R:R</th>
               <th id="th-rr-actual">Actual R:R</th>
               <th id="th-tax-col" style="display:none;color:rgba(255,217,122,0.6)">Tax $</th>
+              <th id="th-fee-col" style="display:none;color:rgba(0,212,255,0.6)">Fees $</th>
               <th id="th-net-col" style="display:none;color:rgba(0,255,136,0.6)">Net $</th>
               <th id="th-notes">Notes</th>
               <th></th>
@@ -608,7 +638,14 @@
   /* ── Logbook logic ── */
   let trades = [];
   let taxRate = 0;
+  let feeMode = 'off';
+  let feePct = 0.1;
+  let feeFixed = 3.50;
+
   try { taxRate = parseFloat(localStorage.getItem('unda-logbook-tax') || '0'); } catch(e) {}
+  try { feeMode  = localStorage.getItem('unda-logbook-feemode') || 'off'; } catch(e) {}
+  try { feePct   = parseFloat(localStorage.getItem('unda-logbook-feepct') || '0.1'); } catch(e) {}
+  try { feeFixed = parseFloat(localStorage.getItem('unda-logbook-feefixed') || '3.50'); } catch(e) {}
   try { 
     const stored = JSON.parse(localStorage.getItem('unda-logbook') || '[]');
     // If stored in old unshift order (newest first), reverse to get chronological order
@@ -617,6 +654,48 @@
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
 
   function save() { try { localStorage.setItem('unda-logbook', JSON.stringify(trades)); } catch(e) {} }
+
+  function calcFee(risk, pnl, feeCustom) {
+    // Individual fee overrides global
+    if (feeCustom !== null && feeCustom !== undefined) return feeCustom;
+    if (feeMode === 'off') return 0;
+    let fee = 0;
+    if (feeMode === 'pct' || feeMode === 'both') fee += Math.abs(pnl || risk) * (feePct / 100);
+    if (feeMode === 'fixed' || feeMode === 'both') fee += feeFixed;
+    return parseFloat(fee.toFixed(2));
+  }
+
+  function saveFees() {
+    feePct   = parseFloat(document.getElementById('fee-pct-input')?.value) || 0.1;
+    feeFixed = parseFloat(document.getElementById('fee-fixed-input')?.value) || 3.50;
+    try { localStorage.setItem('unda-logbook-feepct', String(feePct)); } catch(e) {}
+    try { localStorage.setItem('unda-logbook-feefixed', String(feeFixed)); } catch(e) {}
+  }
+
+  function setFeeMode(mode) {
+    feeMode = mode;
+    try { localStorage.setItem('unda-logbook-feemode', mode); } catch(e) {}
+    document.querySelectorAll('[id^="fee-btn-"]').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('fee-btn-' + mode);
+    if (btn) btn.classList.add('active');
+    const pctWrap   = document.getElementById('fee-pct-wrap');
+    const fixedWrap = document.getElementById('fee-fixed-wrap');
+    const badge     = document.getElementById('fee-active-badge');
+    if (pctWrap)   pctWrap.style.display   = (mode === 'pct'   || mode === 'both') ? 'flex' : 'none';
+    if (fixedWrap) fixedWrap.style.display = (mode === 'fixed' || mode === 'both') ? 'flex' : 'none';
+    if (badge) {
+      if (mode !== 'off') {
+        badge.style.display = 'block';
+        const parts = [];
+        if (mode === 'pct'   || mode === 'both') parts.push(feePct + '% fee');
+        if (mode === 'fixed' || mode === 'both') parts.push('$' + feeFixed + ' fixed');
+        badge.textContent = parts.join(' + ') + ' applied';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+    render();
+  }
 
   function setTaxRate(pct) {
     taxRate = pct;
@@ -762,13 +841,15 @@
     const rrPlan  = parseFloat(document.getElementById('f-rr').value) || 0;
     const rrAct   = risk > 0 ? parseFloat((pnl / risk).toFixed(2)) : 0;
     const notes   = document.getElementById('f-notes').value || '';
-    trades.push({ id: Date.now(), date, pair, dir: dirVal, result: resVal, risk, pnl, rr: rrPlan, rrActual: rrAct, notes });
+    const feeCustom = document.getElementById('f-fee').value !== '' ? parseFloat(document.getElementById('f-fee').value) : null;
+    trades.push({ id: Date.now(), date, pair, dir: dirVal, result: resVal, risk, pnl, rr: rrPlan, rrActual: rrAct, notes, feeCustom });
     save(); render();
     document.getElementById('f-pair').value     = '';
     document.getElementById('f-pnl').value      = '';
     document.getElementById('f-rr').value       = '';
     document.getElementById('f-rr-actual').value= '';
     document.getElementById('f-notes').value    = '';
+    document.getElementById('f-fee').value      = '';
     document.getElementById('f-date').value     = new Date().toISOString().split('T')[0];
   }
 
@@ -852,10 +933,10 @@
     sorted.forEach((t, i) => {
       if (t.result === 'Win') {
         if (compoundMode === 'safe' && taxRate > 0) {
-          const net = t.pnl * (1 - taxRate / 100);
+          const net = t.pnl * (1 - taxRate / 100) - calcFee(t.risk, t.pnl, t.feeCustom);
           bal += net;
         } else {
-          bal += t.pnl;
+          bal += t.pnl - calcFee(t.risk, t.pnl, t.feeCustom);
         }
         yearAccWin += t.pnl;
       } else if (t.result === 'Loss') {
@@ -901,7 +982,8 @@
     const totalLossAmt = Math.abs(allLoss.reduce((s,t) => s + t.pnl, 0));
     const taxable  = Math.max(0, totalWinAmt - totalLossAmt);
     const totalTaxAmt  = taxRate > 0 ? taxable * (taxRate / 100) : 0;
-    const netBal   = grossBal - totalTaxAmt;
+    const totalFeesAmt = trades.reduce((s,t) => s + calcFee(t.risk, t.pnl, t.feeCustom), 0);
+    const netBal   = grossBal - totalTaxAmt - totalFeesAmt;
 
     // Fill summary boxes
     const portGrossEl = document.getElementById('port-gross');
@@ -1117,12 +1199,11 @@
     // Show/hide tax columns in header
     const thTax = document.getElementById('th-tax-col');
     const thNet = document.getElementById('th-net-col');
+    const thFee = document.getElementById('th-fee-col');
     if (thTax) thTax.style.display = taxOn ? '' : 'none';
-    if (thNet) thNet.style.display = taxOn ? '' : 'none';
-
-    // Show/hide tax stats row
-    const taxStatsRow = document.getElementById('tax-stats-row');
-    if (taxStatsRow) taxStatsRow.style.display = taxOn ? 'block' : 'none';
+    const hasAnyFee = feeMode !== 'off' || trades.some(t => t.feeCustom !== null && t.feeCustom !== undefined);
+    if (thFee) thFee.style.display = hasAnyFee ? '' : 'none';
+    if (thNet) thNet.style.display = (taxOn || hasAnyFee) ? '' : 'none';
 
     if (trades.length === 0) {
       body.innerHTML = '';
@@ -1137,11 +1218,14 @@
         const badgeClass = t.result === 'Win' ? 'badge-win' : t.result === 'Loss' ? 'badge-loss' : 'badge-be';
         const pnlCol     = t.pnl > 0 ? 'c-green' : t.pnl < 0 ? 'c-red' : 'c-gold';
         const dirCol     = t.dir === 'Long' ? '#00ff88' : '#ff6b9d';
-        const taxAmt     = (taxOn && t.result === 'Win') ? t.pnl * (taxRate / 100) : 0;
-        const netAmt     = t.pnl - taxAmt;
-        const taxCols    = taxOn ? `
-          <td style="color:rgba(255,217,122,0.7);display:${taxOn?'':'none'}">${t.result === 'Win' ? '-$'+taxAmt.toFixed(2) : '—'}</td>
-          <td style="color:${netAmt >= 0 ? '#00ff88' : 'var(--red)'};display:${taxOn?'':'none'}">${t.result !== 'Loss' ? (netAmt >= 0 ? '+' : '') + '$' + Math.abs(netAmt).toFixed(2) : '-$'+Math.abs(t.pnl).toFixed(2)}</td>` : '';
+        const taxAmt  = (taxOn && t.result === 'Win') ? t.pnl * (taxRate / 100) : 0;
+        const feeAmt  = calcFee(t.risk, t.pnl, t.feeCustom);
+        const netAmt  = t.pnl - taxAmt - feeAmt;
+        const showNet = taxOn || feeMode !== 'off';
+        const taxCols = `
+          ${taxOn ? `<td style="color:rgba(255,217,122,0.7)">${t.result === 'Win' ? '-$'+taxAmt.toFixed(2) : '—'}</td>` : ''}
+          ${feeMode !== 'off' || t.feeCustom !== null ? `<td style="color:rgba(0,212,255,0.6)">-$${feeAmt.toFixed(2)}${t.feeCustom !== null && t.feeCustom !== undefined ? '<span style="font-size:8px;color:rgba(0,212,255,0.4);margin-left:3px">custom</span>' : ''}</td>` : ''}
+          ${showNet ? `<td style="color:${netAmt >= 0 ? '#00ff88' : 'var(--red)'}">${(netAmt >= 0 ? '+' : '') + '$' + Math.abs(netAmt).toFixed(2)}</td>` : ''}`;
         return `<tr>
           <td style="color:var(--text-muted)">${i + 1}</td>
           <td style="color:var(--text-muted)">${t.date}</td>
@@ -1226,13 +1310,23 @@
       if (dirRow) dirRow.style.display = 'none';
     }
 
-    // Tax stats
-    if (taxOn) {
-      const totalTax  = wins.reduce((s, t) => s + t.pnl * (taxRate / 100), 0);
-      const netAfter  = netPnl - totalTax;
-      const taxEl     = document.getElementById('st-totaltax');
-      const netAftEl  = document.getElementById('st-netaftertax');
+    // Tax/Fee stats row
+    const taxStatsRow = document.getElementById('tax-stats-row');
+    const showTaxFeeRow = taxOn || feeMode !== 'off';
+    if (taxStatsRow) taxStatsRow.style.display = showTaxFeeRow ? 'block' : 'none';
+    if (showTaxFeeRow) {
+      const totalTax  = taxOn ? wins.reduce((s, t) => s + t.pnl * (taxRate / 100), 0) : 0;
+      const totalFees = trades.reduce((s,t) => s + calcFee(t.risk, t.pnl, t.feeCustom), 0);
+      const netAfter  = netPnl - totalTax - totalFees;
+      const taxBox  = document.getElementById('tax-stat-box');
+      const feeBox  = document.getElementById('fee-stat-box');
+      if (taxBox)  taxBox.style.display  = taxOn ? '' : 'none';
+      if (feeBox)  feeBox.style.display  = feeMode !== 'off' ? '' : 'none';
+      const taxEl = document.getElementById('st-totaltax');
+      const feeEl = document.getElementById('st-totalfees');
+      const netAftEl = document.getElementById('st-netaftertax');
       if (taxEl)    taxEl.textContent    = '-$' + totalTax.toFixed(2);
+      if (feeEl)    feeEl.textContent    = '-$' + totalFees.toFixed(2);
       if (netAftEl) { netAftEl.textContent = (netAfter >= 0 ? '+' : '') + '$' + netAfter.toFixed(2); netAftEl.className = 'stat-val ' + (netAfter >= 0 ? 'c-green' : 'c-red'); }
     }
 
@@ -1242,11 +1336,10 @@
       const totRisk   = trades.reduce((s,t) => s + t.risk, 0);
       const totPnl    = trades.reduce((s,t) => s + t.pnl, 0);
       const totTax    = taxOn ? wins.reduce((s,t) => s + t.pnl * (taxRate/100), 0) : 0;
-      const totNet    = totPnl - totTax;
+      const totFees   = trades.reduce((s,t) => s + calcFee(t.risk, t.pnl, t.feeCustom), 0);
+      const totNet    = totPnl - totTax - totFees;
       const avgRRActTot = validRRAct.length ? (validRRAct.reduce((a,b) => a+(b.rrActual||0), 0) / validRRAct.length).toFixed(2) : '—';
-      const taxCells  = taxOn
-        ? `<td style="color:rgba(255,217,122,0.8)">-$${totTax.toFixed(2)}</td><td style="color:${totNet>=0?'#00ff88':'var(--red)'}">${totNet>=0?'+':''}$${totNet.toFixed(2)}</td>`
-        : '';
+      const showNet = taxOn || feeMode !== 'off';
       const T2 = LANGS[currentLang];
       tfoot.innerHTML = `<tr>
         <td colspan="5">${T2.total || 'TOTAL'}</td>
@@ -1254,8 +1347,10 @@
         <td style="color:${totPnl>=0?'#00ff88':'var(--red)'}">${totPnl>=0?'+':''}$${totPnl.toFixed(2)}</td>
         <td></td>
         <td style="color:rgba(0,255,178,0.6)">${avgRRActTot !== '—' ? '1:'+avgRRActTot : '—'}</td>
-        ${taxCells}
-        <td colspan="${taxOn ? 1 : 2}"></td>
+        ${taxOn ? `<td style="color:rgba(255,217,122,0.8)">-$${totTax.toFixed(2)}</td>` : ''}
+        ${feeMode !== 'off' ? `<td style="color:rgba(0,212,255,0.6)">-$${totFees.toFixed(2)}</td>` : ''}
+        ${showNet ? `<td style="color:${totNet>=0?'#00ff88':'var(--red)'}">${totNet>=0?'+':''}$${totNet.toFixed(2)}</td>` : ''}
+        <td colspan="${showNet ? 1 : 2}"></td>
         <td></td>
       </tr>`;
     } else if (tfoot) {
@@ -1318,6 +1413,11 @@
   const initLang = LANGS[browserLang] ? browserLang : 'en';
   setLang(initLang, flagMap[initLang]);
   setTaxRate(taxRate);
+  setFeeMode(feeMode);
+  const feePctEl = document.getElementById('fee-pct-input');
+  const feeFixEl = document.getElementById('fee-fixed-input');
+  if (feePctEl) feePctEl.value = feePct;
+  if (feeFixEl) feeFixEl.value = feeFixed;
   if (startCap > 0) document.getElementById('chart-startcap').value = startCap;
   const ccEl = document.getElementById('compound-classic');
   const csEl = document.getElementById('compound-safe');
