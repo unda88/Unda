@@ -94,7 +94,7 @@
     .table-wrap::-webkit-scrollbar { width: 4px; }
     .table-wrap::-webkit-scrollbar-thumb { background: rgba(0,255,178,0.2); border-radius: 2px; }
     table { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 12px; }
-    thead tr { background: rgba(0,255,178,0.08); position: sticky; top: 0; z-index: 1; }
+    thead tr { background: #000f08; position: sticky; top: 0; z-index: 1; }
     th { padding: 10px 12px; text-align: right; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; }
     th:first-child, th:nth-child(2) { text-align: left; }
     td { padding: 8px 12px; text-align: right; border-bottom: 1px solid rgba(0,255,178,0.05); font-size: 12px; }
@@ -1341,20 +1341,26 @@
       const totTax    = taxOn ? wins.reduce((s,t) => s + t.pnl * (taxRate/100), 0) : 0;
       const totFees   = trades.reduce((s,t) => s + calcFee(t.risk, t.pnl, t.feeCustom), 0);
       const totNet    = totPnl - totTax - totFees;
-      const avgRRActTot = validRRAct.length ? (validRRAct.reduce((a,b) => a+(b.rrActual||0), 0) / validRRAct.length).toFixed(2) : '—';
+      const avgRRActNum = validRRAct.length ? parseFloat((validRRAct.reduce((a,b) => a+(b.rrActual||0), 0) / validRRAct.length).toFixed(2)) : null;
+      const avgRRActTot = avgRRActNum !== null ? avgRRActNum.toFixed(2) : '—';
+      const rrColor = avgRRActNum !== null ? (avgRRActNum >= 0 ? 'rgba(0,255,178,0.6)' : 'var(--red)') : 'rgba(0,255,178,0.6)';
       const showNet = taxOn || feeMode !== 'off';
       const T2 = LANGS[currentLang];
+      // Count how many optional columns are shown
+      const taxCols  = taxOn ? 1 : 0;
+      const feeCols  = feeMode !== 'off' ? 1 : 0;
+      const netCols  = showNet ? 1 : 0;
+      const notesCol = 1; // notes always shown
       tfoot.innerHTML = `<tr>
         <td colspan="5">${T2.total || 'TOTAL'}</td>
         <td>$${totRisk.toFixed(2)}</td>
         <td style="color:${totPnl>=0?'#00ff88':'var(--red)'}">${totPnl>=0?'+':''}$${totPnl.toFixed(2)}</td>
         <td></td>
-        <td style="color:rgba(0,255,178,0.6)">${avgRRActTot !== '—' ? '1:'+avgRRActTot : '—'}</td>
+        <td style="color:${rrColor}">${avgRRActTot !== '—' ? '1:'+avgRRActTot : '—'}</td>
         ${taxOn ? `<td style="color:rgba(255,217,122,0.8)">-$${totTax.toFixed(2)}</td>` : ''}
         ${feeMode !== 'off' ? `<td style="color:rgba(0,212,255,0.6)">-$${totFees.toFixed(2)}</td>` : ''}
         ${showNet ? `<td style="color:${totNet>=0?'#00ff88':'var(--red)'}">${totNet>=0?'+':''}$${totNet.toFixed(2)}</td>` : ''}
-        <td colspan="${showNet ? 1 : 2}"></td>
-        <td></td>
+        <td colspan="2"></td>
       </tr>`;
     } else if (tfoot) {
       tfoot.innerHTML = '';
