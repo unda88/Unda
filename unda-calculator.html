@@ -218,6 +218,86 @@
       </div>
       <div class="hdiv"></div>
 
+      <!-- Full/Scalp toggle -->
+      <div style="display:flex;gap:8px;margin-bottom:1rem">
+        <button id="btn-full" onclick="setMode('full')" style="flex:1;background:rgba(0,255,178,0.1);border:1px solid rgba(0,255,178,0.35);border-radius:10px;padding:9px;color:var(--g);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s">Full</button>
+        <button id="btn-scalp" onclick="setMode('scalp')" style="flex:1;background:rgba(0,255,178,0.03);border:1px solid rgba(0,255,178,0.12);border-radius:10px;padding:9px;color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;transition:all .2s">⚡ Scalp</button>
+      </div>
+      <!-- Scalp mode panel -->
+      <div id="scalp-panel" style="display:none;margin-bottom:1rem">
+        <div style="background:rgba(180,100,255,0.04);border:1px solid rgba(180,100,255,0.18);border-radius:14px;padding:1.25rem">
+          <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(180,100,255,0.4);margin-bottom:12px" id="t-scalp-title">Scalp mode — margin & risk saved, only stop loss changes</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="fg">
+              <span class="fl" id="t-scalp-margin">Margin on exchange $</span>
+              <div class="iw"><span class="px">$</span><input type="number" id="s-margin" placeholder="10000" oninput="saveScalp();scalpCalc()"></div>
+            </div>
+            <div class="fg">
+              <span class="fl" id="t-scalp-risk">Risk $</span>
+              <div class="iw"><span class="px">$</span><input type="number" id="s-risk" placeholder="1000" oninput="saveScalp();scalpCalc()"></div>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:12px">
+            <span class="fl" style="font-size:11px;color:rgba(180,100,255,0.8)" id="t-scalp-sl">Stop loss %</span>
+            <div class="iw" style="border-color:rgba(180,100,255,0.35);background:rgba(180,100,255,0.05)">
+              <span class="px" style="color:rgba(180,100,255,0.6)">%</span>
+              <input type="number" id="s-sl" placeholder="0.05" step="0.01" min="0.001" oninput="scalpCalc()" style="font-size:20px;font-weight:600;color:rgba(180,100,255,0.9)">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="ri">
+              <div class="rl" id="t-scalp-lev">Leverage</div>
+              <div class="rv big" id="s-lev" style="color:rgba(180,100,255,0.9)">—</div>
+            </div>
+            <div class="ri">
+              <div class="rl" id="t-scalp-pos">Position size</div>
+              <div class="rv" id="s-pos">—</div>
+            </div>
+            <div class="ri">
+              <div class="rl" id="t-scalp-riskpct">Risk %</div>
+              <div class="rv" id="s-riskpct">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="quick-panel" style="display:none;margin-bottom:1rem">
+        <div style="background:rgba(0,255,178,0.04);border:1px solid rgba(0,255,178,0.15);border-radius:14px;padding:1.25rem">
+          <div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:rgba(0,255,178,0.35);margin-bottom:12px">Quick mode — enter stop loss only</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div class="fg">
+              <span class="fl">Portfolio $</span>
+              <div class="iw"><span class="px">$</span><input type="number" id="q-portfolio" placeholder="100000" oninput="saveQuick();quickCalc()"></div>
+            </div>
+            <div class="fg">
+              <span class="fl">Risk $</span>
+              <div class="iw"><span class="px">$</span><input type="number" id="q-risk" placeholder="1000" oninput="saveQuick();quickCalc()"></div>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:12px">
+            <span class="fl" style="font-size:11px;color:var(--g2)">Stop loss %</span>
+            <div class="iw" style="border-color:rgba(0,255,178,0.3);background:rgba(0,255,178,0.05)">
+              <span class="px">%</span>
+              <input type="number" id="q-sl" placeholder="0.5" step="0.01" min="0.01" oninput="quickCalc()" style="font-size:18px;font-weight:500" autofocus>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="ri">
+              <div class="rl" id="t-scalp-lev">Leverage</div>
+              <div class="rv big" id="q-lev" style="color:var(--gold)">—</div>
+            </div>
+            <div class="ri">
+              <div class="rl">Contracts</div>
+              <div class="rv" id="q-con">—</div>
+            </div>
+            <div class="ri">
+              <div class="rl">Portfolio at risk</div>
+              <div class="rv" id="q-par">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="full-form">
       <div class="fg">
         <div class="flr">
           <span class="fl" id="t-portfolio-lbl">Portfolio size</span>
@@ -271,10 +351,9 @@
         </div>
       </div>
 
-      <div class="wb" id="warn-block">
-        <div class="wir"><div class="wd"></div><div class="wt" id="warn-title"></div></div>
-        <div class="wbody" id="warn-body"></div>
-      </div>
+      <div style="margin-top:10px;font-size:11px;color:rgba(255,217,122,0.7);font-style:italic;text-align:center" id="t-liq-note">⚠ Always check your liquidation price on the exchange — make sure it is beyond your stop loss.</div>
+
+      </div><!-- /full-form -->
 
       <div class="footer" id="t-footer">unda · wave your risk</div>
     </div>
@@ -298,15 +377,15 @@
       parLbl:       'Portfolio at risk',
       levLbl:       'Leverage to use',
       conLbl:       'Contracts to use',
-      footer:       'unda · wave your risk',
+      footer:'unda · wave your risk', liqNote:'⚠ Always check your liquidation price on the exchange — make sure it is beyond your stop loss.', scalpTitle:'Scalp mode — margin & risk saved, only stop loss changes', scalpMargin:'Margin on exchange $', scalpRisk:'Risk $', scalpSl:'Stop loss %', scalpLev:'Leverage', scalpPos:'Position size', scalpRiskpct:'Risk %',
       wGreenT:  'Low leverage — looking good',
-      wGreenB:  (l)    => `At ${l}x, your stop loss has plenty of room. Safe on any exchange.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Moderate leverage — stay sharp',
       wYellowB: (l)    => `At ${l}x, verify the liquidation price on your exchange before entering.`,
       wOrangeT: 'High leverage — check liquidation',
-      wOrangeB: (l)    => `At ${l}x, confirm your stop loss is above the liquidation distance on your exchange.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Very high leverage — danger zone',
-      wRedB:    (l, s) => `At ${l}x with a ${s}% stop loss, you risk being liquidated before your stop triggers. Widen your stop or reduce risk %.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     nl: { nav:'← Terug naar suite',
       dir: 'ltr',
@@ -322,15 +401,15 @@
       parLbl:       'Portfolio op risico',
       levLbl:       'Te gebruiken hefboom',
       conLbl:       'Te gebruiken contracten',
-      footer:       'unda · beheers je risico',
+      footer:'unda · beheers je risico', liqNote:'⚠ Controleer altijd je liquidatieprijs op de exchange — zorg dat die voorbij je stop-loss ligt.', scalpTitle:'Scalp modus — margin & risico opgeslagen, enkel stop-loss wijzigt', scalpMargin:'Margin op exchange $', scalpRisk:'Risico $', scalpSl:'Stop-loss %', scalpLev:'Hefboom', scalpPos:'Positiegrootte', scalpRiskpct:'Risico %',
       wGreenT:  'Lage hefboom — uitstekend',
-      wGreenB:  (l)    => `Bij ${l}x heeft je stop-loss voldoende ruimte. Veilig op elke beurs.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Matige hefboom — blijf alert',
       wYellowB: (l)    => `Bij ${l}x, controleer de liquidatieprijs op je beurs voor je instapt.`,
       wOrangeT: 'Hoge hefboom — check liquidatie',
-      wOrangeB: (l)    => `Bij ${l}x, bevestig dat je stop-loss boven de liquidatieafstand ligt op je beurs.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Zeer hoge hefboom — gevarenzone',
-      wRedB:    (l, s) => `Bij ${l}x met een ${s}% stop-loss riskeer je geliquideerd te worden voor je stop triggert. Vergroot je stop of verklein je risico %.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     fr: { nav:'← Retour à la suite',
       dir: 'ltr',
@@ -346,15 +425,15 @@
       parLbl:       'Portefeuille à risque',
       levLbl:       'Levier à utiliser',
       conLbl:       'Contrats à utiliser',
-      footer:       'unda · maîtrisez votre risque',
+      footer:'unda · maîtrisez votre risque', liqNote:'⚠ Vérifiez toujours votre prix de liquidation — assurez-vous qu il est au-delà de votre stop-loss.', scalpTitle:'Mode scalp — marge & risque sauvegardés', scalpMargin:'Marge sur plateforme $', scalpRisk:'Risque $', scalpSl:'Stop-loss %', scalpLev:'Levier', scalpPos:'Taille position', scalpRiskpct:'Risque %',
       wGreenT:  'Faible levier — excellent',
-      wGreenB:  (l)    => `À ${l}x, votre stop-loss dispose d'une bonne marge. Sécurisé sur toute plateforme.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Levier modéré — restez vigilant',
       wYellowB: (l)    => `À ${l}x, vérifiez le prix de liquidation sur votre plateforme avant d'entrer.`,
       wOrangeT: 'Levier élevé — vérifiez la liquidation',
-      wOrangeB: (l)    => `À ${l}x, confirmez que votre stop est au-dessus de la distance de liquidation.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Levier très élevé — zone dangereuse',
-      wRedB:    (l, s) => `À ${l}x avec un stop de ${s}%, vous risquez la liquidation avant votre stop. Élargissez le stop ou réduisez le risque %.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     es: { nav:'← Volver a la suite',
       dir: 'ltr',
@@ -370,15 +449,15 @@
       parLbl:       'Portafolio en riesgo',
       levLbl:       'Apalancamiento a usar',
       conLbl:       'Contratos a usar',
-      footer:       'unda · domina tu riesgo',
+      footer:'unda · domina tu riesgo', liqNote:'⚠ Comprueba siempre tu precio de liquidación en el exchange.', scalpTitle:'Modo scalp — margen & riesgo guardados', scalpMargin:'Margen en exchange $', scalpRisk:'Riesgo $', scalpSl:'Stop-loss %', scalpLev:'Apalancamiento', scalpPos:'Tamaño posición', scalpRiskpct:'Riesgo %',
       wGreenT:  'Apalancamiento bajo — muy bien',
-      wGreenB:  (l)    => `Con ${l}x, tu stop-loss tiene mucho espacio. Seguro en cualquier exchange.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Apalancamiento moderado — mantente alerta',
       wYellowB: (l)    => `Con ${l}x, verifica el precio de liquidación en tu exchange antes de entrar.`,
       wOrangeT: 'Apalancamiento alto — revisa liquidación',
-      wOrangeB: (l)    => `Con ${l}x, confirma que tu stop está por encima de la distancia de liquidación.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Apalancamiento muy alto — zona de peligro',
-      wRedB:    (l, s) => `Con ${l}x y un stop de ${s}%, arriesgas ser liquidado antes de que se active tu stop. Amplía el stop o reduce el % de riesgo.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     de: { nav:'← Zurück zur Suite',
       dir: 'ltr',
@@ -394,15 +473,15 @@
       parLbl:       'Portfolio im Risiko',
       levLbl:       'Zu verwendender Hebel',
       conLbl:       'Zu verwendende Kontrakte',
-      footer:       'unda · steuere dein Risiko',
+      footer:'unda · steuere dein Risiko', liqNote:'⚠ Überprüfe immer deinen Liquidationspreis auf der Börse.', scalpTitle:'Scalp-Modus — Margin & Risiko gespeichert', scalpMargin:'Margin auf Exchange $', scalpRisk:'Risiko $', scalpSl:'Stop-Loss %', scalpLev:'Hebel', scalpPos:'Positionsgröße', scalpRiskpct:'Risiko %',
       wGreenT:  'Niedriger Hebel — sehr gut',
-      wGreenB:  (l)    => `Bei ${l}x hat dein Stop-Loss genug Spielraum. Sicher auf jeder Börse.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Moderater Hebel — bleib aufmerksam',
       wYellowB: (l)    => `Bei ${l}x, prüfe den Liquidationspreis an deiner Börse vor dem Einstieg.`,
       wOrangeT: 'Hoher Hebel — Liquidation prüfen',
-      wOrangeB: (l)    => `Bei ${l}x, bestätige dass dein Stop-Loss über der Liquidationsdistanz liegt.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Sehr hoher Hebel — Gefahrenzone',
-      wRedB:    (l, s) => `Bei ${l}x mit einem ${s}% Stop-Loss riskierst du Liquidierung vor Auslösung des Stops. Erweitere den Stop oder reduziere das Risiko %.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     it: { nav:'← Torna alla suite',
       dir: 'ltr',
@@ -418,15 +497,15 @@
       parLbl:       'Portafoglio a rischio',
       levLbl:       'Leva da usare',
       conLbl:       'Contratti da usare',
-      footer:       'unda · gestisci il tuo rischio',
+      footer:'unda · gestisci il tuo rischio', liqNote:'⚠ Verifica sempre il tuo prezzo di liquidazione sull exchange.', scalpTitle:'Modalità scalp — margine & rischio salvati', scalpMargin:'Margine su exchange $', scalpRisk:'Rischio $', scalpSl:'Stop-loss %', scalpLev:'Leva', scalpPos:'Dimensione posizione', scalpRiskpct:'Rischio %',
       wGreenT:  'Leva bassa — ottimo',
-      wGreenB:  (l)    => `A ${l}x, il tuo stop-loss ha ampio margine. Sicuro su qualsiasi exchange.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Leva moderata — rimani vigile',
       wYellowB: (l)    => `A ${l}x, verifica il prezzo di liquidazione sul tuo exchange prima di entrare.`,
       wOrangeT: 'Leva alta — controlla la liquidazione',
-      wOrangeB: (l)    => `A ${l}x, conferma che il tuo stop sia sopra la distanza di liquidazione.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Leva molto alta — zona di pericolo',
-      wRedB:    (l, s) => `A ${l}x con uno stop del ${s}%, rischi la liquidazione prima che si attivi lo stop. Allarga lo stop o riduci il % di rischio.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     pt: { nav:'← Voltar à suite',
       dir: 'ltr',
@@ -442,15 +521,15 @@
       parLbl:       'Portfólio em risco',
       levLbl:       'Alavancagem a usar',
       conLbl:       'Contratos a usar',
-      footer:       'unda · controle seu risco',
+      footer:'unda · controle seu risco', liqNote:'⚠ Verifique sempre o seu preço de liquidação na exchange.', scalpTitle:'Modo scalp — margem & risco guardados', scalpMargin:'Margem na exchange $', scalpRisk:'Risco $', scalpSl:'Stop-loss %', scalpLev:'Alavancagem', scalpPos:'Tamanho posição', scalpRiskpct:'Risco %',
       wGreenT:  'Baixa alavancagem — ótimo',
-      wGreenB:  (l)    => `Com ${l}x, seu stop-loss tem bastante espaço. Seguro em qualquer exchange.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Alavancagem moderada — fique atento',
       wYellowB: (l)    => `Com ${l}x, verifique o preço de liquidação na sua exchange antes de entrar.`,
       wOrangeT: 'Alta alavancagem — verifique liquidação',
-      wOrangeB: (l)    => `Com ${l}x, confirme que seu stop está acima da distância de liquidação na sua exchange.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Alavancagem muito alta — zona de perigo',
-      wRedB:    (l, s) => `Com ${l}x e stop de ${s}%, você arrisca ser liquidado antes do stop disparar. Amplie o stop ou reduza o % de risco.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     tr: { nav:'← Suiteye dön',
       dir: 'ltr',
@@ -466,15 +545,15 @@
       parLbl:       'Riski olan portföy',
       levLbl:       'Kullanılacak kaldıraç',
       conLbl:       'Kullanılacak kontrat',
-      footer:       'unda · riskinizi yönetin',
+      footer:'unda · riskinizi yönetin', liqNote:'⚠ Exchange de likidasyon fiyatını kontrol et.', scalpTitle:'Scalp modu — marj & risk kaydedildi', scalpMargin:'Exchange marjı $', scalpRisk:'Risk $', scalpSl:'Stop-loss %', scalpLev:'Kaldıraç', scalpPos:'Pozisyon büyüklüğü', scalpRiskpct:'Risk %',
       wGreenT:  'Düşük kaldıraç — harika',
-      wGreenB:  (l)    => `${l}x\'de stop-loss\'unuzun yeterli alanı var. Herhangi bir borsada güvenli.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Orta kaldıraç — dikkatli olun',
       wYellowB: (l)    => `${l}x\'de girmeden önce borsanızdaki tasfiye fiyatını kontrol edin.`,
       wOrangeT: 'Yüksek kaldıraç — tasfiyeyi kontrol edin',
-      wOrangeB: (l)    => `${l}x\'de stop-loss\'unuzun tasfiye mesafesinin üzerinde olduğunu onaylayın.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Çok yüksek kaldıraç — tehlike bölgesi',
-      wRedB:    (l, s) => `${l}x kaldıraç ve %${s} stop-loss ile stopunuz tetiklenmeden tasfiye edilme riskiniz var. Stopunuzu genişletin veya risk %\'sini azaltın.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     ar: { nav:'العودة إلى القائمة →',
       dir: 'rtl',
@@ -490,15 +569,15 @@
       parLbl:       'المحفظة في خطر',
       levLbl:       'الرافعة المالية',
       conLbl:       'العقود المُستخدمة',
-      footer:       'unda · تحكم في مخاطرك',
+      footer:'unda · تحكم في مخاطرك', liqNote:'⚠ تحقق دائماً من سعر التصفية على المنصة.', scalpTitle:'وضع السكالب — الهامش والمخاطرة محفوظان', scalpMargin:'الهامش في المنصة $', scalpRisk:'المخاطرة $', scalpSl:'% وقف الخسارة', scalpLev:'الرافعة المالية', scalpPos:'حجم الصفقة', scalpRiskpct:'% المخاطرة',
       wGreenT:  'رافعة منخفضة — ممتاز',
-      wGreenB:  (l)    => `عند ${l}x، وقف خسارتك لديه مساحة كافية. آمن على أي منصة.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'رافعة معتدلة — كن يقظاً',
       wYellowB: (l)    => `عند ${l}x، تحقق من سعر التصفية على منصتك قبل الدخول.`,
       wOrangeT: 'رافعة عالية — تحقق من التصفية',
-      wOrangeB: (l)    => `عند ${l}x، تأكد أن وقف الخسارة فوق مسافة التصفية على منصتك.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'رافعة عالية جداً — منطقة خطر',
-      wRedB:    (l, s) => `عند ${l}x مع وقف خسارة ${s}%، تخاطر بالتصفية قبل تفعيل وقف الخسارة. وسّع الوقف أو قلل نسبة المخاطرة.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
     ru: { nav:'← Назад к набору',
       dir: 'ltr',
@@ -514,15 +593,15 @@
       parLbl:       'Портфель под риском',
       levLbl:       'Используемое плечо',
       conLbl:       'Используемые контракты',
-      footer:       'unda · управляй своим риском',
+      footer:'unda · управляй своим риском', liqNote:'⚠ Всегда проверяй цену ликвидации на бирже.', scalpTitle:'Скальп режим — маржа & риск сохранены', scalpMargin:'Маржа на бирже $', scalpRisk:'Риск $', scalpSl:'Стоп-лосс %', scalpLev:'Плечо', scalpPos:'Размер позиции', scalpRiskpct:'Риск %',
       wGreenT:  'Низкое плечо — отлично',
-      wGreenB:  (l)    => `При ${l}x ваш стоп-лосс имеет достаточный запас. Безопасно на любой бирже.`,
+      wGreenB:  (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wYellowT: 'Умеренное плечо — будьте внимательны',
       wYellowB: (l)    => `При ${l}x проверьте цену ликвидации на вашей бирже перед входом.`,
       wOrangeT: 'Высокое плечо — проверьте ликвидацию',
-      wOrangeB: (l)    => `При ${l}x убедитесь, что стоп-лосс находится выше дистанции ликвидации.`,
+      wOrangeB: (l)    => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
       wRedT:    'Очень высокое плечо — зона опасности',
-      wRedB:    (l, s) => `При ${l}x со стоп-лоссом ${s}% вы рискуете быть ликвидированы до срабатывания стопа. Расширьте стоп или уменьшите % риска.`,
+      wRedB:    (l, s) => `At ${l}x leverage — always verify your liquidation price on the exchange is beyond your stop loss.`,
     },
   };
 
@@ -570,8 +649,20 @@
     document.getElementById('t-con-lbl').textContent       = T.conLbl;
     document.getElementById('t-footer').textContent        = T.footer;
 
-    // Re-render warning in new language
-    calc();
+    // Liq note
+    const liqEl = document.getElementById('t-liq-note');
+    if (liqEl && T.liqNote) liqEl.textContent = T.liqNote;
+
+    // Scalp panel translations
+    const scalp_ids = {
+      't-scalp-title': T.scalpTitle, 't-scalp-margin': T.scalpMargin,
+      't-scalp-risk': T.scalpRisk, 't-scalp-sl': T.scalpSl,
+      't-scalp-lev': T.scalpLev, 't-scalp-pos': T.scalpPos,
+      't-scalp-riskpct': T.scalpRiskpct,
+    };
+    Object.entries(scalp_ids).forEach(([id, txt]) => {
+      const el = document.getElementById(id); if (el && txt) el.textContent = txt;
+    });
 
     // Close menu
     document.getElementById('lang-sw').classList.remove('open');
@@ -618,7 +709,6 @@
       document.getElementById('res-par').textContent = '—';
       document.getElementById('res-lev').textContent = '—';
       document.getElementById('res-con').textContent = '—';
-      document.getElementById('warn-block').style.display = 'none';
       return;
     }
 
@@ -631,21 +721,6 @@
     document.getElementById('res-par').textContent = par.toFixed(2)+'%';
     document.getElementById('res-lev').textContent = Math.round(leverage);
     document.getElementById('res-con').textContent = Math.round(contracts).toLocaleString('en-US');
-
-    const lev   = Math.round(leverage);
-    const block = document.getElementById('warn-block');
-    block.style.display = 'block';
-    block.className = 'wb';
-
-    const T = LANGS[currentLang];
-    const key = leverage<=5?'green':leverage<=15?'yellow':leverage<=30?'orange':'red';
-    block.classList.add(key);
-
-    const titles = { green:T.wGreenT, yellow:T.wYellowT, orange:T.wOrangeT, red:T.wRedT };
-    const bodies = { green:T.wGreenB, yellow:T.wYellowB, orange:T.wOrangeB, red:T.wRedB };
-
-    document.getElementById('warn-title').textContent = titles[key];
-    document.getElementById('warn-body').textContent  = bodies[key](lev, slPct);
   }
 
   /* ── Init ── */
@@ -654,6 +729,159 @@
   const flagMap = { nl:'🇳🇱 NL', en:'🇬🇧 EN', fr:'🇫🇷 FR', es:'🇪🇸 ES', de:'🇩🇪 DE', it:'🇮🇹 IT', pt:'🇵🇹 PT', tr:'🇹🇷 TR', ar:'🇸🇦 AR', ru:'🇷🇺 RU' };
   const initLang = LANGS[browserLang] ? browserLang : 'en';
   setLang(initLang, flagMap[initLang]);
+
+  /* ── Quick mode ── */
+  let currentMode = 'full';
+  try { currentMode = localStorage.getItem('unda-calc-mode') || 'full'; } catch(e) {}
+
+  function setMode(mode) {
+    currentMode = mode;
+    try { localStorage.setItem('unda-calc-mode', mode); } catch(e) {}
+    const ff = document.getElementById('full-form');
+    const sp = document.getElementById('scalp-panel');
+    const bf = document.getElementById('btn-full');
+    const bs = document.getElementById('btn-scalp');
+
+    // Reset
+    [bf, bs].forEach(b => { if (!b) return; b.style.background='rgba(0,255,178,0.03)'; b.style.borderColor='rgba(0,255,178,0.12)'; b.style.color='var(--text-muted)'; });
+    if (ff) ff.style.display = 'none';
+    if (sp) sp.style.display = 'none';
+
+    if (mode === 'scalp') {
+      if (sp) sp.style.display = 'block';
+      if (bs) { bs.style.background='rgba(180,100,255,0.12)'; bs.style.borderColor='rgba(180,100,255,0.4)'; bs.style.color='rgba(180,100,255,0.9)'; }
+      try {
+        const m = parseFloat(localStorage.getItem('unda-scalp-margin') || '0');
+        const r = parseFloat(localStorage.getItem('unda-scalp-risk') || '0');
+        if (m) document.getElementById('s-margin').value = m;
+        if (r) document.getElementById('s-risk').value = r;
+      } catch(e) {}
+      document.getElementById('s-sl').focus();
+      scalpCalc();
+    } else {
+      if (ff) ff.style.display = 'block';
+      if (bf) { bf.style.background='rgba(0,255,178,0.1)'; bf.style.borderColor='rgba(0,255,178,0.35)'; bf.style.color='var(--g)'; }
+      calc();
+    }
+  }
+
+  function saveLev() {
+    try {
+      const m = document.getElementById('l-margin').value;
+      const l = document.getElementById('l-lev').value;
+      if (m) localStorage.setItem('unda-lev-margin', m);
+      if (l) localStorage.setItem('unda-lev-lev', l);
+    } catch(e) {}
+  }
+
+  function levCalc() {
+    const margin  = parseFloat(document.getElementById('l-margin').value) || 0;
+    const lev     = parseFloat(document.getElementById('l-lev').value) || 0;
+    const slPct   = parseFloat(document.getElementById('l-sl').value) || 0;
+
+    const posEl   = document.getElementById('l-pos');
+    const riskEl  = document.getElementById('l-risk');
+    const rpctEl  = document.getElementById('l-riskpct');
+    const warnEl  = document.getElementById('l-warn');
+
+    if (margin <= 0 || lev <= 0 || slPct <= 0) {
+      [posEl, riskEl, rpctEl].forEach(el => { if (el) el.textContent = '—'; });
+      if (warnEl) warnEl.style.display = 'none';
+      return;
+    }
+
+    const position = margin * lev;
+    const riskUsd  = position * (slPct / 100);
+    const riskPct  = (riskUsd / margin) * 100;
+
+    if (posEl)  posEl.textContent  = '$' + Math.round(position).toLocaleString();
+    if (riskEl) { riskEl.textContent = '-$' + riskUsd.toFixed(2); riskEl.style.color = riskPct > 5 ? 'var(--red)' : riskPct > 2 ? 'var(--gold)' : '#00ff88'; }
+    if (rpctEl) { rpctEl.textContent = riskPct.toFixed(2) + '%'; rpctEl.style.color = riskPct > 5 ? 'var(--red)' : riskPct > 2 ? 'var(--gold)' : '#00ff88'; }
+
+    // Warning
+    if (warnEl) {
+      if (riskPct > 10) {
+        warnEl.style.display = 'block';
+        warnEl.textContent = `⚠ Risk of ${riskPct.toFixed(1)}% is very high. Consider reducing leverage or widening your stop loss.`;
+      } else if (riskPct > 5) {
+        warnEl.style.display = 'block';
+        warnEl.textContent = `⚠ Risk of ${riskPct.toFixed(1)}% is aggressive. Max recommended is 2–3%.`;
+      } else {
+        warnEl.style.display = 'none';
+      }
+    }
+  }
+
+  function saveQuick() {
+    try {
+      const p = document.getElementById('q-portfolio').value;
+      const r = document.getElementById('q-risk').value;
+      if (p) localStorage.setItem('unda-quick-portfolio', p);
+      if (r) localStorage.setItem('unda-quick-risk', r);
+    } catch(e) {}
+  }
+
+  function quickCalc() {
+    const portfolio = parseFloat(document.getElementById('q-portfolio').value) || 0;
+    const riskUsd   = parseFloat(document.getElementById('q-risk').value) || 0;
+    const slPct     = parseFloat(document.getElementById('q-sl').value) || 0;
+
+    const levEl = document.getElementById('q-lev');
+    const conEl = document.getElementById('q-con');
+    const parEl = document.getElementById('q-par');
+
+    if (portfolio <= 0 || riskUsd <= 0 || slPct <= 0) {
+      if (levEl) levEl.textContent = '—';
+      if (conEl) conEl.textContent = '—';
+      if (parEl) parEl.textContent = '—';
+      return;
+    }
+
+    const parPct  = (riskUsd / portfolio) * 100;
+    const lev     = parPct / slPct;
+    const margin  = portfolio; // use full portfolio as reference
+    const contracts = Math.round(portfolio * lev);
+
+    if (levEl) { levEl.textContent = lev.toFixed(1) + 'x'; levEl.style.color = lev > 50 ? 'var(--red)' : lev > 20 ? 'var(--gold)' : '#00ff88'; }
+    if (conEl) conEl.textContent = contracts.toLocaleString();
+    if (parEl) parEl.textContent = parPct.toFixed(2) + '%';
+  }
+
+  function saveScalp() {
+    try {
+      const m = document.getElementById('s-margin').value;
+      const r = document.getElementById('s-risk').value;
+      if (m) localStorage.setItem('unda-scalp-margin', m);
+      if (r) localStorage.setItem('unda-scalp-risk', r);
+    } catch(e) {}
+  }
+
+  function scalpCalc() {
+    const margin  = parseFloat(document.getElementById('s-margin').value) || 0;
+    const riskUsd = parseFloat(document.getElementById('s-risk').value) || 0;
+    const slPct   = parseFloat(document.getElementById('s-sl').value) || 0;
+
+    const levEl  = document.getElementById('s-lev');
+    const posEl  = document.getElementById('s-pos');
+    const rpEl   = document.getElementById('s-riskpct');
+
+    if (margin <= 0 || riskUsd <= 0 || slPct <= 0) {
+      [levEl, posEl, rpEl].forEach(el => { if (el) el.textContent = '—'; });
+      return;
+    }
+
+    // position = riskUsd / (slPct/100)
+    const position = riskUsd / (slPct / 100);
+    const lev      = position / margin;
+    const riskPct  = (riskUsd / margin) * 100;
+
+    if (levEl) { levEl.textContent = lev.toFixed(1) + 'x'; levEl.style.color = lev > 100 ? 'var(--red)' : lev > 50 ? 'var(--gold)' : 'rgba(180,100,255,0.9)'; }
+    if (posEl) posEl.textContent = '$' + Math.round(position).toLocaleString();
+    if (rpEl)  { rpEl.textContent = riskPct.toFixed(2) + '%'; rpEl.style.color = riskPct > 5 ? 'var(--red)' : riskPct > 2 ? 'var(--gold)' : '#00ff88'; }
+  }
+
+  // Init mode
+  setMode(currentMode);
 </script>
 </body>
 </html>
