@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unda · Options Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#080d09;--bg2:#0d1510;--bg3:#111c13;--card:#0e1a10;--border:rgba(0,255,100,0.13);--border2:rgba(0,255,100,0.28);--green:#00e676;--red:#ff4d4d;--gold:#f0c040;--blue:#4fc3f7;--purple:#ce93d8;--text:#dff0e1;--sub:#b0ccb3;--muted:#8aaa8d;--dim:#4a6b4d;--mono:'Space Mono',monospace;--body:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;font-size:14px}
+body::before{content:'';position:fixed;top:-150px;left:-150px;width:700px;height:700px;background:radial-gradient(ellipse,rgba(0,110,45,0.16) 0%,transparent 68%);pointer-events:none;z-index:0}
+.topline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);z-index:100}
+.wrap{max-width:1140px;margin:0 auto;padding:2.5rem 1.5rem 4rem;position:relative;z-index:1}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);text-decoration:none;font-family:var(--mono);margin-bottom:2rem;transition:color .2s}
+.back:hover{color:var(--green)}.back::before{content:'<-'}
+.page-header{text-align:center;margin-bottom:2rem}
+.brand{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.page-header h1{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--text)}
+.page-header h2{font-size:15px;font-weight:300;color:var(--sub);margin-top:5px}
+.pbar{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:.875rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;flex-shrink:0}
+.pbs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
+.ps{font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px}
+.ps1{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3)}
+.ps2{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.25)}
+.ps3{background:rgba(255,77,77,.1);color:var(--red);border:1px solid rgba(255,77,77,.25)}
+.ps4{background:rgba(79,195,247,.1);color:var(--blue);border:1px solid rgba(79,195,247,.25)}
+.arr{color:var(--dim);font-size:12px}
+.guide-toggle{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;cursor:pointer;transition:border-color .2s}
+.guide-toggle:hover{border-color:var(--border2)}
+.gtl{font-family:var(--mono);font-size:11px;color:var(--sub);letter-spacing:.06em}
+.gtr{font-family:var(--mono);font-size:11px;color:var(--dim);transition:transform .25s}
+.gtr.open{transform:rotate(180deg)}
+.guide-body{display:none;background:var(--card);border:1px solid var(--border);border-radius:0 0 8px 8px;margin-top:-1px;margin-bottom:1.5rem}
+.guide-body.open{display:block}
+.gg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+@media(max-width:700px){.gg{grid-template-columns:1fr}}
+.gi{padding:1rem 1.125rem;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.gi:nth-child(3n){border-right:none}.gi:nth-last-child(-n+3){border-bottom:none}
+.git{font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:.4rem}
+.gib{font-size:12px;color:var(--sub);line-height:1.65}
+.lev{margin-top:.5rem;padding:.5rem .75rem;background:rgba(0,230,118,.07);border-left:2px solid var(--green);border-radius:0 4px 4px 0;font-size:12px;color:var(--sub)}
+.lev strong{color:var(--green)}
+.tabs-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+.atab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;padding:7px 16px;border-radius:6px;border:1px solid var(--border2);background:var(--card);color:var(--muted);cursor:pointer;transition:all .2s;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.atab:hover{color:var(--text);border-color:var(--green)}
+.atab.active{color:var(--green);border-color:var(--green);background:rgba(0,230,118,.1)}
+.atab.add{border-style:dashed;color:var(--dim)}.atab.add:hover{color:var(--green)}
+.tcls{opacity:.45;font-size:12px}.tcls:hover{opacity:1;color:var(--red)}
+.day-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem;padding:.75rem;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.dtab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .2s;text-transform:uppercase;display:flex;align-items:center;gap:6px;position:relative}
+.dtab:hover{color:var(--text);border-color:var(--border2)}
+.dtab.active{color:var(--text);border-color:var(--green);background:rgba(0,230,118,.08)}
+.dtab.loaded{color:var(--green)}
+.dtab.inst{color:var(--purple);border-color:rgba(206,147,216,.3)}
+.dtab.inst.active{background:rgba(206,147,216,.08);border-color:var(--purple)}
+.dtab.total{color:var(--blue);border-color:rgba(79,195,247,.3)}
+.dtab.total.active{background:rgba(79,195,247,.08);border-color:var(--blue)}
+.ddot{width:5px;height:5px;border-radius:50%;background:var(--green);position:absolute;top:4px;right:4px}
+.upload-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+@media(max-width:600px){.upload-grid{grid-template-columns:1fr 1fr}}
+.uslot{border:1px dashed var(--border2);border-radius:8px;padding:.875rem;text-align:center;cursor:pointer;background:var(--card);transition:all .2s;position:relative}
+.uslot:hover{border-color:var(--green);background:var(--bg3)}
+.uslot.done{border-color:var(--green);border-style:solid;background:rgba(0,230,118,.05)}
+.uslot.inst-slot{border-color:rgba(206,147,216,.3)}
+.uslot.inst-slot:hover{border-color:var(--purple)}
+.uslot.inst-slot.done{border-color:var(--purple);background:rgba(206,147,216,.05)}
+.us-day{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.us-status{font-size:12px;font-weight:500}
+.us-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:3px}
+.us-check{position:absolute;top:6px;right:8px;font-size:12px;font-family:var(--mono)}
+.smsg{font-family:var(--mono);font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:.5rem .875rem;margin-bottom:1.5rem;background:var(--card)}
+.smsg.ok{color:var(--green);border-color:rgba(0,230,118,.3)}
+.smsg.err{color:var(--red);border-color:rgba(255,77,77,.3)}
+.parser-debug{background:var(--bg2);border:1px solid rgba(240,192,64,.2);border-radius:8px;padding:.875rem 1rem;margin-bottom:1.5rem;font-family:var(--mono);font-size:11px;color:var(--gold);line-height:1.7;display:none}
+.parser-debug.show{display:block}
+.sec{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--sub);text-transform:uppercase;margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.iBtn{width:16px;height:16px;border-radius:50%;border:1px solid var(--border2);background:var(--card);color:var(--muted);font-size:9px;font-family:var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.iBtn:hover{border-color:var(--green);color:var(--green)}
+.ibox{display:none;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:.875rem 1rem;margin-bottom:1rem;font-size:13px;line-height:1.7;color:var(--sub)}
+.ibox.open{display:block}
+.ibox strong{color:var(--text);font-weight:500}
+.wbar{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:8px;background:var(--card);padding:.6rem 1rem;margin-bottom:1.5rem;font-family:var(--mono);font-size:12px;flex-wrap:wrap;gap:8px}
+.wl{color:var(--sub)}.wr{color:var(--green)}
+.pill{border-radius:4px;padding:2px 9px;font-size:10px;font-family:var(--mono);letter-spacing:.06em}
+.pdemo{background:rgba(240,192,64,.12);color:var(--gold);border:1px solid rgba(240,192,64,.25)}
+.plive{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.3)}
+.ptotal{background:rgba(79,195,247,.12);color:var(--blue);border:1px solid rgba(79,195,247,.3)}
+.metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:2rem}
+@media(max-width:800px){.metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:500px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.875rem 1rem;transition:border-color .2s}
+.mc:hover{border-color:var(--border2)}
+.ml{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.mv{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;margin-bottom:5px}
+.mv.bull{color:var(--green)}.mv.bear{color:var(--red)}.mv.neut{color:var(--gold)}.mv.info{color:var(--blue)}
+.msub{font-size:11px;color:var(--muted);margin-top:4px}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.07em;padding:2px 7px;border-radius:3px;text-transform:uppercase}
+.bg{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+.br{background:rgba(255,77,77,.12);color:var(--red);border:1px solid rgba(255,77,77,.2)}
+.bn{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2)}
+.bi{background:rgba(79,195,247,.1);color:var(--blue);border:1px solid rgba(79,195,247,.2)}
+.bp{background:rgba(206,147,216,.1);color:var(--purple);border:1px solid rgba(206,147,216,.2)}
+.liq-zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:2rem}
+@media(max-width:600px){.liq-zones{grid-template-columns:1fr}}
+.lzone{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.125rem;position:relative;overflow:hidden}
+.lzone::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.lz-res::before{background:var(--red)}.lz-mag::before{background:var(--gold)}.lz-sup::before{background:var(--green)}
+.lz-type{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.lz-res .lz-type{color:var(--red)}.lz-mag .lz-type{color:var(--gold)}.lz-sup .lz-type{color:var(--green)}
+.lz-price{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;margin-bottom:6px}
+.lz-res .lz-price{color:var(--red)}.lz-mag .lz-price{color:var(--gold)}.lz-sup .lz-price{color:var(--green)}
+.lz-desc{font-size:12px;color:var(--sub);line-height:1.6}
+.lz-tag{font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:6px}
+.scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:2rem}
+@media(max-width:600px){.scenarios{grid-template-columns:1fr}}
+.sccard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.125rem;position:relative;overflow:hidden}
+.sccard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.scb::before{background:var(--green)}.scr::before{background:var(--red)}.scn::before{background:var(--gold)}
+.scpct{font-family:var(--mono);font-size:38px;font-weight:700;line-height:1;margin:.5rem 0 .25rem}
+.scb .scpct{color:var(--green)}.scr .scpct{color:var(--red)}.scn .scpct{color:var(--gold)}
+.scname{font-size:14px;font-weight:500;color:var(--text);margin-bottom:.5rem}
+.scdet{font-family:var(--mono);font-size:11px;color:var(--sub);line-height:1.75}
+.hmrow{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-family:var(--mono);font-size:12px}
+.hms{width:60px;text-align:right;color:var(--sub);flex-shrink:0}
+.hmt{flex:1;height:18px;background:var(--bg3);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.hmc{position:absolute;left:0;top:0;height:100%;background:rgba(0,230,118,.38);border-radius:3px 0 0 3px}
+.hmp{position:absolute;right:0;top:0;height:100%;background:rgba(255,77,77,.38);border-radius:0 3px 3px 0}
+.hmml{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);z-index:2}
+.hmtag{width:90px;font-size:10px;text-align:right;flex-shrink:0;color:var(--muted)}
+.hmtag.cw{color:var(--green);font-weight:700}.hmtag.pw{color:var(--red);font-weight:700}.hmtag.mp{color:var(--gold);font-weight:700}.hmtag.lq{color:var(--purple);font-weight:700}
+.hmleg{display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--sub);margin-bottom:2rem;flex-wrap:wrap}
+.hmleg span{display:flex;align-items:center;gap:5px}
+.hmdot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:2rem}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.125rem}
+.ct{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--sub);text-transform:uppercase;margin-bottom:.75rem}
+.grow{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-family:var(--mono);font-size:11px}
+.gs{width:60px;text-align:right;color:var(--sub);flex-shrink:0}
+.gt{flex:1;height:14px;background:var(--bg3);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.gpos{position:absolute;left:50%;top:0;height:100%;background:rgba(0,230,118,.45);border-radius:0 3px 3px 0}
+.gneg{position:absolute;right:50%;top:0;height:100%;background:rgba(255,77,77,.4);border-radius:3px 0 0 3px}
+.gctr{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border2)}
+.gv{width:70px;text-align:right;flex-shrink:0;font-size:10px}
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2rem;overflow-x:auto}
+.tcard table{width:100%;border-collapse:collapse;min-width:600px}
+.tcard th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--sub);text-transform:uppercase;padding:.625rem .875rem;text-align:right;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tcard th:first-child{text-align:left}
+.tcard td{padding:.625rem .875rem;text-align:right;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--text)}
+.tcard td:first-child{text-align:left;font-weight:700}
+.tcard tr:last-child td{border-bottom:none}.tcard tr:hover td{background:var(--bg3)}
+.nbull{color:var(--green)!important}.nbear{color:var(--red)!important}.nspk{color:var(--gold)!important;font-weight:700}
+.sigcard{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2rem}
+.sigrow{display:flex;align-items:flex-start;gap:10px;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+.sigrow:last-child{border-bottom:none}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.sdot.bull{background:var(--green);box-shadow:0 0 6px var(--green)}.sdot.bear{background:var(--red);box-shadow:0 0 6px var(--red)}.sdot.neut{background:var(--gold)}.sdot.info{background:var(--blue)}.sdot.purp{background:var(--purple)}
+.slbl{flex:1;color:var(--sub);font-family:var(--mono);font-size:11px}
+.shint{font-size:10px;color:var(--dim);display:block;margin-top:2px}
+.sval{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2rem}
+@media(max-width:600px){.setup-grid{grid-template-columns:1fr}}
+.setupcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.125rem}
+.shdr{display:flex;align-items:center;gap:8px;margin-bottom:.75rem;font-family:var(--mono);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.srow{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+.sk{color:var(--muted);font-size:12px}.skh{font-size:10px;color:var(--dim);display:block;margin-top:1px}
+.sv{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right}
+.inst-banner{background:rgba(206,147,216,.07);border:1px solid rgba(206,147,216,.2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+.ib-text{font-size:13px;color:var(--sub);line-height:1.6}
+.ib-text strong{color:var(--purple)}
+.inst-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:2rem}
+@media(max-width:600px){.inst-grid{grid-template-columns:1fr}}
+.inst-card{background:var(--card);border:1px solid rgba(206,147,216,.2);border-radius:10px;padding:1rem 1.125rem}
+.ic-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--purple);text-transform:uppercase;margin-bottom:6px}
+.ic-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ic-sub{font-size:11px;color:var(--muted)}
+.empty-day{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.ei{font-size:28px;font-family:var(--mono);color:var(--dim);margin-bottom:.75rem}
+.et{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:.5rem}
+.es{font-size:12px;font-family:var(--mono);color:var(--muted);line-height:1.6}
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;align-items:center;justify-content:center}
+.moverlay.open{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;width:380px;max-width:95vw}
+.mbox h3{font-family:var(--mono);font-size:14px;color:var(--text);margin-bottom:1rem}
+.mbox input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 12px;margin-bottom:.75rem;outline:none}
+.mbox input:focus{border-color:var(--green)}
+.mbtns{display:flex;gap:8px;justify-content:flex-end}
+.xbtn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;padding:8px 16px;border-radius:6px;cursor:pointer;border:1px solid var(--border2);background:var(--card);color:var(--sub);transition:all .2s;text-transform:uppercase}
+.xbtn:hover{color:var(--text);border-color:var(--green)}
+.xbtn.xp{background:rgba(0,230,118,.15);color:var(--green);border-color:var(--green)}.xbtn.xp:hover{background:rgba(0,230,118,.25)}
+.exp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:300;align-items:center;justify-content:center;padding:1rem}
+.exp-overlay.open{display:flex}
+.exp-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:700px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.exp-hdr{display:flex;align-items:center;justify-content:space-between;padding:1.125rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.exp-hdr h3{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)}
+.exp-cls{font-family:var(--mono);font-size:13px;color:var(--muted);cursor:pointer;background:none;border:none;padding:4px 8px;border-radius:4px;transition:color .2s}
+.exp-cls:hover{color:var(--red)}
+.exp-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.exp-tab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;padding:.75rem 1.125rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;text-transform:uppercase;transition:all .2s}
+.exp-tab:hover{color:var(--text)}.exp-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.exp-body{flex:1;overflow-y:auto;padding:1.25rem}
+.exp-note{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:.875rem;padding:.75rem;background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.15);border-radius:6px;font-family:var(--mono)}
+.exp-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;margin-top:1rem}
+.exp-pre{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:12px;color:var(--text);white-space:pre;line-height:1.8;overflow:auto;max-height:260px}
+.exp-acts{display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap;align-items:center}
+.exp-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;padding:8px 16px;border-radius:6px;cursor:pointer;border:1px solid var(--border2);background:var(--card);color:var(--sub);transition:all .2s;text-transform:uppercase}
+.exp-btn:hover{color:var(--text);border-color:var(--green)}
+.exp-btn.ep{background:rgba(0,230,118,.15);color:var(--green);border-color:var(--green)}.exp-btn.ep:hover{background:rgba(0,230,118,.25)}
+.exp-ok{color:var(--green);font-family:var(--mono);font-size:11px;display:none;align-items:center}.exp-ok.show{display:flex}
+.exp-float{position:fixed;bottom:2rem;right:2rem;z-index:50}
+.exp-float-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;padding:10px 20px;border-radius:8px;cursor:pointer;background:rgba(0,230,118,.15);color:var(--green);border:1px solid var(--green);transition:all .2s;text-transform:uppercase;box-shadow:0 0 20px rgba(0,230,118,.12)}
+.exp-float-btn:hover{background:rgba(0,230,118,.25);box-shadow:0 0 30px rgba(0,230,118,.22)}
+.pgfoot{text-align:center;font-family:var(--mono);font-size:11px;color:var(--dim);padding-top:2rem;border-top:1px solid var(--border);letter-spacing:.06em;line-height:1.8}
+.pgfoot a{color:var(--muted);text-decoration:none}.pgfoot a:hover{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="topline"></div>
+
+<div class="moverlay" id="moverlay">
+  <div class="mbox">
+    <h3>Asset toevoegen</h3>
+    <input type="text" id="mname" placeholder="Ticker (bv. ES, CL)" maxlength="16">
+    <input type="text" id="mlabel" placeholder="Naam (bv. S&P 500 E-mini)" maxlength="40">
+    <div class="mbtns">
+      <button class="xbtn" onclick="closeModal()">Annuleren</button>
+      <button class="xbtn xp" onclick="addAsset()">Toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<div class="exp-overlay" id="expOverlay">
+  <div class="exp-box">
+    <div class="exp-hdr">
+      <h3>Weekrapport exporteren</h3>
+      <button class="exp-cls" onclick="closeExport()">&#x2715; Sluiten</button>
+    </div>
+    <div class="exp-tabs">
+      <div class="exp-tab active" onclick="switchExpTab(0)" id="etab0">TradingView</div>
+      <div class="exp-tab" onclick="switchExpTab(1)" id="etab1">Logboek CSV</div>
+      <div class="exp-tab" onclick="switchExpTab(2)" id="etab2">Volledig rapport</div>
+    </div>
+    <div class="exp-body">
+      <div id="epanel0"></div>
+      <div id="epanel1" style="display:none"></div>
+      <div id="epanel2" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div class="exp-float">
+  <button class="exp-float-btn" onclick="openExport()">&#8595; Weekrapport</button>
+</div>
+
+<div class="wrap">
+  <a class="back" href="index.html">Terug naar suite</a>
+  <div class="page-header">
+    <div class="brand">Unda</div>
+    <h1>Options Analysis</h1>
+    <h2>CME Weekly opties &middot; Multi-asset &middot; 5-daagse analyse</h2>
+  </div>
+  <div class="pbar">
+    <span class="pbl">Prioriteit</span>
+    <div class="pbs">
+      <span class="ps ps1">&#9312; Max Pain</span><span class="arr">&#8594;</span>
+      <span class="ps ps2">&#9313; Call / Put Wall</span><span class="arr">&#8594;</span>
+      <span class="ps ps3">&#9314; Liquidatiezones</span><span class="arr">&#8594;</span>
+      <span class="ps ps4">&#9315; Sentiment + GEX</span>
+    </div>
+  </div>
+  <div class="guide-toggle" onclick="toggleGuide()">
+    <span class="gtl">&#128214; Begrippengids &mdash; klik om te openen</span>
+    <span class="gtr" id="gArrow">&#9660;</span>
+  </div>
+  <div class="guide-body" id="gBody">
+    <div class="gg">
+      <div class="gi"><div class="git" style="color:var(--gold)">&#8857; Max Pain</div><div class="gib">De strike waar de meeste opties waardeloos vervallen. Gravitatiecentrum voor die dag &mdash; prijs driftt hier naartoe richting expiry.<div class="lev"><strong>Leverage:</strong> Entry richting Max Pain heeft wind mee van market maker hedging.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--red)">&#9733; Call Wall &mdash; weerstand</div><div class="gib">Meeste call OI. Market makers creeren verkoopdruk. Break erboven met volume = bullish bevestiging.<div class="lev"><strong>Leverage:</strong> Dynamische weerstand of long-target afhankelijk van je bias.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--green)">&#9733; Put Wall &mdash; support</div><div class="gib">Meeste put OI. Market makers creeren koopdruk. Break eronder versnelt daling.<div class="lev"><strong>Leverage:</strong> Dynamische support of short-target afhankelijk van je bias.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--purple)">&#128167; Liquidatiezones</div><div class="gib">Zones buiten de range waar geclusterde stops en geforceerde sluitingen verwacht worden.<div class="lev"><strong>Leverage:</strong> Pas stops aan &mdash; niet in een liquidatiezone zitten.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--purple)">&#9889; Gamma Exposure</div><div class="gib">Positief = market makers remmen beweging. Negatief = versterken beweging. Hoge GEX zones = prijsmagneten.<div class="lev"><strong>Leverage:</strong> Negatieve GEX zones = mogelijke acceleratiepunten.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--gold)">&#9889; Volume Spike</div><div class="gib">Strike met meer dan 2.5x gemiddeld volume. Institutionele activiteit op dat niveau.<div class="lev"><strong>Leverage:</strong> Spike niveaus zijn institutioneel relevant deze week.</div></div></div>
+      <div class="gi"><div class="git" style="color:var(--blue)">Put/Call Ratio</div><div class="gib">Onder 0.9 = calls dominant = bullish. Boven 1.1 = puts dominant = bearish of hedge. Extreem laag kan overbought signaleren.</div></div>
+      <div class="gi"><div class="git" style="color:var(--sub)">Net Flow</div><div class="gib">Call vol minus put vol per strike. Positief = institutionele bull-bias. Hoog OI plus sterke flow = sterke institutionele consensus.</div></div>
+      <div class="gi"><div class="git" style="color:var(--purple)">Institutioneel (American)</div><div class="gib">Langetermijn opties tonen bias van hedgefondsen. Niet voor dagtrading maar als bevestiging van grotere trend.</div></div>
+    </div>
+  </div>
+  <div class="tabs-row" id="aTabs"></div>
+  <div id="panel"></div>
+</div>
+
+<script>
+var DEFS = [
+  {id:'NQ', name:'NQ',  label:'Nasdaq E-mini', color:'#00e676'},
+  {id:'GC', name:'GC',  label:'Gold Futures',  color:'#f0c040'},
+  {id:'BTC',name:'BTC', label:'Bitcoin CME',   color:'#4fc3f7'}
+];
+var DAYS = [
+  {id:'ma', label:'Ma', full:'Maandag'},
+  {id:'di', label:'Di', full:'Dinsdag'},
+  {id:'wo', label:'Wo', full:'Woensdag'},
+  {id:'do', label:'Do', full:'Donderdag'},
+  {id:'vr', label:'Vr', full:'Vrijdag'}
+];
+var assets      = DEFS.slice();
+var aData       = {};
+var activeAsset = 'NQ';
+var activeDay   = 'ma';
+var charts      = {};
+var parseLog    = {};
+
+var DEMO = {
+  ma: [{strike:20150,callOI:1800,putOI:600,callVol:900,putVol:300},{strike:20200,callOI:2100,putOI:800,callVol:1100,putVol:420},{strike:20250,callOI:5800,putOI:2100,callVol:2400,putVol:800},{strike:20300,callOI:12500,putOI:4200,callVol:5200,putVol:1200},{strike:20350,callOI:8900,putOI:6500,callVol:3100,putVol:2800},{strike:20400,callOI:4200,putOI:9800,callVol:1800,putVol:4200},{strike:20450,callOI:2100,putOI:7200,callVol:900,putVol:3100},{strike:20500,callOI:1200,putOI:3400,callVol:500,putVol:1400}],
+  di: [{strike:20150,callOI:1600,putOI:700,callVol:800,putVol:350},{strike:20200,callOI:2400,putOI:900,callVol:1200,putVol:480},{strike:20250,callOI:6200,putOI:2300,callVol:2600,putVol:850},{strike:20300,callOI:11800,putOI:4600,callVol:4900,putVol:1350},{strike:20350,callOI:8200,putOI:7100,callVol:2900,putVol:3100},{strike:20400,callOI:3900,putOI:10200,callVol:1600,putVol:4500},{strike:20450,callOI:1900,putOI:7800,callVol:800,putVol:3300},{strike:20500,callOI:1100,putOI:3600,callVol:450,putVol:1500}],
+  wo: [{strike:20150,callOI:1400,putOI:800,callVol:700,putVol:400},{strike:20200,callOI:2200,putOI:1100,callVol:1000,putVol:550},{strike:20250,callOI:5500,putOI:2600,callVol:2200,putVol:950},{strike:20300,callOI:10900,putOI:5100,callVol:4500,putVol:1600},{strike:20350,callOI:7600,putOI:7800,callVol:2700,putVol:3400},{strike:20400,callOI:3500,putOI:11500,callVol:1400,putVol:4900},{strike:20450,callOI:1700,putOI:8400,callVol:700,putVol:3600},{strike:20500,callOI:900,putOI:4000,callVol:380,putVol:1700}],
+  do: [{strike:20150,callOI:1100,putOI:900,callVol:550,putVol:450},{strike:20200,callOI:1800,putOI:1300,callVol:800,putVol:650},{strike:20250,callOI:4600,putOI:3100,callVol:1800,putVol:1100},{strike:20300,callOI:9800,putOI:5900,callVol:3900,putVol:1900},{strike:20350,callOI:6900,putOI:8400,callVol:2400,putVol:3800},{strike:20400,callOI:3000,putOI:12600,callVol:1100,putVol:5400},{strike:20450,callOI:1400,putOI:9100,callVol:550,putVol:4000},{strike:20500,callOI:700,putOI:4600,callVol:290,putVol:2000}],
+  vr: [{strike:20150,callOI:800,putOI:1100,callVol:400,putVol:550},{strike:20200,callOI:1300,putOI:1600,callVol:600,putVol:800},{strike:20250,callOI:3400,putOI:3800,callVol:1300,putVol:1400},{strike:20300,callOI:7900,putOI:7200,callVol:3100,putVol:2700},{strike:20350,callOI:5800,putOI:9600,callVol:2000,putVol:4200},{strike:20400,callOI:2200,putOI:14100,callVol:800,putVol:6200},{strike:20450,callOI:1000,putOI:10400,callVol:380,putVol:4600},{strike:20500,callOI:500,putOI:5400,callVol:200,putVol:2400}],
+  inst:[{strike:19000,callOI:8500,putOI:3200,callVol:2100,putVol:900},{strike:19500,callOI:12400,putOI:4800,callVol:3200,putVol:1200},{strike:20000,callOI:18600,putOI:6900,callVol:4800,putVol:1800},{strike:20500,callOI:9200,putOI:8400,callVol:2400,putVol:2200},{strike:21000,callOI:6800,putOI:11200,callVol:1800,putVol:2900},{strike:21500,callOI:4200,putOI:9800,callVol:1100,putVol:2500},{strike:22000,callOI:2800,putOI:7600,callVol:700,putVol:1900}]
+};
+
+function fmt(n){ return Number(n).toLocaleString('nl-NL'); }
+function sc(v){ return +v < 0.9 ? 'bull' : +v > 1.1 ? 'bear' : 'neut'; }
+function sb(v){ return +v < 0.9 ? ['bg','Bullish'] : +v > 1.1 ? ['br','Bearish'] : ['bn','Neutraal']; }
+
+function calcMaxPain(data){
+  var min = Infinity, mp = 0;
+  data.forEach(function(row){
+    var p = 0;
+    data.forEach(function(r){
+      if(r.strike < row.strike) p += (row.strike - r.strike) * r.callOI;
+      if(r.strike > row.strike) p += (r.strike - row.strike) * r.putOI;
+    });
+    if(p < min){ min = p; mp = row.strike; }
+  });
+  return mp;
+}
+function calcGex(data){
+  var mid = data.reduce(function(s,r){ return s+r.strike; },0) / data.length;
+  return data.map(function(r){
+    var d = Math.max(Math.abs(r.strike - mid), 1);
+    var g = 1 / (d * 0.001 + 1);
+    return Object.assign({}, r, {gex: (r.callOI - r.putOI) * g});
+  });
+}
+function calcSpikes(data){
+  var ac = data.reduce(function(s,r){ return s+r.callVol; },0) / Math.max(data.length,1);
+  var ap = data.reduce(function(s,r){ return s+r.putVol;  },0) / Math.max(data.length,1);
+  return data.map(function(r){ return Object.assign({},r,{cspk:r.callVol>ac*2.5, pspk:r.putVol>ap*2.5}); });
+}
+function calcLiq(data, maxC, maxP){
+  var ss = data.map(function(r){ return r.strike; }).sort(function(a,b){ return a-b; });
+  var range = ss[ss.length-1] - ss[0];
+  return { above: maxC.strike + Math.round(range*0.12/50)*50, below: maxP.strike - Math.round(range*0.12/50)*50 };
+}
+function mergeData(map){
+  var all = {};
+  Object.values(map).forEach(function(rows){
+    rows.forEach(function(r){
+      if(!all[r.strike]) all[r.strike] = {strike:r.strike,callOI:0,putOI:0,callVol:0,putVol:0};
+      all[r.strike].callOI += r.callOI; all[r.strike].putOI  += r.putOI;
+      all[r.strike].callVol+= r.callVol;all[r.strike].putVol += r.putVol;
+    });
+  });
+  return Object.values(all).sort(function(a,b){ return a.strike-b.strike; });
+}
+
+function parseCSV(text){
+  var lines = text.trim().split(/\r?\n/).filter(function(l){ return l.trim(); });
+  if(lines.length < 2) return {data:[],log:'Te weinig rijen.'};
+  var raw  = lines[0].split(',').map(function(h){ return h.trim().replace(/['"]/g,''); });
+  var hdrs = raw.map(function(h){ return h.toLowerCase().replace(/[\s\-\/\(\)]+/g,'_').replace(/_+/g,'_'); });
+  var log  = ['Headers: ' + raw.slice(0,6).join(' | ')];
+  var fi   = function(){ for(var i=0;i<arguments.length;i++){ var x=hdrs.findIndex(function(h){ return h.indexOf(arguments[i])>=0; }); if(x>=0) return x; } return -1; };
+  var iStr = fi('strike'); var iCOI = fi('call_oi','calls_oi','call_open','c_oi');
+  var iPOI = fi('put_oi','puts_oi','put_open','p_oi');
+  var iCV  = fi('call_vol','calls_vol','call_volume','c_vol');
+  var iPV  = fi('put_vol','puts_vol','put_volume','p_vol');
+  var iTyp = fi('type','side','option_type','call_put');
+  var iOI  = fi('open_interest','_oi','interest_at');
+  var iVol = fi('total_volume','volume','_vol');
+  var rows = [];
+  if(iStr>=0 && iCOI>=0 && iPOI>=0){
+    log.push('Formaat: calls+puts per rij');
+    rows = lines.slice(1).map(function(l){
+      var c = l.split(',').map(function(v){ return v.trim().replace(/['"]/g,''); });
+      return {strike:parseFloat(c[iStr])||0, callOI:parseFloat(c[iCOI])||0, putOI:parseFloat(c[iPOI])||0, callVol:iCV>=0?parseFloat(c[iCV])||0:0, putVol:iPV>=0?parseFloat(c[iPV])||0:0};
+    }).filter(function(r){ return r.strike>0; });
+  } else if(iTyp>=0 && iStr>=0 && iOI>=0){
+    log.push('Formaat: type-rijen C/P');
+    var byS = {};
+    lines.slice(1).forEach(function(l){
+      var c = l.split(',').map(function(v){ return v.trim().replace(/['"]/g,''); });
+      var s = parseFloat(c[iStr]); var t = (c[iTyp]||'').toUpperCase();
+      var oi= parseFloat(c[iOI])||0; var v = iVol>=0?parseFloat(c[iVol])||0:0;
+      if(!s) return;
+      if(!byS[s]) byS[s]={strike:s,callOI:0,putOI:0,callVol:0,putVol:0};
+      if(t.charAt(0)==='C'){ byS[s].callOI=oi; byS[s].callVol=v; }
+      if(t.charAt(0)==='P'){ byS[s].putOI=oi;  byS[s].putVol=v; }
+    });
+    rows = Object.values(byS).filter(function(r){ return r.strike>0; });
+  } else if(iStr>=0 && iVol>=0 && iOI>=0){
+    log.push('Formaat: CME volume+OI, split halverwege');
+    var half = Math.ceil((lines.length-1)/2);
+    var prs  = function(arr, isC){ return arr.map(function(l){
+      var c=l.split(',').map(function(v){ return v.trim().replace(/['"]/g,''); });
+      return {strike:parseFloat(c[iStr])||0, oi:parseFloat(c[iOI])||0, vol:iVol>=0?parseFloat(c[iVol])||0:0, isC:isC};
+    }).filter(function(r){ return r.strike>0; }); };
+    var bySS = {};
+    prs(lines.slice(1,1+half),true).concat(prs(lines.slice(1+half),false)).forEach(function(r){
+      if(!bySS[r.strike]) bySS[r.strike]={strike:r.strike,callOI:0,putOI:0,callVol:0,putVol:0};
+      if(r.isC){ bySS[r.strike].callOI=r.oi; bySS[r.strike].callVol=r.vol; }
+      else      { bySS[r.strike].putOI =r.oi; bySS[r.strike].putVol =r.vol; }
+    });
+    rows = Object.values(bySS).filter(function(r){ return r.strike>0; });
+  } else {
+    log.push('Formaat onbekend - kolomvolgorde (0=Strike,1=CallOI,2=PutOI,3=CallVol,4=PutVol)');
+    rows = lines.slice(1).map(function(l){
+      var c=l.split(',').map(function(v){ return v.trim().replace(/['"]/g,''); });
+      return {strike:parseFloat(c[0])||0,callOI:parseFloat(c[1])||0,putOI:parseFloat(c[2])||0,callVol:parseFloat(c[3])||0,putVol:parseFloat(c[4])||0};
+    }).filter(function(r){ return r.strike>0; });
+  }
+  rows = rows.sort(function(a,b){ return a.strike-b.strike; });
+  log.push('Geparse rijen: '+rows.length);
+  if(rows.length) log.push('Range: '+rows[0].strike+' - '+rows[rows.length-1].strike);
+  return {data:rows, log:log.join('\n')};
+}
+
+function toggleGuide(){ document.getElementById('gBody').classList.toggle('open'); document.getElementById('gArrow').classList.toggle('open'); }
+function toggleInfo(id){ document.getElementById('ib_'+id).classList.toggle('open'); }
+function iBtn(id){ return '<button class="iBtn" onclick="toggleInfo(\''+id+'\')">i</button>'; }
+function openModal(){ document.getElementById('moverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('moverlay').classList.remove('open'); document.getElementById('mname').value=''; document.getElementById('mlabel').value=''; }
+function addAsset(){
+  var n = document.getElementById('mname').value.trim().toUpperCase();
+  var l = document.getElementById('mlabel').value.trim();
+  if(!n) return;
+  if(assets.find(function(a){ return a.id===n; })){ alert('Bestaat al.'); return; }
+  var cols = ['#ce93d8','#80cbc4','#ffb74d','#ef9a9a','#b0bec5'];
+  assets.push({id:n,name:n,label:l||n,color:cols[assets.length%cols.length]});
+  closeModal(); switchAsset(n);
+}
+function removeAsset(e,id){
+  e.stopPropagation();
+  assets = assets.filter(function(a){ return a.id!==id; });
+  delete aData[id];
+  if(activeAsset===id) activeAsset = assets[0].id;
+  renderAssetTabs(); renderPanel();
+}
+function switchAsset(id){ activeAsset=id; renderAssetTabs(); renderPanel(); }
+function switchDay(id){ activeDay=id; renderDayTabs(); renderDayPanel(); }
+
+function renderAssetTabs(){
+  var el = document.getElementById('aTabs');
+  el.innerHTML = assets.map(function(a){
+    return '<div class="atab'+(a.id===activeAsset?' active':'')+'" style="'+(a.id===activeAsset?'border-color:'+a.color+';color:'+a.color:'')+'" onclick="switchAsset(\''+a.id+'\')">'
+      +a.name
+      +(DEFS.find(function(d){ return d.id===a.id; })?'':'<span class="tcls" onclick="removeAsset(event,\''+a.id+'\')">&#x2715;</span>')
+      +'</div>';
+  }).join('')+'<div class="atab add" onclick="openModal()">+ Asset</div>';
+}
+
+function renderPanel(){
+  if(!aData[activeAsset]) aData[activeAsset]={};
+  document.getElementById('panel').innerHTML =
+    '<div id="dayTabsWrap"></div><div id="uploadGrid"></div><div class="parser-debug" id="parseDebug"></div><div id="dayPanel"></div>';
+  renderDayTabs(); renderUploadGrid(); renderDayPanel();
+}
+
+function renderDayTabs(){
+  var el = document.getElementById('dayTabsWrap');
+  if(!el) return;
+  var loaded = aData[activeAsset]||{};
+  el.innerHTML = '<div class="day-tabs">'
+    + DAYS.map(function(d){
+        var ok = !!loaded[d.id];
+        return '<div class="dtab'+(activeDay===d.id?' active':'')+(ok?' loaded':'')+'" onclick="switchDay(\''+d.id+'\')">'
+          +d.label+(ok?'<span class="ddot"></span>':'')+'</div>';
+      }).join('')
+    + '<div class="dtab total'+(activeDay==='total'?' active':'')+'" onclick="switchDay(\'total\')">Totaal</div>'
+    + '<div class="dtab inst'+(activeDay==='inst'?' active':'')+'" onclick="switchDay(\'inst\')">Institutioneel</div>'
+    + '</div>';
+}
+
+function renderUploadGrid(){
+  var el = document.getElementById('uploadGrid');
+  if(!el) return;
+  var loaded = aData[activeAsset]||{};
+  var aid = activeAsset;
+  el.innerHTML = '<div class="upload-grid">'
+    + DAYS.map(function(d){
+        var ok = !!loaded[d.id];
+        return '<div class="uslot'+(ok?' done':'')+'" onclick="document.getElementById(\'f_'+aid+'_'+d.id+'\').click()">'
+          +'<input type="file" id="f_'+aid+'_'+d.id+'" accept=".csv" onchange="handleCSV(event,\''+aid+'\',\''+d.id+'\')">'
+          +'<div class="us-day">'+d.full+'</div>'
+          +'<div class="us-status" style="color:'+(ok?'var(--green)':'var(--muted)')+'">'+( ok ? loaded[d.id].length+' strikes' : 'Upload CSV')+'</div>'
+          +'<div class="us-sub">'+(ok?'geladen':'CME daily expiry')+'</div>'
+          +(ok?'<span class="us-check" style="color:var(--green)">&#x2713;</span>':'')
+          +'</div>';
+      }).join('')
+    + '<div class="uslot inst-slot'+(loaded.inst?' done':'')+'" onclick="document.getElementById(\'f_'+aid+'_inst\').click()">'
+      +'<input type="file" id="f_'+aid+'_inst" accept=".csv" onchange="handleCSV(event,\''+aid+'\',\'inst\')">'
+      +'<div class="us-day">American</div>'
+      +'<div class="us-status" style="color:'+(loaded.inst?'var(--purple)':'var(--muted)')+'">'+( loaded.inst?loaded.inst.length+' strikes':'Upload CSV')+'</div>'
+      +'<div class="us-sub">'+(loaded.inst?'geladen':'Langetermijn OI')+'</div>'
+      +(loaded.inst?'<span class="us-check" style="color:var(--purple)">&#x2713;</span>':'')
+      +'</div>'
+    + '</div>';
+}
+
+function renderDayPanel(){
+  var el = document.getElementById('dayPanel');
+  if(!el) return;
+  var loaded = aData[activeAsset]||{};
+  var asset  = assets.find(function(a){ return a.id===activeAsset; });
+  el.innerHTML = '';
+
+  if(activeDay==='total'){
+    var loadedDays = DAYS.filter(function(d){ return !!loaded[d.id]; });
+    if(!loadedDays.length){ el.innerHTML=buildEmpty('Geen dagdata geladen','Upload minimaal een dag CSV.'); return; }
+    var merged = mergeData(Object.fromEntries ? Object.fromEntries(loadedDays.map(function(d){ return [d.id,loaded[d.id]]; })) : (function(){ var o={}; loadedDays.forEach(function(d){ o[d.id]=loaded[d.id]; }); return o; })());
+    var wbar = document.createElement('div'); wbar.className='wbar';
+    wbar.innerHTML='<span class="wl">Week Totaal</span><span class="pill ptotal">'+loadedDays.map(function(d){ return d.label; }).join(' + ')+'</span><span class="wr">'+loadedDays.length+'/5 dagen</span>';
+    el.appendChild(wbar);
+    buildAnalysis(el, merged, asset, true, 'total', 'Gecombineerde week');
+    return;
+  }
+
+  if(activeDay==='inst'){
+    buildInstView(el, loaded.inst||DEMO.inst, asset, !!loaded.inst);
+    return;
+  }
+
+  var dayObj = DAYS.find(function(d){ return d.id===activeDay; });
+  var data   = loaded[activeDay]||DEMO[activeDay];
+  var isLive = !!loaded[activeDay];
+  var wbar2  = document.createElement('div'); wbar2.className='wbar';
+  wbar2.innerHTML='<span class="wl">'+dayObj.full+'</span><span class="pill '+(isLive?'plive':'pdemo')+'">'+(isLive?'LIVE DATA':'DEMO DATA')+'</span><span class="wr">'+asset.id+' '+data.length+' strikes</span>';
+  el.appendChild(wbar2);
+
+  var dbEl = document.getElementById('parseDebug');
+  var key  = activeAsset+'_'+activeDay;
+  if(parseLog[key] && dbEl){ dbEl.classList.add('show'); dbEl.innerHTML='<div style="font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Parser log</div>'+parseLog[key].replace(/\n/g,'<br>'); }
+  else if(dbEl) dbEl.classList.remove('show');
+
+  buildAnalysis(el, data, asset, isLive, activeDay, dayObj.full+' expiry');
+}
+
+function buildEmpty(title, sub){
+  return '<div class="empty-day"><div class="ei">&#8593;</div><div class="et">'+title+'</div><div class="es">'+sub+'</div></div>';
+}
+
+function buildInstView(parent, data, asset, isLive){
+  var tcOI=data.reduce(function(s,r){ return s+r.callOI; },0);
+  var tpOI=data.reduce(function(s,r){ return s+r.putOI;  },0);
+  var pOI=(tpOI/tcOI).toFixed(2);
+  var maxC=data.reduce(function(a,b){ return b.callOI>a.callOI?b:a; });
+  var maxP=data.reduce(function(a,b){ return b.putOI>a.putOI?b:a;   });
+  var mp=calcMaxPain(data);
+  var ba=sb(+pOI); var maxOI=Math.max.apply(null,data.map(function(r){ return Math.max(r.callOI,r.putOI); }));
+  var div=document.createElement('div');
+  div.innerHTML='<div class="inst-banner"><div class="ib-text"><strong>Institutioneel beeld &mdash; American Options (lange looptijd)</strong><br>Opties met weken tot maanden looptijd. Gebruik als contextuele bevestiging &mdash; niet als dagtrading signaal.</div></div>'
+    +'<div class="sec">Institutioneel sentiment</div>'
+    +'<div class="inst-grid">'
+    +'<div class="inst-card"><div class="ic-label">Put/Call ratio</div><div class="ic-val">'+pOI+'</div><div class="ic-sub"><span class="badge '+ba[0]+'">'+ba[1]+'</span></div></div>'
+    +'<div class="inst-card"><div class="ic-label">Call Wall (lange termijn)</div><div class="ic-val">'+fmt(maxC.strike)+'</div><div class="ic-sub">Institutionele weerstand</div></div>'
+    +'<div class="inst-card"><div class="ic-label">Put Wall (lange termijn)</div><div class="ic-val">'+fmt(maxP.strike)+'</div><div class="ic-sub">Institutionele support</div></div>'
+    +'<div class="inst-card"><div class="ic-label">Max Pain (lange termijn)</div><div class="ic-val">'+fmt(mp)+'</div><div class="ic-sub">Gravitatiecentrum</div></div>'
+    +'<div class="inst-card"><div class="ic-label">Totaal calls OI</div><div class="ic-val">'+fmt(tcOI)+'</div><div class="ic-sub">Institutionele long bias</div></div>'
+    +'<div class="inst-card"><div class="ic-label">Richting</div><div class="ic-val" style="font-size:18px">'+ba[1]+'</div><div class="ic-sub"><span class="badge '+ba[0]+'">'+ba[1]+'</span></div></div>'
+    +'</div>'
+    +'<div class="sec">OI heatmap lange termijn</div>'
+    +'<div id="instHm"></div>'
+    +'<div class="hmleg"><span><span class="hmdot" style="background:rgba(206,147,216,.6)"></span>Calls OI</span><span><span class="hmdot" style="background:rgba(255,77,77,.5)"></span>Puts OI</span></div>';
+  parent.appendChild(div);
+  var hmEl=div.querySelector('#instHm');
+  data.slice().reverse().forEach(function(r){
+    var cw=Math.round(r.callOI/maxOI*46), pw=Math.round(r.putOI/maxOI*46);
+    var tag=r.callOI===maxC.callOI?'<span class="hmtag cw">&#9733; CALL WALL</span>':r.putOI===maxP.putOI?'<span class="hmtag pw">&#9733; PUT WALL</span>':r.strike===mp?'<span class="hmtag mp">&#8857; MAX PAIN</span>':'<span class="hmtag"></span>';
+    hmEl.innerHTML+='<div class="hmrow"><span class="hms">'+fmt(r.strike)+'</span><div class="hmt" style="border-color:rgba(206,147,216,.15)"><div class="hmc" style="background:rgba(206,147,216,.35);width:'+cw+'%"></div><div class="hmp" style="width:'+pw+'%"></div>'+(r.strike===mp?'<div class="hmml" style="left:50%"></div>':'')+'</div>'+tag+'</div>';
+  });
+}
+
+function buildAnalysis(parent, data, asset, isLive, dayId, dayLabel){
+  var tcOI=data.reduce(function(s,r){ return s+r.callOI; },0);
+  var tpOI=data.reduce(function(s,r){ return s+r.putOI;  },0);
+  var tcV =data.reduce(function(s,r){ return s+r.callVol; },0);
+  var tpV =data.reduce(function(s,r){ return s+r.putVol;  },0);
+  var pOI =(tpOI/tcOI).toFixed(2);
+  var pVol=(tpV/tcV).toFixed(2);
+  var maxC=data.reduce(function(a,b){ return b.callOI>a.callOI?b:a; });
+  var maxP=data.reduce(function(a,b){ return b.putOI>a.putOI?b:a;   });
+  var mp  =calcMaxPain(data);
+  var gd  =calcGex(data);
+  var sd  =calcSpikes(data);
+  var liq =calcLiq(data,maxC,maxP);
+  var maxG=Math.max.apply(null,gd.map(function(r){ return Math.abs(r.gex); }));
+  var maxOI=Math.max.apply(null,data.map(function(r){ return Math.max(r.callOI,r.putOI); }));
+  var bp=65,berp=25;
+  if(+pOI<0.8){bp=65;berp=25;}else if(+pOI<1.0){bp=55;berp=30;}else if(+pOI<1.2){bp=40;berp=45;}else{bp=25;berp=60;}
+  var np=100-bp-berp;
+  var b1=sb(+pOI); var b2=sb(+pVol);
+  var ov=+pOI<0.9?'Bullish':+pOI>1.1?'Bearish':'Neutraal';
+  var ovc=sc(+pOI);
+  var cspks=sd.filter(function(r){ return r.cspk; }).length;
+  var pspks=sd.filter(function(r){ return r.pspk; }).length;
+  var cid=asset.id+'_'+dayId;
+
+  var div=document.createElement('div');
+  var h='';
+  h+='<div class="sec">Sentiment '+iBtn('sent_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_sent_'+cid+'"><strong>P/C onder 0.9</strong> = calls dominant = bullish. <strong>Boven 1.1</strong> = puts dominant = bearish/hedge.<div class="lev"><strong>Leverage:</strong> Aligned = bevestiging. Tegengesteld = extra voorzichtig.</div></div>';
+  h+='<div class="metrics">';
+  h+='<div class="mc"><div class="ml">Put/Call &middot; OI</div><div class="mv '+sc(+pOI)+'">'+pOI+'</div><span class="badge '+b1[0]+'">'+b1[1]+'</span><div class="msub">OI sentiment</div></div>';
+  h+='<div class="mc"><div class="ml">Put/Call &middot; Volume</div><div class="mv '+sc(+pVol)+'">'+pVol+'</div><span class="badge '+b2[0]+'">'+b2[1]+'</span><div class="msub">Dagelijks volume</div></div>';
+  h+='<div class="mc"><div class="ml">Max Pain</div><div class="mv neut">'+fmt(mp)+'</div><span class="badge bn">Magneet</span><div class="msub">'+dayLabel+' centrum</div></div>';
+  h+='<div class="mc"><div class="ml">Call Wall</div><div class="mv bear">'+fmt(maxC.strike)+'</div><span class="badge br">Weerstand</span><div class="msub">Verkoopdruk</div></div>';
+  h+='<div class="mc"><div class="ml">Put Wall</div><div class="mv bull">'+fmt(maxP.strike)+'</div><span class="badge bg">Support</span><div class="msub">Koopdruk</div></div>';
+  h+='</div>';
+  h+='<div class="sec">Sleutelniveaus '+iBtn('lvl_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_lvl_'+cid+'">Drie meest relevante niveaus voor '+dayLabel+'.<div class="lev"><strong>Leverage:</strong> Call Wall = weerstand/target. Max Pain = magneet richting expiry. Put Wall = support/target.</div></div>';
+  h+='<div class="liq-zones">';
+  h+='<div class="lzone lz-res"><div class="lz-type">Weerstand &middot; Call Wall</div><div class="lz-price">'+fmt(maxC.strike)+'</div><div class="lz-desc">Market makers creeren verkoopdruk. Break erboven met volume = bullish bevestiging.</div><div class="lz-tag">OI: '+fmt(maxC.callOI)+' contracten</div></div>';
+  h+='<div class="lzone lz-mag"><div class="lz-type">Magneet &middot; Max Pain</div><div class="lz-price">'+fmt(mp)+'</div><div class="lz-desc">Prijs driftt hier naartoe richting expiry '+dayLabel+'.</div><div class="lz-tag">Gravitatiecentrum '+dayLabel+'</div></div>';
+  h+='<div class="lzone lz-sup"><div class="lz-type">Support &middot; Put Wall</div><div class="lz-price">'+fmt(maxP.strike)+'</div><div class="lz-desc">Market makers creeren koopdruk. Break eronder versnelt daling.</div><div class="lz-tag">OI: '+fmt(maxP.putOI)+' contracten</div></div>';
+  h+='</div>';
+  h+='<div class="sec">Scenarios '+iBtn('sc_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_sc_'+cid+'">Kansen op basis van OI verdeling. Gebruik als probabilistische context.<div class="lev"><strong>Leverage:</strong> Trade richting hoogste kans, plan voor scenario 2.</div></div>';
+  h+='<div class="scenarios">';
+  h+='<div class="sccard scb"><span class="badge bg">Bullish</span><div class="scpct">'+bp+'%</div><div class="scname">Opwaarts</div><div class="scdet">Target: '+fmt(maxC.strike)+'<br>Support: '+fmt(maxC.strike-100)+'<br>Max Pain: '+fmt(mp)+'<br>Put Wall: '+fmt(maxP.strike)+'</div></div>';
+  h+='<div class="sccard scr"><span class="badge br">Bearish</span><div class="scpct">'+berp+'%</div><div class="scname">Neerwaarts</div><div class="scdet">Break: '+fmt(maxC.strike-100)+'<br>Target: '+fmt(maxC.strike-200)+'<br>Max Pain: '+fmt(mp)+'<br>Put floor: '+fmt(maxP.strike)+'</div></div>';
+  h+='<div class="sccard scn"><span class="badge bn">Zijwaarts</span><div class="scpct">'+np+'%</div><div class="scname">Range</div><div class="scdet">Range: '+fmt(maxC.strike-100)+' &ndash; '+fmt(maxC.strike+50)+'<br>Max Pain: '+fmt(mp)+'<br>Drift richting '+fmt(mp)+'</div></div>';
+  h+='</div>';
+  h+='<div class="sec">Heatmap '+iBtn('hm_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_hm_'+cid+'">Calls (groen) en puts (rood) per strike. Gouden lijn = Max Pain. Grotere balken = meer institutioneel gewicht.</div>';
+  h+='<div id="hm_'+cid+'"></div>';
+  h+='<div class="hmleg"><span><span class="hmdot" style="background:rgba(0,230,118,.5)"></span>Calls OI</span><span><span class="hmdot" style="background:rgba(255,77,77,.5)"></span>Puts OI</span><span><span class="hmdot" style="background:var(--gold);width:4px;border-radius:0"></span>Max Pain</span><span style="color:var(--green)">&#9733; Call Wall</span><span style="color:var(--red)">&#9733; Put Wall</span><span style="color:var(--purple)">&#128167; Liquidatie</span></div>';
+  h+='<div class="two-col"><div class="cc"><div class="ct">OI distributie per strike</div><div style="position:relative;height:220px"><canvas id="oi_'+cid+'"></canvas></div></div><div class="cc"><div class="ct">Net volume flow</div><div style="position:relative;height:220px"><canvas id="fl_'+cid+'"></canvas></div></div></div>';
+  h+='<div class="sec">Gamma Exposure '+iBtn('gex_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_gex_'+cid+'">Groen = market makers remmen beweging. Rood = versterken beweging.<div class="lev"><strong>Leverage:</strong> Rode zones = potentiele versnelling van een move.</div></div>';
+  h+='<div class="cc" style="margin-bottom:2rem"><div id="gex_'+cid+'"></div></div>';
+  if(cspks+pspks>0){
+    h+='<div class="sec">Volume spikes '+iBtn('spk_'+cid)+'</div>';
+    h+='<div class="ibox" id="ib_spk_'+cid+'">Strikes met meer dan 2.5x gemiddeld volume. Institutionele positionering.</div>';
+    h+='<div class="sigcard" style="margin-bottom:2rem" id="spk_'+cid+'"></div>';
+  }
+  h+='<div class="sec">Strike tabel '+iBtn('tbl_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_tbl_'+cid+'">Gesorteerd op totale OI. &#8857; = Max Pain. Geel = spike. GEX positief = stabiliserend.</div>';
+  h+='<div class="tcard"><table><thead><tr><th style="text-align:left">Strike</th><th>Calls OI</th><th>Puts OI</th><th>Call Vol</th><th>Put Vol</th><th>Net flow</th><th>GEX</th><th>Signaal</th></tr></thead><tbody id="tb_'+cid+'"></tbody></table></div>';
+  h+='<div class="sec">Signalen '+iBtn('sig_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_sig_'+cid+'">Alle sleutelniveaus in een overzicht.</div>';
+  h+='<div class="sigcard" id="sig_'+cid+'"></div><br>';
+  h+='<div class="sec">Setup referentie &mdash; '+dayLabel+' '+iBtn('set_'+cid)+'</div>';
+  h+='<div class="ibox" id="ib_set_'+cid+'">Referentiekader op basis van Call Wall, Put Wall en Max Pain. Geen handelssignaal.<div class="lev"><strong>Backtesting:</strong> Noteer elke week het resultaat vs deze niveaus.</div></div>';
+  h+='<div class="setup-grid">';
+  h+='<div class="setupcard"><div class="shdr" style="color:var(--green)">&#9650; Long referentie</div>';
+  h+='<div class="srow"><span class="sk">Entry zone<span class="skh">Onder Call Wall, boven Put Wall</span></span><span class="sv" style="color:var(--green)">'+fmt(maxC.strike-100)+' &ndash; '+fmt(maxC.strike-70)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Target 1<span class="skh">Call Wall</span></span><span class="sv">'+fmt(maxC.strike)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Target 2 / Max Pain<span class="skh">Gravitatiecentrum '+dayLabel+'</span></span><span class="sv" style="color:var(--gold)">'+fmt(mp)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Stop referentie<span class="skh">Onder support</span></span><span class="sv" style="color:var(--red)">'+fmt(maxC.strike-150)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Liquidatiezone boven<span class="skh">Short squeeze zone</span></span><span class="sv" style="color:var(--purple)">'+fmt(liq.above)+'</span></div>';
+  h+='</div>';
+  h+='<div class="setupcard"><div class="shdr" style="color:var(--red)">&#9660; Short referentie</div>';
+  h+='<div class="srow"><span class="sk">Entry zone<span class="skh">Boven Put Wall</span></span><span class="sv" style="color:var(--red)">'+fmt(maxP.strike)+' &ndash; '+fmt(maxP.strike+30)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Target 1<span class="skh">Max Pain</span></span><span class="sv" style="color:var(--gold)">'+fmt(mp)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Target 2<span class="skh">Onder Max Pain</span></span><span class="sv">'+fmt(maxC.strike-100)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Stop referentie<span class="skh">Boven weerstand</span></span><span class="sv" style="color:var(--red)">'+fmt(maxP.strike+80)+'</span></div>';
+  h+='<div class="srow"><span class="sk">Liquidatiezone onder<span class="skh">Long squeeze zone</span></span><span class="sv" style="color:var(--purple)">'+fmt(liq.below)+'</span></div>';
+  h+='</div></div>';
+  h+='<div class="pgfoot"><a href="index.html">Unda</a> &middot; Options Analysis &middot; Niet bedoeld als financieel advies &middot; Backtesten aanbevolen</div>';
+  div.innerHTML=h;
+  parent.appendChild(div);
+
+  var hmEl=document.getElementById('hm_'+cid);
+  if(hmEl){ data.slice().reverse().forEach(function(r){
+    var cw=Math.round(r.callOI/maxOI*46), pw=Math.round(r.putOI/maxOI*46);
+    var isLiqA=(r.strike===liq.above), isLiqB=(r.strike===liq.below);
+    var tag=r.callOI===maxC.callOI?'<span class="hmtag cw">&#9733; CALL WALL</span>':r.putOI===maxP.putOI?'<span class="hmtag pw">&#9733; PUT WALL</span>':r.strike===mp?'<span class="hmtag mp">&#8857; MAX PAIN</span>':(isLiqA||isLiqB)?'<span class="hmtag lq">&#128167; LIQUIDATIE</span>':'<span class="hmtag"></span>';
+    hmEl.innerHTML+='<div class="hmrow"><span class="hms">'+fmt(r.strike)+'</span><div class="hmt"><div class="hmc" style="width:'+cw+'%"></div><div class="hmp" style="width:'+pw+'%"></div>'+(r.strike===mp?'<div class="hmml" style="left:50%"></div>':'')+'</div>'+tag+'</div>';
+  }); }
+
+  var gexEl=document.getElementById('gex_'+cid);
+  if(gexEl){ gd.slice().reverse().forEach(function(r){
+    var pct=Math.round(Math.abs(r.gex)/maxG*48), pos=r.gex>=0;
+    gexEl.innerHTML+='<div class="grow"><span class="gs">'+fmt(r.strike)+'</span><div class="gt"><div class="gctr"></div>'+(pos?'<div class="gpos" style="width:'+pct+'%"></div>':'<div class="gneg" style="width:'+pct+'%"></div>')+'</div><span class="gv" style="color:'+(pos?'var(--green)':'var(--red)')+'">'+( pos?'+':'')+( Math.round(r.gex/100)/10)+'k</span></div>';
+  }); }
+
+  var spkEl=document.getElementById('spk_'+cid);
+  if(spkEl){
+    var avgCV=tcV/data.length, avgPV=tpV/data.length;
+    sd.filter(function(r){ return r.cspk||r.pspk; }).forEach(function(r){
+      spkEl.innerHTML+='<div class="sigrow"><span class="sdot '+(r.cspk?'bull':'bear')+'"></span><span class="slbl">'+(r.cspk?'Call spike':'Put spike')+' op '+fmt(r.strike)+'<span class="shint">'+(r.cspk?fmt(r.callVol)+' vol ('+Math.round(r.callVol/avgCV*10)/10+'x gem.)':'')+(r.pspk?fmt(r.putVol)+' vol ('+Math.round(r.putVol/avgPV*10)/10+'x gem.)':'')+'</span></span><span class="sval" style="color:var(--gold)">&#9889; Smart money</span></div>';
+    });
+  }
+
+  var tbEl=document.getElementById('tb_'+cid);
+  if(tbEl){ sd.slice().sort(function(a,b){ return (b.callOI+b.putOI)-(a.callOI+a.putOI); }).slice(0,8).forEach(function(r){
+    var gr=gd.find(function(g){ return g.strike===r.strike; });
+    var n=r.callVol-r.putVol;
+    var gstr=gr?(gr.gex>=0?'+':'')+( Math.round(gr.gex/100)/10)+'k':'--';
+    var sig=r.cspk?'<span class="badge bg">&#9889; Call</span>':r.pspk?'<span class="badge br">&#9889; Put</span>':n>1500?'<span class="badge bg">Bullish</span>':n<-1500?'<span class="badge br">Bearish</span>':'<span class="badge bn">Neutraal</span>';
+    tbEl.innerHTML+='<tr><td>'+fmt(r.strike)+(r.strike===mp?' <span style="color:var(--gold);font-size:10px">&#8857;</span>':'')+'</td><td>'+fmt(r.callOI)+'</td><td>'+fmt(r.putOI)+'</td><td class="'+(r.cspk?'nspk':'')+'">'+fmt(r.callVol)+'</td><td class="'+(r.pspk?'nspk':'')+'">'+fmt(r.putVol)+'</td><td class="'+(n>=0?'nbull':'nbear')+'">'+( n>=0?'+':'')+fmt(n)+'</td><td class="'+(gr&&gr.gex>=0?'nbull':'nbear')+'">'+gstr+'</td><td>'+sig+'</td></tr>';
+  }); }
+
+  var sigEl=document.getElementById('sig_'+cid);
+  if(sigEl){ sigEl.innerHTML=''
+    +'<div class="sigrow"><span class="sdot bear"></span><span class="slbl">Weerstand (Call Wall)<span class="shint">Break erboven = bullish bevestiging</span></span><span class="sval">'+fmt(maxC.strike)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot neut"></span><span class="slbl">Max Pain magneet<span class="shint">Gravitatiecentrum '+dayLabel+'</span></span><span class="sval">'+fmt(mp)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot bull"></span><span class="slbl">Support (Put Wall)<span class="shint">Break eronder versnelt daling</span></span><span class="sval">'+fmt(maxP.strike)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot '+ovc+'"></span><span class="slbl">Marktsentiment<span class="shint">Op basis van OI verhouding</span></span><span class="sval">'+ov+'</span></div>'
+    +'<div class="sigrow"><span class="sdot info"></span><span class="slbl">Verwachte dagrange<span class="shint">Statistische zone opties data</span></span><span class="sval">'+fmt(maxC.strike-100)+' &ndash; '+fmt(maxP.strike)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot purp"></span><span class="slbl">Liquidatiezone boven<span class="shint">Short squeeze zone</span></span><span class="sval">'+fmt(liq.above)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot purp"></span><span class="slbl">Liquidatiezone onder<span class="shint">Long squeeze zone</span></span><span class="sval">'+fmt(liq.below)+'</span></div>'
+    +'<div class="sigrow"><span class="sdot neut"></span><span class="slbl">Volume spikes<span class="shint">Institutioneel relevante strikes</span></span><span class="sval" style="color:var(--gold)">'+(cspks+pspks)+' strikes</span></div>';
+  }
+
+  var prevC=charts[cid];
+  if(prevC){ try{ prevC.oi.destroy(); prevC.fl.destroy(); }catch(e){} }
+  var labels=data.map(function(r){ return fmt(r.strike); });
+  setTimeout(function(){
+    var oc=document.getElementById('oi_'+cid), fc=document.getElementById('fl_'+cid);
+    if(!oc||!fc) return;
+    var nf=data.map(function(r){ return r.callVol-r.putVol; });
+    charts[cid]={
+      oi: new Chart(oc,{type:'bar',data:{labels:labels,datasets:[{label:'Calls',data:data.map(function(r){ return r.callOI; }),backgroundColor:'rgba(0,230,118,.4)',borderColor:'rgba(0,230,118,.7)',borderWidth:1},{label:'Puts',data:data.map(function(r){ return r.putOI; }),backgroundColor:'rgba(255,77,77,.35)',borderColor:'rgba(255,77,77,.65)',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8aaa8d',font:{size:9,family:'Space Mono'}},grid:{color:'rgba(0,255,100,.06)'}},y:{ticks:{color:'#8aaa8d',font:{size:9,family:'Space Mono'},callback:function(v){ return v>=1000?(v/1000).toFixed(0)+'k':v; }},grid:{color:'rgba(0,255,100,.06)'}}}}
+      }),
+      fl: new Chart(fc,{type:'bar',data:{labels:labels,datasets:[{label:'Net',data:nf,backgroundColor:nf.map(function(v){ return v>=0?'rgba(0,230,118,.45)':'rgba(255,77,77,.4)'; }),borderColor:nf.map(function(v){ return v>=0?'rgba(0,230,118,.8)':'rgba(255,77,77,.8)'; }),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8aaa8d',font:{size:9,family:'Space Mono'}},grid:{color:'rgba(0,255,100,.06)'}},y:{ticks:{color:'#8aaa8d',font:{size:9,family:'Space Mono'},callback:function(v){ return v>=1000?(v/1000).toFixed(1)+'k':v; }},grid:{color:'rgba(0,255,100,.06)'}}}}
+      })
+    };
+  }, 50);
+}
+
+function handleCSV(e, assetId, dayId){
+  var file=e.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var result=parseCSV(ev.target.result);
+    parseLog[assetId+'_'+dayId]=result.log;
+    if(result.data.length>0){
+      if(!aData[assetId]) aData[assetId]={};
+      aData[assetId][dayId]=result.data;
+      renderDayTabs(); renderUploadGrid();
+      if(activeDay===dayId||activeDay==='total') renderDayPanel();
+    } else {
+      var dbEl=document.getElementById('parseDebug');
+      if(dbEl){ dbEl.classList.add('show'); dbEl.innerHTML='<div style="font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem">Parser fout</div>'+result.log.replace(/\n/g,'<br>')+'<br><br>Plak je CSV headers in de chat.'; }
+    }
+  };
+  reader.readAsText(file);
+}
+
+function openExport(){ buildExportPanels(); document.getElementById('expOverlay').classList.add('open'); }
+function closeExport(){ document.getElementById('expOverlay').classList.remove('open'); }
+function switchExpTab(i){
+  [0,1,2].forEach(function(j){
+    document.getElementById('etab'+j).classList.toggle('active', j===i);
+    document.getElementById('epanel'+j).style.display = j===i ? 'block' : 'none';
+  });
+}
+
+function getWeekLevels(){
+  var out={};
+  DAYS.forEach(function(d){
+    var data=(aData[activeAsset]||{})[d.id]; if(!data) return;
+    var maxC=data.reduce(function(a,b){ return b.callOI>a.callOI?b:a; });
+    var maxP=data.reduce(function(a,b){ return b.putOI>a.putOI?b:a;   });
+    var mp=calcMaxPain(data);
+    var liq=calcLiq(data,maxC,maxP);
+    var tcOI=data.reduce(function(s,r){ return s+r.callOI; },0);
+    var tpOI=data.reduce(function(s,r){ return s+r.putOI;  },0);
+    var pOI=(tpOI/tcOI).toFixed(2);
+    out[d.id]={day:d.full, callWall:maxC.strike, putWall:maxP.strike, maxPain:mp, liqAbove:liq.above, liqBelow:liq.below, sentiment:(+pOI<0.9?'Bullish':+pOI>1.1?'Bearish':'Neutraal'), pcRatio:pOI};
+  });
+  return out;
+}
+
+function buildExportPanels(){
+  var asset=assets.find(function(a){ return a.id===activeAsset; });
+  var levels=getWeekLevels();
+  var days=Object.values(levels);
+  var now=new Date();
+  var dateStr=now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+  var fileDate=now.toISOString().slice(0,10);
+
+  var tv='';
+  if(!days.length){ tv='Geen data geladen.'; }
+  else {
+    tv += '// ================================================\n';
+    tv += '// UNDA - ' + asset.name + ' - OPTIONS NIVEAUS\n';
+    tv += '// Week: ' + dateStr + '\n';
+    tv += '// ================================================\n';
+    days.forEach(function(d){
+      tv += '\n// -- ' + d.day.toUpperCase() + ' --\n';
+      tv += '// Call Wall  (ROOD):   ' + fmt(d.callWall)  + '\n';
+      tv += '// Max Pain   (GOUD):   ' + fmt(d.maxPain)   + '\n';
+      tv += '// Put Wall   (GROEN):  ' + fmt(d.putWall)   + '\n';
+      tv += '// Liq boven  (PAARS):  ' + fmt(d.liqAbove)  + '\n';
+      tv += '// Liq onder  (PAARS):  ' + fmt(d.liqBelow)  + '\n';
+      tv += '// Sentiment:           ' + d.sentiment + ' (P/C: ' + d.pcRatio + ')\n';
+    });
+    tv += '\n// Teken 5 lijnen per dag: Rood=Call Wall  Goud=Max Pain  Groen=Put Wall  Paars=Liquidatie';
+  }
+  document.getElementById('epanel0').innerHTML=
+    '<div class="exp-note">Kopieer en voer in als horizontale lijnen in TradingView. Kleurcode staat erbij.</div>'
+    +'<div class="exp-lbl">TradingView annotaties</div>'
+    +'<pre class="exp-pre" id="tvPre"></pre>'
+    +'<div class="exp-acts"><button class="exp-btn ep" onclick="copyPre(\'tvPre\',\'tvOk\')">Kopiëren</button><span class="exp-ok" id="tvOk">&#x2713; Gekopieerd</span></div>';
+  document.getElementById('tvPre').textContent=tv;
+
+  var csvLines=['Datum,Asset,Dag,Call Wall,Put Wall,Max Pain,Liq Boven,Liq Onder,Sentiment,PC Ratio'];
+  days.forEach(function(d){
+    csvLines.push([dateStr,asset.name,d.day,d.callWall,d.putWall,d.maxPain,d.liqAbove,d.liqBelow,d.sentiment,d.pcRatio].join(','));
+  });
+  document.getElementById('epanel1').innerHTML=
+    '<div class="exp-note">Compatibel met Unda Trade Logbook. Download als CSV of kopieer.</div>'
+    +'<div class="exp-lbl">Logboek CSV</div>'
+    +'<pre class="exp-pre" id="csvPre"></pre>'
+    +'<div class="exp-acts">'
+    +'<button class="exp-btn ep" onclick="dlFile(\''+asset.name+'_'+fileDate+'.csv\',\'csvPre\',\'text/csv\')">&#8595; Download CSV</button>'
+    +'<button class="exp-btn" onclick="copyPre(\'csvPre\',\'csvOk\')">Kopiëren</button>'
+    +'<span class="exp-ok" id="csvOk">&#x2713; Gekopieerd</span></div>';
+  document.getElementById('csvPre').textContent=csvLines.join('\n');
+
+  var full='';
+  if(!days.length){ full='Geen data geladen.'; }
+  else {
+    full+='UNDA - OPTIONS ANALYSE WEEKRAPPORT\n';
+    full+='Asset: '+asset.name+' - '+asset.label+'\n';
+    full+='Datum: '+dateStr+'\n';
+    full+='====================================================\n\n';
+    days.forEach(function(d){
+      full+=d.day.toUpperCase()+'\n';
+      full+='--------------------------------------------\n';
+      full+='Weerstand  (Call Wall):   '+fmt(d.callWall)+'\n';
+      full+='Magneet    (Max Pain):    '+fmt(d.maxPain)+'\n';
+      full+='Support    (Put Wall):    '+fmt(d.putWall)+'\n';
+      full+='Liquidatie boven:         '+fmt(d.liqAbove)+'\n';
+      full+='Liquidatie onder:         '+fmt(d.liqBelow)+'\n';
+      full+='Sentiment:                '+d.sentiment+'\n';
+      full+='Put/Call ratio:           '+d.pcRatio+'\n\n';
+    });
+    full+='====================================================\n';
+    full+='Niet bedoeld als financieel advies.\n';
+    full+='Backtesting: noteer wekelijks resultaat vs niveaus.';
+  }
+  document.getElementById('epanel2').innerHTML=
+    '<div class="exp-note">Volledig rapport - sla op als weekreferentie.</div>'
+    +'<div class="exp-lbl">Volledig rapport</div>'
+    +'<pre class="exp-pre" id="fullPre"></pre>'
+    +'<div class="exp-acts">'
+    +'<button class="exp-btn ep" onclick="dlFile(\''+asset.name+'_rapport_'+fileDate+'.txt\',\'fullPre\',\'text/plain\')">&#8595; Download TXT</button>'
+    +'<button class="exp-btn" onclick="copyPre(\'fullPre\',\'fullOk\')">Kopiëren</button>'
+    +'<span class="exp-ok" id="fullOk">&#x2713; Gekopieerd</span></div>';
+  document.getElementById('fullPre').textContent=full;
+}
+
+function copyPre(preId, okId){
+  navigator.clipboard.writeText(document.getElementById(preId).textContent).then(function(){
+    var el=document.getElementById(okId); el.classList.add('show');
+    setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  });
+}
+function dlFile(name, preId, mime){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([document.getElementById(preId).textContent],{type:mime}));
+  a.download=name; a.click();
+}
+
+document.getElementById('moverlay').addEventListener('click',  function(e){ if(e.target===this) closeModal();  });
+document.getElementById('expOverlay').addEventListener('click', function(e){ if(e.target===this) closeExport(); });
+renderAssetTabs();
+renderPanel();
+</script>
+</body>
+</html>
