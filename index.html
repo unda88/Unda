@@ -54,6 +54,9 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
 .nav-btn.blue{border-color:rgba(0,212,255,.2)}
 .nav-btn.blue::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(0,212,255,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
 .nav-btn.blue:hover{border-color:rgba(0,212,255,.45);background:rgba(0,212,255,.06);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(0,212,255,.06)}
+.nav-btn.purple{border-color:rgba(180,100,255,.2)}
+.nav-btn.purple::before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.15) 35%,rgba(180,100,255,.5) 50%,rgba(255,255,255,.15) 65%,transparent)}
+.nav-btn.purple:hover{border-color:rgba(180,100,255,.45);background:rgba(180,100,255,.05);box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 20px rgba(180,100,255,.06)}
 .nav-icon{font-size:26px;line-height:1}
 .nav-label{font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px}
 .nav-arr{font-size:10px;color:rgba(200,255,235,.35)}
@@ -166,6 +169,13 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
       </div>
     </div>
 
+    <!-- Business Cycle -->
+    <a class="nav-btn purple" href="business-cycle-report.html">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label" id="n5-label">Business Cycle</span>
+      <span class="nav-sub" id="n5-sub">Macro analysis</span>
+    </a>
+
     <!-- Educational dropdown -->
     <div class="dd-wrap">
       <div class="nav-btn blue" onclick="toggleDD('dd-edu')">
@@ -194,7 +204,7 @@ const TX={
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Stock Dashboard','n1-sub':'Posities & live koersen',
     'n2-label':'Trading Suite','n2-sub':'Calculators & simulatie',
-    'n4-label':'Investor Suite','n4-sub':'Investeer zonder hefboom',
+    'n4-label':'Investor Suite','n4-sub':'Investeer zonder hefboom','n5-label':'Business Cycle','n5-sub':'Macro analyse',
     'n3-label':'Educatief','n3-sub':'Elliott Wave & meer',
     'dd-calc':'Positie Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterium','dd-log':'Trade Logboek','dd-tax':'Belasting Simulator','dd-guide':'Handleiding',
     'dd-position':'Positiegrootte','dd-dca':'DCA Simulator','dd-dca-tracker':'DCA Tracker','dd-compound':'Samengestelde groei','dd-soon2':'Binnenkort',
@@ -205,7 +215,7 @@ const TX={
     'h-eyebrow':'Elliott Wave','h-tag':'Trade Smart.','h-cert':'CEWA I',
     'n1-label':'Stock Dashboard','n1-sub':'Positions & live prices',
     'n2-label':'Trading Suite','n2-sub':'Calculators & simulation',
-    'n4-label':'Investor Suite','n4-sub':'Invest without leverage',
+    'n4-label':'Investor Suite','n4-sub':'Invest without leverage','n5-label':'Business Cycle','n5-sub':'Macro analysis',
     'n3-label':'Educational','n3-sub':'Elliott Wave & more',
     'dd-calc':'Position Calculator','dd-sim':'Trade Simulator','dd-kelly':'Kelly Criterion','dd-log':'Trade Logbook','dd-tax':'Tax Simulator','dd-opt':'Options Analysis','dd-guide':'Guide',
     'dd-position':'Position Size','dd-dca':'DCA Simulator','dd-dca-tracker':'DCA Tracker','dd-compound':'Compound Calculator','dd-soon2':'Soon',
