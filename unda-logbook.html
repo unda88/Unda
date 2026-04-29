@@ -302,6 +302,7 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
     <button class="tab" data-tab="history" onclick="switchTab(this)"><span class="ico">📒</span> Trade History</button>
     <button class="tab" data-tab="calendar" onclick="switchTab(this)"><span class="ico">📅</span> Calendar</button>
     <button class="tab" data-tab="analytics" onclick="switchTab(this)"><span class="ico">📊</span> Analytics</button>
+    <button class="tab" data-tab="tax" onclick="switchTab(this)"><span class="ico">💰</span> Tax</button>
     <button class="tab" data-tab="psychology" onclick="switchTab(this)"><span class="ico">🧠</span> Psychology</button>
     <button class="tab" data-tab="setups" onclick="switchTab(this)"><span class="ico">🎯</span> Setups</button>
   </div>
@@ -526,7 +527,8 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:10px">
               <button type="button" onclick="dpNav(-1)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-dim);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:12px">◂</button>
-              <div id="dp-month" style="font-size:13px;color:var(--text);font-weight:600"></div>
+              <select id="dp-month-sel" onchange="dpJump()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:12px;font-weight:600;padding:4px 6px;border-radius:6px;cursor:pointer;outline:none"></select>
+              <select id="dp-year-sel" onchange="dpJump()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;font-weight:600;padding:4px 6px;border-radius:6px;cursor:pointer;outline:none"></select>
               <button type="button" onclick="dpNav(1)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-dim);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:12px">▸</button>
             </div>
             <button type="button" onclick="toggleDP()" style="background:rgba(255,82,119,.06);border:1px solid rgba(255,82,119,.2);color:var(--red);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:12px">✕</button>
@@ -559,10 +561,12 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
   <div class="tab-content" id="tab-calendar">
     <div class="card">
       <div class="card-h">
-        <div style="display:flex;align-items:center;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <button type="button" onclick="calNav(-1)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-dim);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:14px">◂</button>
-          <div id="cal-title" style="font-size:18px;color:var(--text);font-weight:600"></div>
+          <select id="cal-month" onchange="calJump()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;padding:7px 10px;border-radius:9px;cursor:pointer;outline:none"></select>
+          <select id="cal-year" onchange="calJump()" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;padding:7px 10px;border-radius:9px;cursor:pointer;outline:none;font-family:'DM Mono',monospace"></select>
           <button type="button" onclick="calNav(1)" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-dim);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:14px">▸</button>
+          <button type="button" onclick="calToday()" title="Spring naar vandaag" style="background:rgba(255,217,122,.06);border:1px solid rgba(255,217,122,.3);color:var(--gold);padding:7px 12px;border-radius:9px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:500;letter-spacing:.06em">⊙ Vandaag</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px" id="cal-stats"></div>
@@ -624,6 +628,36 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
           <div class="card-h"><div class="card-t">📊 R-multiple distributie</div><div class="card-sub">winst/verlies in R</div></div>
           <div id="ana-r-dist" style="min-height:160px"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-tax">
+    <div id="tax-empty" style="display:none"><div class="card" style="padding:60px 30px;text-align:center"><div style="font-size:42px;opacity:.3;margin-bottom:14px">💰</div><div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:8px;letter-spacing:.04em">Nog geen tax data</div><div style="font-size:12px;color:var(--text-mute);max-width:560px;margin:0 auto;line-height:1.7">Voeg trades toe en zet Tax aan in de balk bovenaan om je belasting-impact te zien.</div></div></div>
+    <div id="tax-content">
+      <div class="card">
+        <div class="card-h"><div class="card-t">💰 Tax & Fee samenvatting</div><div class="card-sub" id="tax-summary-sub">huidige instellingen</div></div>
+        <div class="row r-4" id="tax-summary-stats"></div>
+      </div>
+
+      <div class="card" id="portfolio-card">
+        <div class="card-h">
+          <div><div class="card-t">📈 Portfolio waarde</div><div class="card-sub">Bruto vs Netto na belasting · gebruikt Compound mode uit topbar</div></div>
+        </div>
+        <div id="portfolio-chart" style="background:rgba(0,11,8,.4);border:1px solid var(--border);border-radius:14px;padding:14px;min-height:340px"></div>
+        <div id="portfolio-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"></div>
+        <div id="compound-note" style="margin-top:10px;font-size:11px;color:var(--g2);font-style:italic;padding:10px 14px;background:rgba(0,255,178,.04);border:1px solid var(--g3);border-radius:10px;line-height:1.6"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="card-t">📊 Per jaar</div><div class="card-sub">opsplitsing per kalenderjaar</div></div>
+        <div style="overflow-x:auto"><table class="t-tbl" id="tax-year-table"><thead><tr><th>Jaar</th><th style="text-align:right">Trades</th><th style="text-align:right">Bruto W</th><th style="text-align:right">Bruto V</th><th style="text-align:right">Belastbaar</th><th style="text-align:right">Tax</th><th style="text-align:right">Fees</th><th style="text-align:right">Net</th></tr></thead><tbody id="tax-year-tbody"></tbody></table></div>
+      </div>
+
+      <div class="card" id="carry-card">
+        <div class="card-h"><div class="card-t">🇧🇪 Carry-forward verliezen</div><div class="card-sub">België · max €1.000/jaar · max €5.000 totaal</div></div>
+        <div id="carry-content"></div>
+        <div style="font-size:11px;color:var(--text-mute);background:rgba(255,217,122,.04);border:1px solid rgba(255,217,122,.18);border-radius:8px;padding:10px 12px;margin-top:14px;line-height:1.6">ℹ️ Belgische regel: verliezen mogen worden afgetrokken van toekomstige winsten. Maximum <strong style="color:var(--gold)">€1.000 per jaar</strong> overdragen, totaal maximum <strong style="color:var(--gold)">€5.000</strong>. Geldt alleen voor speculatieve inkomsten (33%).</div>
       </div>
     </div>
   </div>
@@ -762,6 +796,7 @@ function switchTab(b){
   if(b.dataset.tab==='history'){renderHistoryList();renderHistoryFilters();}
   if(b.dataset.tab==='calendar'){renderCalendar();}
   if(b.dataset.tab==='analytics'){renderAnalytics();}
+  if(b.dataset.tab==='tax'){renderTax();}
   if(b.dataset.tab==='psychology'){renderPsychology();}
   if(b.dataset.tab==='setups'){renderSetups();}
 }
@@ -778,6 +813,9 @@ function setToggle(b){
   document.getElementById('fee-usd').style.display=(state.settings.fee==='usd'||state.settings.fee==='both')?'inline-block':'none';
   saveState();
   recalc();
+  // Re-render tabs that depend on these settings
+  if(document.getElementById('tab-tax').classList.contains('active'))renderTax();
+  if(document.getElementById('tab-analytics').classList.contains('active'))renderAnalytics();
 }
 
 function applySettingsToUI(){
@@ -799,6 +837,8 @@ function onCapChange(){
   state.settings.startCap=parseFloat(document.getElementById('start-cap').value)||0;
   saveState();
   recalc();
+  if(document.getElementById('tab-tax').classList.contains('active'))renderTax();
+  if(document.getElementById('tab-analytics').classList.contains('active'))renderAnalytics();
 }
 
 function setDir(b,v){
@@ -867,6 +907,9 @@ function recalc(){
   const netEl=document.getElementById('c-net');
   if(pnl!==0){netEl.textContent=(net>=0?'+$':'-$')+Math.abs(net).toFixed(2);netEl.className='calc-v '+(net>=0?'ok':'bad');}
   else{netEl.textContent='—';netEl.className='calc-v';}
+  // Re-render dependent tabs
+  const taxTab=document.getElementById('tab-tax');
+  if(taxTab&&taxTab.classList.contains('active'))renderTax();
 }
 
 function computeFees(risk,pnl){
@@ -1480,12 +1523,31 @@ function toggleDP(){
 }
 
 function dpNav(d){dpDate.setMonth(dpDate.getMonth()+d);renderDP();}
+function dpJump(){
+  const m=parseInt(document.getElementById('dp-month-sel').value);
+  const y=parseInt(document.getElementById('dp-year-sel').value);
+  if(!isNaN(m)&&!isNaN(y)){dpDate=new Date(y,m,1);renderDP();}
+}
 
 function renderDP(){
   const months=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-  document.getElementById('dp-month').textContent=months[dpDate.getMonth()]+' '+dpDate.getFullYear();
-  const grid=document.getElementById('dp-grid');
   const year=dpDate.getFullYear(),month=dpDate.getMonth();
+  // Build dropdowns
+  const mSel=document.getElementById('dp-month-sel');
+  if(mSel)mSel.innerHTML=months.map((mn,i)=>'<option value="'+i+'"'+(i===month?' selected':'')+'>'+mn+'</option>').join('');
+  const tradeYears=state.trades.map(t=>new Date(t.date).getFullYear()).filter(y=>!isNaN(y));
+  const nowY=new Date().getFullYear();
+  let minY=2000,maxY=nowY+2;
+  if(tradeYears.length){minY=Math.min(minY,...tradeYears);maxY=Math.max(maxY,...tradeYears);}
+  if(year<minY)minY=year;
+  if(year>maxY)maxY=year;
+  const ySel=document.getElementById('dp-year-sel');
+  if(ySel){
+    let yopts='';
+    for(let y=maxY;y>=minY;y--)yopts+='<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'</option>';
+    ySel.innerHTML=yopts;
+  }
+  const grid=document.getElementById('dp-grid');
   const firstDay=new Date(year,month,1);
   let dow=firstDay.getDay()-1;if(dow<0)dow=6;
   const lastDay=new Date(year,month+1,0).getDate();
@@ -1579,11 +1641,36 @@ function closeLightbox(e){
 function escClose(e){if(e.key==='Escape')closeLightbox();}
 
 function calNav(d){calDate.setMonth(calDate.getMonth()+d);renderCalendar();}
+function calJump(){
+  const m=parseInt(document.getElementById('cal-month').value);
+  const y=parseInt(document.getElementById('cal-year').value);
+  if(!isNaN(m)&&!isNaN(y)){calDate=new Date(y,m,1);renderCalendar();}
+}
+function calToday(){calDate=new Date();renderCalendar();}
 
 function renderCalendar(){
   const year=calDate.getFullYear(),month=calDate.getMonth();
   const months=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
-  document.getElementById('cal-title').textContent=months[month]+' '+year;
+  // Build month dropdown
+  const monthSel=document.getElementById('cal-month');
+  monthSel.innerHTML=months.map((mn,i)=>'<option value="'+i+'"'+(i===month?' selected':'')+'>'+mn+'</option>').join('');
+  // Build year dropdown — wide range: 2000 → current+2, plus any trade years outside that
+  const tradeYears=state.trades.map(t=>new Date(t.date).getFullYear()).filter(y=>!isNaN(y));
+  const nowY=new Date().getFullYear();
+  let minY=2000;
+  let maxY=nowY+2;
+  // Extend if trades go beyond
+  if(tradeYears.length){
+    minY=Math.min(minY,...tradeYears);
+    maxY=Math.max(maxY,...tradeYears);
+  }
+  // Always include current selection
+  if(year<minY)minY=year;
+  if(year>maxY)maxY=year;
+  const yearSel=document.getElementById('cal-year');
+  let yopts='';
+  for(let y=maxY;y>=minY;y--)yopts+='<option value="'+y+'"'+(y===year?' selected':'')+'>'+y+'</option>';
+  yearSel.innerHTML=yopts;
   const dayData={};
   state.trades.forEach(t=>{
     const d=new Date(t.date);
@@ -2265,6 +2352,298 @@ function getScore(wr,avgR,count){
   if(wr>=40||avgR>=0)return 'C';
   if(wr<30||avgR<-0.5)return 'D-';
   return 'D';
+}
+
+// ──── TAX TAB ────
+function renderTax(){
+  const trades=state.trades;
+  const empty=document.getElementById('tax-empty'),content=document.getElementById('tax-content');
+  if(trades.length===0){empty.style.display='block';content.style.display='none';return;}
+  empty.style.display='none';content.style.display='block';
+
+  // Compute totals using current settings
+  const taxRate=getTaxRate();
+  const cap=state.settings.startCap||0;
+  const compoundMode=state.settings.compound||'classic';
+
+  // Compute per-trade fees using current fee mode
+  let totalGrossPnl=0,totalFees=0,totalGrossWins=0,totalGrossLosses=0;
+  trades.forEach(t=>{
+    const pnl=t.pnl||0;
+    const fee=computeFeesForTrade(t.risk,pnl);
+    totalGrossPnl+=pnl;
+    totalFees+=fee;
+    if(pnl>0)totalGrossWins+=pnl;
+    else if(pnl<0)totalGrossLosses+=Math.abs(pnl);
+  });
+  const taxableProfit=Math.max(0,totalGrossWins-totalGrossLosses);
+  const totalTax=taxableProfit*(taxRate/100);
+  const totalNet=totalGrossPnl-totalFees-totalTax;
+
+  // Update summary subtitle
+  const taxLabel=taxRate>0?taxRate+'%':'uit';
+  const feeLabel=state.settings.fee==='off'?'uit':state.settings.fee==='pct'?state.settings.feePct+'%':state.settings.fee==='usd'?'$'+state.settings.feeUsd:state.settings.feePct+'%+$'+state.settings.feeUsd;
+  document.getElementById('tax-summary-sub').textContent='Tax '+taxLabel+' · Fees '+feeLabel+' · '+capitalize(compoundMode);
+
+  // Summary stat cards
+  const summaryStats=[
+    {l:'Bruto P&L',v:(totalGrossPnl>=0?'+$':'-$')+Math.abs(totalGrossPnl).toFixed(0),col:totalGrossPnl>=0?'var(--green)':'var(--red)',hint:'voor tax + fees'},
+    {l:'Total tax',v:'-$'+totalTax.toFixed(0),col:totalTax>0?'var(--gold)':'var(--text-mute)',hint:taxRate>0?'op $'+taxableProfit.toFixed(0)+' belastbaar':'tax staat uit'},
+    {l:'Total fees',v:'-$'+totalFees.toFixed(0),col:totalFees>0?'var(--blue)':'var(--text-mute)',hint:state.settings.fee==='off'?'fees staan uit':trades.length+' trades'},
+    {l:'Net na alles',v:(totalNet>=0?'+$':'-$')+Math.abs(totalNet).toFixed(0),col:totalNet>=0?'var(--green)':'var(--red)',hint:'na tax + fees'}
+  ];
+  document.getElementById('tax-summary-stats').innerHTML=summaryStats.map(s=>statCard(s)).join('');
+
+  // Portfolio chart
+  if(cap>0){
+    document.getElementById('portfolio-card').style.display='block';
+    renderPortfolioChart(trades,cap,taxRate,compoundMode);
+  }else{
+    document.getElementById('portfolio-chart').innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-mute);font-size:12px;font-style:italic">⚠️ Vul een Start kapitaal in (topbar bovenaan) om de Portfolio curve te zien.</div>';
+    document.getElementById('portfolio-summary').innerHTML='';
+    document.getElementById('compound-note').innerHTML='';
+  }
+
+  // Per year breakdown
+  renderTaxYearTable(trades,taxRate);
+
+  // Carry-forward (only relevant for 33% Belgian speculative)
+  renderCarryForward(trades,taxRate);
+}
+
+function getTaxRate(){
+  const m=state.settings.tax;
+  if(m==='off')return 0;
+  if(m==='10')return 10;
+  if(m==='33')return 33;
+  if(m==='50')return 50;
+  if(m==='custom')return parseFloat(state.settings.taxCustom)||0;
+  return 0;
+}
+
+function computeFeesForTrade(risk,pnl){
+  const m=state.settings.fee;
+  if(m==='off'||pnl===0)return 0;
+  const feePct=parseFloat(state.settings.feePct)||0;
+  const feeUsd=parseFloat(state.settings.feeUsd)||0;
+  if(m==='pct')return Math.abs(risk)*feePct/100;
+  if(m==='usd')return feeUsd;
+  if(m==='both')return Math.abs(risk)*feePct/100+feeUsd;
+  return 0;
+}
+
+function renderPortfolioChart(trades,cap,taxRate,compoundMode){
+  // Sort by date
+  const sorted=trades.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  // Compute bruto and netto curves
+  let bal=cap;       // running balance with compound mode
+  let yearWin=0,yearLoss=0;  // for classic mode year-end deduction
+  const brutoArr=[cap];
+  const nettoArr=[cap];
+  const labels=['Start'];
+  let cumGross=cap;
+
+  sorted.forEach((t,i)=>{
+    const pnl=t.pnl||0;
+    const fee=computeFeesForTrade(t.risk,pnl);
+    cumGross+=pnl-fee;
+
+    // Apply to running balance based on compound mode
+    if(pnl>0){
+      // Win
+      if(compoundMode==='safe'&&taxRate>0){
+        // Safe: deduct tax immediately on each win
+        const netWin=pnl*(1-taxRate/100)-fee;
+        bal+=netWin;
+      }else{
+        // Classic: full pnl, fee deducted, tax at year end
+        bal+=pnl-fee;
+        yearWin+=pnl;
+      }
+    }else if(pnl<0){
+      // Loss: full deduction, fee
+      bal+=pnl-fee;
+      yearLoss+=Math.abs(pnl);
+    }else{
+      // BE: only fee
+      bal-=fee;
+    }
+    // Classic: at year-end deduct tax on net winnings
+    if(compoundMode==='classic'&&taxRate>0){
+      const curYear=new Date(t.date).getFullYear();
+      const next=sorted[i+1]?new Date(sorted[i+1].date).getFullYear():null;
+      if(next===null||next!==curYear){
+        const taxable=Math.max(0,yearWin-yearLoss);
+        const tax=taxable*(taxRate/100);
+        bal=Math.max(0,bal-tax);
+        yearWin=0;yearLoss=0;
+      }
+    }
+    brutoArr.push(parseFloat(cumGross.toFixed(2)));
+    nettoArr.push(parseFloat(bal.toFixed(2)));
+    labels.push(t.date.slice(0,10));
+  });
+
+  // Render SVG chart
+  const W=900,H=300,padL=70,padR=20,padT=20,padB=40;
+  const innerW=W-padL-padR,innerH=H-padT-padB;
+  const allValues=[...brutoArr,...nettoArr,cap];
+  const minV=Math.min(...allValues);
+  const maxV=Math.max(...allValues);
+  const range=(maxV-minV)||1;
+  const xStep=brutoArr.length>1?innerW/(brutoArr.length-1):0;
+  // Y axis
+  let yLabels='';
+  const ySteps=5;
+  for(let i=0;i<=ySteps;i++){
+    const v=minV+(range*i/ySteps);
+    const y=padT+innerH-(i/ySteps*innerH);
+    yLabels+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="rgba(255,255,255,.05)" stroke-width="0.5"/>';
+    yLabels+='<text x="'+(padL-8)+'" y="'+(y+3)+'" text-anchor="end" fill="rgba(200,255,235,.45)" font-size="10" font-family="DM Mono,monospace">$'+Math.round(v).toLocaleString()+'</text>';
+  }
+  // Start cap dashed line
+  const capY=padT+innerH-((cap-minV)/range*innerH);
+  yLabels+='<line x1="'+padL+'" y1="'+capY+'" x2="'+(W-padR)+'" y2="'+capY+'" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="4 4"/>';
+  yLabels+='<text x="'+(W-padR-4)+'" y="'+(capY-4)+'" text-anchor="end" fill="rgba(200,255,235,.55)" font-size="9" font-family="DM Mono,monospace">Start cap</text>';
+
+  // Build path strings
+  const buildPath=(arr)=>arr.map((v,i)=>{const x=padL+i*xStep;const y=padT+innerH-((v-minV)/range*innerH);return (i===0?'M ':'L ')+x.toFixed(1)+' '+y.toFixed(1);}).join(' ');
+  const brutoPath=buildPath(brutoArr);
+  const nettoPath=buildPath(nettoArr);
+  // Bruto area
+  const brutoAreaPath=brutoPath+' L '+(padL+(brutoArr.length-1)*xStep)+' '+(padT+innerH)+' L '+padL+' '+(padT+innerH)+' Z';
+
+  document.getElementById('portfolio-chart').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">'+
+      '<div style="font-size:10px;color:var(--text-mute);letter-spacing:.18em;text-transform:uppercase">Portfolio · '+sorted.length+' trades</div>'+
+      '<div style="display:flex;gap:14px;font-size:11px">'+
+        '<span style="color:var(--green);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:2px;background:var(--green)"></span>Bruto</span>'+
+        (taxRate>0?'<span style="color:var(--gold);display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:2px;background:var(--gold)"></span>Netto na belasting</span>':'')+
+      '</div>'+
+    '</div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+
+    yLabels+
+    '<path d="'+brutoAreaPath+'" fill="rgba(0,255,136,.06)" stroke="none"/>'+
+    '<path d="'+brutoPath+'" stroke="#00ff88" stroke-width="2" fill="none"/>'+
+    (taxRate>0?'<path d="'+nettoPath+'" stroke="#ffd97a" stroke-width="2" fill="none" stroke-dasharray="0"/>':'')+
+    '</svg>';
+
+  // Portfolio summary boxes (gross vs net)
+  const finalBruto=brutoArr[brutoArr.length-1];
+  const finalNetto=nettoArr[nettoArr.length-1];
+  let summaryHtml='';
+  if(compoundMode==='safe'&&taxRate>0){
+    // Safe mode: show Net + Reserved
+    const allWins=trades.filter(t=>(t.pnl||0)>0);
+    const taxReserved=allWins.reduce((s,t)=>s+t.pnl*(taxRate/100),0);
+    summaryHtml=
+      '<div style="background:rgba(0,255,178,.04);border:1px solid var(--g3);border-radius:10px;padding:14px"><div style="font-size:10px;color:var(--text-mute);letter-spacing:.18em;text-transform:uppercase">Netto kapitaal</div><div style="font-size:22px;color:var(--g);font-family:\'DM Mono\',monospace;font-weight:600;margin-top:4px">$'+Math.round(finalNetto).toLocaleString()+'</div><div style="font-size:10px;color:var(--text-mute);margin-top:4px">Voor je volgende trade</div></div>'+
+      '<div style="background:rgba(255,217,122,.04);border:1px solid rgba(255,217,122,.18);border-radius:10px;padding:14px"><div style="font-size:10px;color:var(--text-mute);letter-spacing:.18em;text-transform:uppercase">Belasting gereserveerd</div><div style="font-size:22px;color:var(--gold);font-family:\'DM Mono\',monospace;font-weight:600;margin-top:4px">$'+Math.round(taxReserved).toLocaleString()+'</div><div style="font-size:10px;color:var(--text-mute);margin-top:4px">Al opzij gezet</div></div>';
+  }else{
+    // Classic: show Bruto + Netto
+    summaryHtml=
+      '<div style="background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:14px"><div style="font-size:10px;color:var(--text-mute);letter-spacing:.18em;text-transform:uppercase">Bruto portfolio</div><div style="font-size:22px;color:var(--green);font-family:\'DM Mono\',monospace;font-weight:600;margin-top:4px">$'+Math.round(finalBruto).toLocaleString()+'</div><div style="font-size:10px;color:var(--text-mute);margin-top:4px">Voor je volgende trade</div></div>'+
+      (taxRate>0?'<div style="background:rgba(255,217,122,.04);border:1px solid rgba(255,217,122,.18);border-radius:10px;padding:14px"><div style="font-size:10px;color:var(--text-mute);letter-spacing:.18em;text-transform:uppercase">Netto na belasting</div><div style="font-size:22px;color:var(--gold);font-family:\'DM Mono\',monospace;font-weight:600;margin-top:4px">$'+Math.round(finalNetto).toLocaleString()+'</div><div style="font-size:10px;color:var(--text-mute);margin-top:4px">Na belastingaangifte</div></div>':'<div style="background:rgba(255,255,255,.025);border:1px dashed var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:center;color:var(--text-mute);font-size:11px;font-style:italic">Tax staat uit · zet een tax % aan in de topbar om netto te zien</div>');
+  }
+  document.getElementById('portfolio-summary').innerHTML=summaryHtml;
+
+  // Compound note
+  const noteEl=document.getElementById('compound-note');
+  if(taxRate>0){
+    if(compoundMode==='classic'){
+      noteEl.innerHTML='<strong>Classic compound:</strong> compound op volledige bruto saldo, tax wordt afgetrokken op jaareinde. Je ziet een drop in de curve op 31 december (belasting-moment).';
+    }else{
+      noteEl.innerHTML='<strong>Safe compound:</strong> tax ('+taxRate+'%) wordt direct na elke winstrade gereserveerd. Compound op netto. Geen verrassing op jaareinde.';
+    }
+  }else{
+    noteEl.innerHTML='<strong>Tax staat uit.</strong> Zet een tax % aan in de topbar om de netto-curve te zien en het verschil tussen Classic en Safe compound.';
+  }
+}
+
+function renderTaxYearTable(trades,taxRate){
+  // Group by year
+  const byYear={};
+  trades.forEach(t=>{
+    const y=new Date(t.date).getFullYear();
+    if(!byYear[y])byYear[y]={trades:0,grossWin:0,grossLoss:0,fees:0};
+    byYear[y].trades++;
+    const pnl=t.pnl||0;
+    const fee=computeFeesForTrade(t.risk,pnl);
+    byYear[y].fees+=fee;
+    if(pnl>0)byYear[y].grossWin+=pnl;
+    else if(pnl<0)byYear[y].grossLoss+=Math.abs(pnl);
+  });
+  const years=Object.keys(byYear).sort((a,b)=>b-a);
+  const tbody=document.getElementById('tax-year-tbody');
+  tbody.innerHTML='';
+  years.forEach(y=>{
+    const d=byYear[y];
+    const taxable=Math.max(0,d.grossWin-d.grossLoss);
+    const tax=taxable*(taxRate/100);
+    const net=d.grossWin-d.grossLoss-d.fees-tax;
+    const tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td style="font-weight:600;color:var(--text)">'+y+'</td>'+
+      '<td style="text-align:right">'+d.trades+'</td>'+
+      '<td style="text-align:right;color:var(--green)">+$'+d.grossWin.toFixed(0)+'</td>'+
+      '<td style="text-align:right;color:var(--red)">-$'+d.grossLoss.toFixed(0)+'</td>'+
+      '<td style="text-align:right;color:var(--text-dim)">$'+taxable.toFixed(0)+'</td>'+
+      '<td style="text-align:right;color:'+(tax>0?'var(--gold)':'var(--text-mute)')+'">'+(tax>0?'-$'+tax.toFixed(0):'—')+'</td>'+
+      '<td style="text-align:right;color:'+(d.fees>0?'var(--blue)':'var(--text-mute)')+'">'+(d.fees>0?'-$'+d.fees.toFixed(0):'—')+'</td>'+
+      '<td style="text-align:right;color:'+(net>=0?'var(--green)':'var(--red)')+';font-weight:600">'+(net>=0?'+$':'-$')+Math.abs(net).toFixed(0)+'</td>';
+    tbody.appendChild(tr);
+  });
+  if(years.length===0){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-mute);font-style:italic">Nog geen jaardata</td></tr>';
+  }
+}
+
+function renderCarryForward(trades,taxRate){
+  const card=document.getElementById('carry-card');
+  // Only relevant for 33% (speculative)
+  if(taxRate!==33){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='block';
+  // Group losses per year
+  const byYear={};
+  trades.forEach(t=>{
+    const y=new Date(t.date).getFullYear();
+    if(!byYear[y])byYear[y]={loss:0,win:0};
+    const pnl=t.pnl||0;
+    if(pnl<0)byYear[y].loss+=Math.abs(pnl);
+    else if(pnl>0)byYear[y].win+=pnl;
+  });
+  const years=Object.keys(byYear).sort((a,b)=>a-b);
+  let cumCarry=0;
+  const yearRows=[];
+  years.forEach(y=>{
+    const d=byYear[y];
+    const netLoss=Math.max(0,d.loss-d.win);
+    const carryThisYear=Math.min(1000,netLoss);
+    const remainingCap=Math.max(0,5000-cumCarry);
+    const actualCarry=Math.min(carryThisYear,remainingCap);
+    cumCarry+=actualCarry;
+    yearRows.push({year:y,netLoss,carry:actualCarry,cumCarry});
+  });
+  let html='';
+  if(yearRows.length===0||yearRows.every(r=>r.netLoss===0)){
+    html='<div style="text-align:center;padding:30px;color:var(--text-mute);font-size:12px;font-style:italic">Nog geen verlies-jaren om te carry\'en. Mooi zo! 💪</div>';
+  }else{
+    html='<div style="display:flex;flex-direction:column;gap:8px">';
+    yearRows.forEach(r=>{
+      if(r.netLoss===0)return;
+      const pctOfMax=(r.cumCarry/5000)*100;
+      const col=r.cumCarry>=5000?'var(--red)':r.cumCarry>=4000?'var(--gold)':'var(--green)';
+      html+='<div style="display:grid;grid-template-columns:60px 1fr 130px 130px;gap:10px;align-items:center;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px"><div style="font-size:13px;color:var(--text);font-weight:600;font-family:DM Mono,monospace">'+r.year+'</div><div><div style="height:16px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden"><div style="width:'+pctOfMax+'%;height:100%;background:linear-gradient(90deg,'+col+',rgba(0,255,178,.5));border-radius:4px"></div></div><div style="font-size:9px;color:var(--text-mute);margin-top:2px">cumulatief: $'+r.cumCarry.toFixed(0)+' / $5000</div></div><div style="text-align:right;font-size:12px;color:var(--red);font-family:DM Mono,monospace">Verlies: -$'+r.netLoss.toFixed(0)+'</div><div style="text-align:right;font-size:12px;color:'+(r.carry>0?'var(--green)':'var(--text-mute)')+';font-family:DM Mono,monospace;font-weight:600">Carry: +$'+r.carry.toFixed(0)+'</div></div>';
+    });
+    html+='</div>';
+    // Summary
+    const remaining=Math.max(0,5000-cumCarry);
+    html+='<div style="margin-top:12px;padding:12px 14px;background:rgba(0,255,178,.04);border:1px solid var(--g3);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="font-size:11px;color:var(--text)"><strong style="color:var(--g)">Totaal gecarry\'d:</strong> $'+cumCarry.toFixed(0)+' van $5000 toegestaan</div><div style="font-size:11px;color:var(--text-dim)">Nog beschikbaar: <strong style="color:'+(remaining>1000?'var(--green)':'var(--gold)')+'">$'+remaining.toFixed(0)+'</strong></div></div>';
+  }
+  document.getElementById('carry-content').innerHTML=html;
 }
 
 init();
