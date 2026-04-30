@@ -593,9 +593,9 @@ html,body{min-height:100vh;font-family:'Outfit',sans-serif;background:#000b08;co
         <div class="row r-4" id="ana-risk-metrics"></div>
       </div>
       <div class="card">
-        <div class="card-h"><div class="card-t">📈 Trader metrics</div><div class="card-sub">Expectancy · Profit Factor · Calmar</div></div>
-        <div class="row r-3" id="ana-trader-metrics"></div>
-        <div style="font-size:11px;color:var(--text-mute);background:rgba(0,255,178,.03);border:1px solid var(--g3);border-radius:8px;padding:10px 12px;line-height:1.7;margin-top:10px"><strong style="color:var(--g)">Expectancy</strong> = wat je gemiddeld verwacht per trade · <strong style="color:var(--g)">Profit Factor</strong> = totale winst / totale verlies (boven 1.5 = goed, boven 2 = sterk) · <strong style="color:var(--g)">Calmar</strong> = jaarlijks rendement / max drawdown</div>
+        <div class="card-h"><div class="card-t">📈 Trader metrics</div><div class="card-sub">Expectancy · Profit Factor · Avg R:R · Calmar</div></div>
+        <div class="row r-4" id="ana-trader-metrics"></div>
+        <div style="font-size:11px;color:var(--text-mute);background:rgba(0,255,178,.03);border:1px solid var(--g3);border-radius:8px;padding:10px 12px;line-height:1.7;margin-top:10px"><strong style="color:var(--g)">Expectancy</strong> = wat je gemiddeld verwacht per trade · <strong style="color:var(--g)">Profit Factor</strong> = totale winst / totale verlies (boven 1.5 = goed, boven 2 = sterk) · <strong style="color:var(--g)">Avg R:R</strong> = gemiddelde Risk:Reward per trade · <strong style="color:var(--g)">Calmar</strong> = jaarlijks rendement / max drawdown</div>
       </div>
       <div class="card">
         <div class="card-h"><div class="card-t">📈 P&L curve</div><div class="card-sub">cumulatief over tijd</div></div>
@@ -1864,9 +1864,17 @@ function renderAnalytics(){
   // Calmar = annualized return / maxDD (simplified: total return / maxDD)
   const totalReturn=cumArr[cumArr.length-1]||0;
   const calmar=maxDD>0?totalReturn/maxDD:totalReturn>0?99:0;
+  // Avg R:R = gemiddelde van alle rrActual waardes (of pnl/risk fallback)
+  let rrSum=0,rrCount=0;
+  trades.forEach(t=>{
+    if(t.rrActual!==null&&t.rrActual!==undefined&&!isNaN(t.rrActual)){rrSum+=t.rrActual;rrCount++;}
+    else if(t.risk>0){const r=(t.net!==undefined?t.net:t.pnl)/t.risk;rrSum+=r;rrCount++;}
+  });
+  const avgRR=rrCount>0?rrSum/rrCount:0;
   const traderMetrics=[
     {l:'Expectancy',v:(expectancy>=0?'+$':'-$')+Math.abs(expectancy).toFixed(0),col:expectancy>=0?'var(--green)':'var(--red)',hint:'per trade verwacht'},
     {l:'Profit Factor',v:profitFactor.toFixed(2),col:profitFactor>2?'var(--green)':profitFactor>1.5?'var(--g)':profitFactor>1?'var(--gold)':'var(--red)',hint:'winst per $1 verlies'},
+    {l:'Avg R:R',v:(avgRR>=0?'+':'')+avgRR.toFixed(2)+'R',col:avgRR>=2?'var(--green)':avgRR>=1?'var(--g)':avgRR>=0?'var(--gold)':'var(--red)',hint:'gemiddelde per trade'},
     {l:'Calmar',v:calmar.toFixed(2),col:calmar>3?'var(--green)':calmar>1?'var(--g)':calmar>0?'var(--gold)':'var(--red)',hint:'rendement / maxDD'}
   ];
   document.getElementById('ana-trader-metrics').innerHTML=traderMetrics.map(m=>statCard(m)).join('');
