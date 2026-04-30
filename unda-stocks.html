@@ -1055,7 +1055,7 @@ html,body{height:100vh;font-family:'Outfit',sans-serif;background:#000b08;color:
           <div class="sec t-hold-tbl-sec" style="margin-bottom:0">Huidige posities</div>
           <div style="display:flex;gap:6px;align-items:center">
             <div id="last-upd" class="last-upd" style="font-size:9px"></div>
-            <button class="refresh-btn" onclick="loadDemoData()" style="font-size:10px;background:rgba(255,217,122,.08);border-color:rgba(255,217,122,.3);color:#ffd97a" title="Vul met fictieve data om te testen">
+            <button class="refresh-btn" id="demo-btn" onclick="loadDemoData()" style="font-size:10px;background:rgba(255,217,122,.08);border-color:rgba(255,217,122,.3);color:#ffd97a" title="Alleen beschikbaar bij lege portfolio — laadt fictieve data om te testen">
               🎨 Demo
             </button>
             <button class="refresh-btn" id="currency-btn" onclick="toggleCurrency()" style="font-family:'DM Mono',sans-serif;font-weight:600;min-width:60px;font-size:10px">€ EUR</button>
@@ -2987,6 +2987,20 @@ function setPosFilter(filter, btn){
 }
 
 function proRenderTable(){
+  // Update demo button state — disable if portfolio has data
+  const demoBtn = fe('demo-btn');
+  if(demoBtn){
+    const hasData = (typeof holdings !== 'undefined' && holdings.length > 0) || (typeof trades !== 'undefined' && trades.length > 0);
+    if(hasData){
+      demoBtn.style.opacity = '0.4';
+      demoBtn.style.cursor = 'not-allowed';
+      demoBtn.title = 'Demo geblokkeerd — wis eerst je posities om demo data te laden';
+    } else {
+      demoBtn.style.opacity = '1';
+      demoBtn.style.cursor = 'pointer';
+      demoBtn.title = 'Laadt fictieve data om de tool te testen';
+    }
+  }
   const tbody = fe('pro-posities-tbody');
   const empty = fe('pro-posities-empty');
   if(!tbody) return;
@@ -4012,10 +4026,11 @@ _dz.addEventListener('drop',e=>{e.preventDefault();_dz.style.borderColor='rgba(0
 // Demo data — vult holdings + losses met fictieve voorbeelden om te testen
 function loadDemoData(){
   const hasData = (holdings && holdings.length > 0) || (trades && trades.length > 0);
-  const msg = hasData
-    ? 'Dit overschrijft je huidige holdings & data met fictieve demo-data. Doorgaan?'
-    : 'Demo data laden? (5 stocks, 3 crypto, 2 metalen — fictief)';
-  if(!confirm(msg)) return;
+  if(hasData){
+    alert('⚠️ Demo data kan niet geladen worden zolang je posities of trades in je portfolio hebt.\n\nDit is een veiligheidsmaatregel om te voorkomen dat je echte data per ongeluk overschreven wordt.\n\nWil je toch demo data zien? Wis eerst handmatig al je posities (× knop bij elke rij).');
+    return;
+  }
+  if(!confirm('Demo data laden? (5 aandelen, 2 ETFs, 3 crypto, 1 bond, 3 cash, 2 metalen, 2 collectibles — fictief)')) return;
 
   const now = Date.now();
   holdings = [
